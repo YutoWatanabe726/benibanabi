@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <title>スタート地点設定</title>
 <style>
-/* あなたのCSSをそのまま転記 */
+
 body { font-family: Arial, sans-serif; background:#f5f7fa; margin:0; padding:0; }
 header { background:#2563eb; color:#fff; text-align:center; padding:16px; font-size:1.4rem; }
 main { max-width:500px; margin:2rem auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
