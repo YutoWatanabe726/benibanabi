@@ -173,8 +173,8 @@ footer {
 
 <header>
   <div class="logo">
-    <img src="../images/logo_nibanavi.png" alt="にばナビ ロゴ">
-    <span>にばナビ</span>
+    <img src="../images/aicon.png" alt="にばナビ ロゴ">
+    <span>べにばナビ</span>
   </div>
 
   <nav>
@@ -198,7 +198,7 @@ footer {
   <img src="../images/sample1.jpg" alt="山形の風景1" class="active">
   <img src="../images/sample2.jpg" alt="山形の風景2">
   <img src="../images/sample3.jpg" alt="山形の風景3">
-  <div class="hero-text">ようこそ、にばナビへ</div>
+  <div class="hero-text">ようこそ、べにばナビへ</div>
 </section>
 
 <!-- ===== 直近のイベント ===== -->
@@ -230,7 +230,7 @@ footer {
 </section>
 
 <footer>
-  &copy; 2025 にばナビ All Rights Reserved.
+  &copy; 2025 べにばナビ All Rights Reserved.
 </footer>
 
 <script>
