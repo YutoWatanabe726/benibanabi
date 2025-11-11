@@ -179,7 +179,7 @@ footer {
 
   <nav>
     <a href="index.jsp">トップ</a>
-    <a href="#">コース</a>
+    <a href="start.jsp">コース</a>
     <a href="#">スポット</a>
     <a href="#">イベント</a>
     <a href="main/souvenir.jsp">お土産紹介</a>
