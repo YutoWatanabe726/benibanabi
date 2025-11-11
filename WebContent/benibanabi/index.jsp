@@ -184,6 +184,7 @@ footer {
     <a href="#">イベント</a>
     <a href="main/souvenir.jsp">お土産紹介</a>
     <a href="main/yamagata.jsp">アクセス情報</a>
+    <a href="main/reservation.jsp">宿泊、レンタカー・カーシェア予約</a>
   </nav>
 
   <div class="right-menu">
