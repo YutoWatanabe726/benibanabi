@@ -24,10 +24,10 @@ button:hover { background:#1e4fd6; }
 <main>
 <form id="startForm" action="courseAction" method="post">
   <label for="courseTitle">コースタイトル</label>
-  <input type="text" id="course-title" name="courseTitle" placeholder="例：山形名所巡りコース" required />
+  <input type="text" id="courseTitle" name="courseTitle" placeholder="例：山形名所巡りコース" required />
 
   <label>旅行期間（日数）</label>
-  <input type="number" id="trip-days" name="tripDays" min="1" max="30" value="1" required />
+  <input type="number" id="tripDays" name="tripDays" min="1" max="30" value="1" required />
 
   <label>スタート地点</label>
   <div class="radio-group">
@@ -43,7 +43,7 @@ button:hover { background:#1e4fd6; }
   </div>
 
   <label for="start-time">観光開始時間</label>
-  <input type="time" id="start-time" name="startTime" value="09:00" required />
+  <input type="time" id="startTime" name="startTime" value="09:00" required />
 
   <button type="submit">スタート地点を設定</button>
 </form>
