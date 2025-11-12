@@ -1,6 +1,7 @@
 package bean;
 
 import java.io.Serializable;
+import java.sql.Date;
 
 public class Reviews implements Serializable {
 
@@ -22,7 +23,7 @@ public class Reviews implements Serializable {
 	/*
 	 *投稿日:int
 	 */
-	private int reviewDate;
+	private Date reviewDate;
 
 	/*
 	 *ゲッタ・セッタ
@@ -51,11 +52,11 @@ public class Reviews implements Serializable {
 		this.reviewText = reviewText;
 	}
 
-	public int getReviewDate(){
+	public Date getReviewDate(){
 		return reviewDate;
 	}
 
-	public void setReviewDate(int reviewDate){
+	public void setReviewDate(Date reviewDate){
 		this.reviewDate = reviewDate;
 	}
 
