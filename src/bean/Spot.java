@@ -39,6 +39,11 @@ public class Spot implements Serializable {
 	 */
 	private String address;
 
+	/*
+	 *エリア:String
+	 */
+	private String area;
+
 
 	/*
 	 *ゲッタ・セッタ
@@ -97,6 +102,14 @@ public class Spot implements Serializable {
 
 	public void setAddress(String address){
 		this.address = address;
+	}
+
+	public String getArea(){
+		return area;
+	}
+
+	public void setArea(String area){
+		this.area = area;
 	}
 
 }
