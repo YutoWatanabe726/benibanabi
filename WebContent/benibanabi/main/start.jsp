@@ -14,33 +14,53 @@ input[type="text"], input[type="number"], input[type="time"] { width:100%; paddi
 .radio-group label { display:inline-block; margin-right:1rem; font-weight:normal; }
 button { margin-top:20px; width:100%; padding:10px; font-size:1.1rem; font-weight:bold; background:#2563eb; color:#fff; border:none; border-radius:8px; cursor:pointer; }
 button:hover { background:#1e4fd6; }
+
+/* 最初は非表示 */
+#address-field { display:none; }
 </style>
 </head>
 <body>
 <header>スタート地点設定</header>
 <main>
-  <!-- サーブレットにPOST送信 -->
-  <form id="startForm" action="courseAction" method="post">
-    <label for="courseTitle">コースタイトル</label>
-    <input type="text" id="course-title" name="courseTitle" placeholder="例：山形名所巡りコース" required />
+<form id="startForm" action="courseAction" method="post">
+  <label for="courseTitle">コースタイトル</label>
+  <input type="text" id="course-title" name="courseTitle" placeholder="例：山形名所巡りコース" required />
 
-    <label>旅行期間（日数）</label>
-    <input type="number" id="trip-days" name="tripDays" min="1" max="30" value="1" required />
+  <label>旅行期間（日数）</label>
+  <input type="number" id="trip-days" name="tripDays" min="1" max="30" value="1" required />
 
-    <label>スタート地点</label>
-    <div class="radio-group">
-      <label><input type="radio" name="startPoint" value="山形駅" checked /> 山形駅</label>
-      <label><input type="radio" name="startPoint" value="山形空港" /> 山形空港</label>
-    </div>
+  <label>スタート地点</label>
+  <div class="radio-group">
+    <label><input type="radio" name="startPoint" value="山形駅" checked> 山形駅</label>
+    <label><input type="radio" name="startPoint" value="山形空港"> 山形空港</label>
+    <label><input type="radio" name="startPoint" value="任意の地点"> 任意の地点</label>
+  </div>
 
+  <!-- 任意の地点が選ばれたときのみ表示 -->
+  <div id="address-field">
     <label for="address">任意の住所を入力</label>
-    <input type="text" id="address" name="address" placeholder="例：山形県山形市七日町1-2-3" />
+    <input type="text" id="address" name="address" placeholder="例：山形県山形市七日町1-2-3">
+  </div>
 
-    <label for="start-time">観光開始時間</label>
-    <input type="time" id="start-time" name="startTime" value="09:00" required />
+  <label for="start-time">観光開始時間</label>
+  <input type="time" id="start-time" name="startTime" value="09:00" required />
 
-    <button type="submit">スタート地点を設定</button>
-  </form>
+  <button type="submit">スタート地点を設定</button>
+</form>
 </main>
+
+<script>
+// ラジオボタンの変更を監視
+document.querySelectorAll('input[name="startPoint"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    const addressField = document.getElementById('address-field');
+    if (this.value === '任意の地点') {
+      addressField.style.display = 'block';
+    } else {
+      addressField.style.display = 'none';
+    }
+  });
+});
+</script>
 </body>
 </html>
