@@ -68,7 +68,7 @@ public class Spot implements Serializable {
 		return description;
 	}
 
-	public void setdescription(String description){
+	public void setDescription(String description){
 		this.description = description;
 	}
 
