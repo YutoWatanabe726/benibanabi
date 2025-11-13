@@ -1,4 +1,4 @@
-package benibanabi.main;
+package benibanabi;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
