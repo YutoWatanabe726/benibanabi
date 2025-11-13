@@ -29,7 +29,7 @@ public class courseAction extends Action {
 }*/
 
 
-package benibanabi;
+package benibanabi.main;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
