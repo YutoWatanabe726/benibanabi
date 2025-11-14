@@ -8,9 +8,6 @@ import java.util.List;
 import bean.Spot;
 import bean.Tag;
 
-/**
- * 管理者用DAO：スポット＋タグ登録・更新、削除時はタグ＋口コミ＋スポットまとめて削除
- */
 public class SpotAdminDAO extends Dao {
 
     // ----------------------------
@@ -23,13 +20,11 @@ public class SpotAdminDAO extends Dao {
 
         try (Connection conn = getConnection()) {
 
-            System.out.println("[INFO] insertSpotWithTags: トランザクション開始");
             conn.setAutoCommit(false);
             int spotId;
 
             // --- スポット登録 ---
             try (PreparedStatement ps = conn.prepareStatement(insertSpotSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                System.out.println("[INFO] スポット登録開始: " + spot.getSpotName());
 
                 ps.setString(1, spot.getSpotName());
                 ps.setString(2, spot.getArea());
@@ -41,37 +36,30 @@ public class SpotAdminDAO extends Dao {
                 ps.executeUpdate();
 
                 ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    spotId = rs.getInt(1);
-                    System.out.println("[INFO] スポット登録成功: SPOT_ID=" + spotId);
-                } else {
+                if (!rs.next()) {
                     throw new Exception("スポット登録に失敗しました。ID取得不可。");
                 }
+                spotId = rs.getInt(1);
             }
 
             // --- タグ登録 ---
             if (tags != null && !tags.isEmpty()) {
-                System.out.println("[INFO] タグ登録開始: 件数=" + tags.size());
-
                 try (PreparedStatement psTag = conn.prepareStatement(insertTagSql)) {
                     for (Tag tag : tags) {
-                        System.out.println("[INFO] タグ登録: TAG_ID=" + tag.getTagId());
                         psTag.setInt(1, spotId);
                         psTag.setInt(2, tag.getTagId());
                         psTag.addBatch();
                     }
                     psTag.executeBatch();
                 }
-            } else {
-                System.out.println("[INFO] タグなし、タグ登録スキップ");
             }
 
             conn.commit();
-            System.out.println("[INFO] insertSpotWithTags: トランザクション完了");
+            System.out.println("[INFO] Spot inserted: SPOT_ID=" + spotId);
             return true;
 
         } catch (Exception e) {
-            System.out.println("[ERROR] insertSpotWithTags: エラー → ロールバック実施");
+            System.err.println("[ERROR] insertSpotWithTags failed: " + e.getMessage());
             throw new Exception("スポット＋タグ登録中にエラーが発生しました。", e);
         }
     }
@@ -86,12 +74,9 @@ public class SpotAdminDAO extends Dao {
 
         try (Connection conn = getConnection()) {
 
-            System.out.println("[INFO] updateSpotWithTags: トランザクション開始 SPOT_ID=" + spot.getSpotId());
             conn.setAutoCommit(false);
 
             // --- スポット更新 ---
-            System.out.println("[INFO] スポット更新開始");
-
             try (PreparedStatement ps = conn.prepareStatement(updateSpotSql)) {
                 ps.setString(1, spot.getSpotName());
                 ps.setString(2, spot.getArea());
@@ -105,8 +90,6 @@ public class SpotAdminDAO extends Dao {
             }
 
             // --- タグ削除 ---
-            System.out.println("[INFO] 既存タグ削除開始");
-
             try (PreparedStatement psDel = conn.prepareStatement(deleteTagSql)) {
                 psDel.setInt(1, spot.getSpotId());
                 psDel.executeUpdate();
@@ -114,27 +97,22 @@ public class SpotAdminDAO extends Dao {
 
             // --- タグ再登録 ---
             if (tags != null && !tags.isEmpty()) {
-                System.out.println("[INFO] タグ再登録開始: 件数=" + tags.size());
-
                 try (PreparedStatement psTag = conn.prepareStatement(insertTagSql)) {
                     for (Tag tag : tags) {
-                        System.out.println("[INFO] 再登録タグ: TAG_ID=" + tag.getTagId());
                         psTag.setInt(1, spot.getSpotId());
                         psTag.setInt(2, tag.getTagId());
                         psTag.addBatch();
                     }
                     psTag.executeBatch();
                 }
-            } else {
-                System.out.println("[INFO] タグなし、タグ再登録スキップ");
             }
 
             conn.commit();
-            System.out.println("[INFO] updateSpotWithTags: トランザクション完了");
+            System.out.println("[INFO] Spot updated: SPOT_ID=" + spot.getSpotId());
             return true;
 
         } catch (Exception e) {
-            System.out.println("[ERROR] updateSpotWithTags: エラー → ロールバック実施");
+            System.err.println("[ERROR] updateSpotWithTags failed: " + e.getMessage());
             throw new Exception("スポット＋タグ更新中にエラーが発生しました。", e);
         }
     }
@@ -150,39 +128,32 @@ public class SpotAdminDAO extends Dao {
 
         try (Connection conn = getConnection()) {
 
-            System.out.println("[INFO] deleteSpotWithTagsAndReviews: トランザクション開始 SPOT_ID=" + spotId);
             conn.setAutoCommit(false);
 
             // --- タグ削除 ---
-            System.out.println("[INFO] タグ削除開始");
-
             try (PreparedStatement psTag = conn.prepareStatement(deleteTagSql)) {
                 psTag.setInt(1, spotId);
                 psTag.executeUpdate();
             }
 
             // --- 口コミ削除 ---
-            System.out.println("[INFO] 口コミ削除開始");
-
             try (PreparedStatement psReview = conn.prepareStatement(deleteReviewSql)) {
                 psReview.setInt(1, spotId);
                 psReview.executeUpdate();
             }
 
             // --- スポット削除 ---
-            System.out.println("[INFO] スポット削除開始");
-
             try (PreparedStatement psSpot = conn.prepareStatement(deleteSpotSql)) {
                 psSpot.setInt(1, spotId);
                 psSpot.executeUpdate();
             }
 
             conn.commit();
-            System.out.println("[INFO] deleteSpotWithTagsAndReviews: トランザクション完了");
+            System.out.println("[INFO] Spot deleted: SPOT_ID=" + spotId);
             return true;
 
         } catch (Exception e) {
-            System.out.println("[ERROR] deleteSpotWithTagsAndReviews: エラー → ロールバック実施");
+            System.err.println("[ERROR] deleteSpotWithTagsAndReviews failed: " + e.getMessage());
             throw new Exception("スポット＋関連データ削除中にエラーが発生しました。", e);
         }
     }
