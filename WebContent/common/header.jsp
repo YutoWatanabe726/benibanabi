@@ -1,93 +1,179 @@
 <%-- ヘッダー --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <style>
-/* ===== ヘッダー全体 ===== */
+
+/* ===============================
+      HEADER（ガラス風デザイン）
+================================= */
 .header {
   width: 100%;
-  background: #ffffff;
-  padding: 12px 25px;
+  padding: 18px 48px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+
+  /* ガラス風背景 */
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+  transition: 0.35s ease;
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
 }
 
-/* ===== ロゴ画像 ===== */
+/* ===== スクロール時に小さくなる ===== */
+.header.shrink {
+  padding: 8px 48px;
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+}
+
+/* ===== ロゴ ===== */
 .header .logo img {
-  height: 55px;      /* ← 大きさ調整ここ！ */
-  width: auto;
-  display: block;
+  height: 60px;
+  transition: 0.3s ease;
+}
+.header.shrink .logo img {
+  height: 48px;
 }
 
-/* ===== ナビゲーション ===== */
+/* ===============================
+      NAVIGATION（メニュー）
+================================= */
 .header nav {
   display: flex;
-  gap: 25px;
+  gap: 36px;
 }
 
 .header nav a {
   text-decoration: none;
-  font-size: 1rem;
+  font-size: 1.06rem;
   font-weight: 600;
   color: #333;
-  padding-bottom: 4px;
+  letter-spacing: 0.04em;
+  padding-bottom: 6px;
+
   position: relative;
-  transition: color 0.25s;
+  transition: color 0.25s ease;
 }
 
+/* ----- ホバーの文字色 ----- */
 .header nav a:hover {
-  color: #e02828;
+  color: #d61e1e;
 }
 
-/* 下線アニメーション */
+/* ----- 下線アニメ（左→右にスライド） ----- */
 .header nav a::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -2px;
+  bottom: -4px;
   width: 0%;
-  height: 2px;
-  background: #e02828;
-  transition: width 0.35s;
+  height: 3px;
+  background: linear-gradient(90deg, #e02828, #ff5a5a);
+  transition: width 0.35s ease;
+  border-radius: 3px;
 }
 .header nav a:hover::after {
   width: 100%;
 }
 
-/* ===== スマホ対応 ===== */
-@media (max-width: 750px) {
+/* ===============================
+      ハンバーガーメニュー（スマホ）
+================================= */
+.menu-btn {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 5px;
+  transition: 0.3s;
+}
+
+.menu-btn div {
+  width: 28px;
+  height: 3px;
+  background: #333;
+  transition: 0.3s ease;
+}
+
+/* スマホ表示 */
+@media (max-width: 850px) {
+
   .header {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 14px 22px;
   }
+
   .header nav {
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-top: 10px;
+    display: none;
+    flex-direction: column;
+
+    background: rgba(255,255,255,0.96);
+    position: absolute;
+    top: 75px;
+    right: 22px;
+    padding: 18px 30px;
+    gap: 18px;
+    border-radius: 14px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+    backdrop-filter: blur(10px);
+  }
+
+  .header nav.show {
+    display: flex;
+  }
+
+  .menu-btn {
+    display: flex;
   }
 }
+
 </style>
+
 
 <header class="header">
 
-  <!-- ★ここにロゴ画像を差し込む ★ -->
+  <!-- ロゴ -->
   <div class="logo">
     <img src="<c:url value='/images/logo_beninavi.png'/>" alt="べにばナビ ロゴ">
   </div>
 
-  <nav>
-    <a href="index.jsp">トップ</a>
-    <a href="start.jsp">コース</a>
+  <!-- メニュー -->
+  <nav id="navMenu">
+    <a href="<c:url value='/benibanabi/index.jsp'/>">トップ</a>
+    <a href="<c:url value='/benibanabi/start.jsp'/>">コース</a>
     <a href="#">スポット</a>
-    <a href="#">イベント</a>
-    <a href="main/souvenir.jsp">お土産紹介</a>
-    <a href="main/yamagata.jsp">アクセス情報</a>
-    <a href="main/reservation.jsp">宿泊・レンタカー</a>
+    <a href="<c:url value='/benibanabi/main/souvenir.jsp'/>">お土産紹介</a>
+    <a href="<c:url value='/benibanabi/main/yamagata.jsp'/>">アクセス情報</a>
+    <a href="<c:url value='/benibanabi/main/reservation.jsp'/>">宿泊・レンタカー</a>
   </nav>
+
+  <!-- ハンバーガーメニュー -->
+  <div class="menu-btn" onclick="toggleMenu()">
+    <div></div><div></div><div></div>
+  </div>
+
 </header>
+
+
+<script>
+/* ---- ハンバーガーメニュー制御 ---- */
+function toggleMenu() {
+  document.getElementById("navMenu").classList.toggle("show");
+}
+
+/* ---- スクロールでヘッダー縮小 ---- */
+window.addEventListener("scroll", function () {
+  const header = document.querySelector(".header");
+  if (window.scrollY > 25) {
+    header.classList.add("shrink");
+  } else {
+    header.classList.remove("shrink");
+  }
+});
+</script>
