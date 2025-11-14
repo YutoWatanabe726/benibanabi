@@ -2,65 +2,52 @@ package dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
-import bean.Reviews;
-
-/**
- * 管理者用DAO：口コミ一覧取得＆削除
- */
 public class ReviewAdminDAO extends Dao {
 
-    /** 口コミ一覧を取得 */
-    public List<Reviews> findAllReviews() throws Exception {
-        System.out.println("[ReviewAdminDAO] 口コミ一覧取得開始");
-
-        String sql = "SELECT REVIEW_ID, SPOT_ID, REVIEW_TEXT, REVIEW_DATE FROM REVIEW ORDER BY REVIEW_DATE DESC";
-
-        List<Reviews> list = new ArrayList<>();
-
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                Reviews r = new Reviews();
-                r.setReviewId(rs.getInt("REVIEW_ID"));
-                // r.setSpotId(rs.getInt("SPOT_ID")); ← 使うなら bean を有効化
-                r.setReviewText(rs.getString("REVIEW_TEXT"));
-                r.setReviewDate(rs.getDate("REVIEW_DATE"));
-
-                list.add(r);
-            }
-
-            System.out.println("[ReviewAdminDAO] 取得件数: " + list.size());
-        }
-
-        return list;
-    }
-
-    /** 口コミ削除 */
+    /**
+     * 管理者：口コミ削除
+     * @param reviewId REVIEW_ID
+     * @return true：削除成功 / false：対象なし
+     * @throws Exception
+     */
     public boolean deleteReviewById(int reviewId) throws Exception {
-        System.out.println("[ReviewAdminDAO] 口コミ削除処理開始: REVIEW_ID=" + reviewId);
+
+        System.out.println("[INFO] ReviewAdminDAO.deleteReviewById: START id = " + reviewId);
 
         String sql = "DELETE FROM REVIEW WHERE REVIEW_ID = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            // ▼ トランザクション開始
+            conn.setAutoCommit(false);
+
             ps.setInt(1, reviewId);
-
             int result = ps.executeUpdate();
-            System.out.println(result > 0 ? "[ReviewAdminDAO] 🗑️ 削除成功" : "[ReviewAdminDAO] ⚠ 削除失敗");
 
+            if (result > 0) {
+                System.out.println("[INFO] ReviewAdminDAO.deleteReviewById: 削除成功 reviewId=" + reviewId);
+            } else {
+                System.out.println("[WARN] ReviewAdminDAO.deleteReviewById: 対象なし reviewId=" + reviewId);
+            }
+
+            // ▼ コミット
+            conn.commit();
             return result > 0;
 
         } catch (Exception e) {
-            System.err.println("[ReviewAdminDAO] ❌ 削除エラー: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
+            System.err.println("[ERROR] ReviewAdminDAO.deleteReviewById: ロールバック実行 reviewId=" + reviewId);
+            try {
+                // rollback は必ず実行
+                Connection conn = getConnection();
+                conn.rollback();
+            } catch (Exception rollbackEx) {
+                System.err.println("[ERROR] rollback失敗: " + rollbackEx.getMessage());
+            }
+
+            // 呼び出し側で原因がわかるようにラップして再送出
+            throw new Exception("口コミ削除中にエラーが発生しました", e);
         }
     }
 }
