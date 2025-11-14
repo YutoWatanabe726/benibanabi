@@ -1,0 +1,33 @@
+<%-- 新規登録JSP --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<c:import url="/common/base.jsp">
+	<c:param name="title">
+		新規作成
+	</c:param>
+
+	<c:param name="content">
+	<div class="container mt-4">
+		<h2 class="mb-4">新規作成</h2>
+
+		<form action="registerAction" method="post" class="form">
+
+			<div class="mb-3">
+				<label for="name" class="form-label">管理者ID</label>
+				<input type="text" id="id" name="id" class="form-control" required>
+			</div>
+
+			<div class="mb-3">
+				<label for="password" class="form-label">パスワード</label>
+				<input type="password" id="password" name="password" class="form-control" required>
+			</div>
+
+			<div class="d-flex mt-4">
+				<button type="submit" class="btn btn-primary me-3">登録</button>
+				<a href="Menu.action" class="btn btn-secondary">戻る</a>
+			</div>
+		</form>
+	</div>
+	</c:param>
+</c:import>

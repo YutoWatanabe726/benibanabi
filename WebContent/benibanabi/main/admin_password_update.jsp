@@ -1,0 +1,44 @@
+<%-- 管理者パスワード更新JSP --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<c:import url="/common/base.jsp">
+    <c:param name="title">
+        管理者パスワード変更
+    </c:param>
+
+    <c:param name="content">
+
+    <div class="container mt-4">
+        <h2 class="mb-4">管理者パスワード変更</h2>
+
+        <form action="AdminPasswordUpdate.action" method="post" class="w-50">
+
+            <!-- 現在のパスワード -->
+            <div class="mb-3">
+                <label for="currentPass" class="form-label">現在のパスワード</label>
+                <input type="password" id="currentPass" name="currentPass" class="form-control" required>
+            </div>
+
+            <!-- 新しいパスワード -->
+            <div class="mb-3">
+                <label for="newPass" class="form-label">新しいパスワード</label>
+                <input type="password" id="newPass" name="newPass" class="form-control" required>
+            </div>
+
+            <!-- 新しいパスワード（確認） -->
+            <div class="mb-3">
+                <label for="newPass2" class="form-label">新しいパスワード（確認）</label>
+                <input type="password" id="newPass2" name="newPass2" class="form-control" required>
+            </div>
+
+            <!-- 送信ボタン -->
+            <button type="submit" class="btn btn-primary">変更する</button>
+            <a href="Menu.action" class="btn btn-secondary">戻る</a>
+
+        </form>
+
+    </div>
+
+    </c:param>
+</c:import>
