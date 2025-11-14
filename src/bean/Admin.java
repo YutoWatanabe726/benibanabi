@@ -7,29 +7,29 @@ public class Admin implements Serializable {
 	/*
 	 *管理者ID:int
 	 */
-	private int id;
+	private String id;
 
 	/*
 	 *パスワード:int
 	 */
-	private int password;
+	private String password;
 
 	/*
 	 *ゲッタ・セッタ
 	 */
-	public int getId(){
+	public String getId(){
 		return id;
 	}
 
-	public void setId(int id){
+	public void setId(String id){
 		this.id = id;
 	}
 
-	public int getPassword(){
+	public String getPassword(){
 		return password;
 	}
 
-	public void setPassword(int password){
+	public void setPassword(String password){
 		this.password = password;
 	}
 
