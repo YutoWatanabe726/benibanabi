@@ -18,7 +18,9 @@
 
 
 
-		<%--ここに中身を書く --%>
+	<main>
+		${param.content}
+	</main>
 
 
 		<footer>
