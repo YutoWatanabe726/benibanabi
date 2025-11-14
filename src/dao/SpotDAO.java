@@ -92,7 +92,7 @@ public class SpotDAO extends Dao {
                 spot.setSpotId(rs.getInt("SPOT_ID"));
                 spot.setSpotName(rs.getString("SPOT_NAME"));
                 spot.setArea(rs.getString("AREA"));
-                spot.setdescription(rs.getString("DESCRIPTION"));
+                spot.setDescription(rs.getString("DESCRIPTION"));
                 spot.setSpotPhoto(rs.getString("SPOT_PHOTO"));
                 spot.setLatitude(rs.getDouble("LATITUDE"));
                 spot.setLongitude(rs.getDouble("LONGITUDE"));
