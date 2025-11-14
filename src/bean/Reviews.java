@@ -13,7 +13,7 @@ public class Reviews implements Serializable {
 	/*
 	 *スポットID:int
 	 */
-/*	private int spotId;
+	private int spotId;
 
 	/*
 	 *口コミ本文:String
@@ -36,14 +36,14 @@ public class Reviews implements Serializable {
 		this.reviewId = reviewId;
 	}
 
-/*	public int getSpotId(){
+	public int getSpotId(){
 		return spotId;
 	}
 
 	public void setSpotId(int spotId){
 		this.spotId = spotId;
 	}
-*/
+
 	public String getReviewText(){
 		return reviewText;
 	}
