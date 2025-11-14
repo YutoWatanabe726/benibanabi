@@ -15,7 +15,7 @@ input[type="text"], input[type="number"], input[type="time"] { width:100%; paddi
 button { margin-top:20px; width:100%; padding:10px; font-size:1.1rem; font-weight:bold; background:#2563eb; color:#fff; border:none; border-radius:8px; cursor:pointer; }
 button:hover { background:#1e4fd6; }
 
-/* 最初は非表示ssk */
+/* 最初は非表示ss */
 #address-field { display:none; }
 </style>
 </head>
