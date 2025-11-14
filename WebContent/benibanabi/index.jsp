@@ -1,259 +1,260 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<title>にばナビ｜山形観光ポータルサイト</title>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<c:import url="../common/base.jsp">
+  <c:param name="title" value="にばナビ TOP" />
+  <c:param name="content">
+
 <style>
-/* ========== ベース設定 ========== */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* ------------------------------
+   全体
+------------------------------ */
 body {
-  font-family: "メイリオ", "Hiragino Kaku Gothic ProN", sans-serif;
-  background-color: #f2f5fa;
-  color: #333;
-  line-height: 1.6;
+  font-family: "Noto Sans JP", sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-/* ========== ヘッダー ========== */
-header {
-  background: linear-gradient(90deg, #003d99, #0059b3);
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 40px;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.logo { display: flex; align-items: center; gap: 10px; }
-.logo img { height: 45px; filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.3)); }
-.logo span { font-size: 1.5em; font-weight: bold; letter-spacing: 1px; }
-
-/* ========== ナビゲーション ========== */
-nav { display: flex; align-items: center; gap: 25px; }
-nav a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: bold;
-  position: relative;
-  transition: 0.3s;
-}
-nav a::after {
-  content: "";
-  position: absolute;
-  width: 0;
-  height: 3px;
-  bottom: -4px;
-  left: 0;
-  background-color: #ffcc33;
-  transition: width 0.3s;
-}
-nav a:hover::after { width: 100%; }
-nav a:hover { color: #ffcc33; }
-
-.right-menu { display: flex; gap: 10px; }
-.btn {
-  background-color: #ffcc33;
-  border: none;
-  color: #003366;
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.btn:hover { background-color: #ffdb4d; transform: translateY(-2px); }
-
-/* ========== ヒーロースライダー ========== */
+/* ------------------------------
+   HERO（トップの大画像）
+------------------------------ */
 .hero {
   position: relative;
   width: 100%;
-  height: 70vh;
+  height: 55vh;
   overflow: hidden;
 }
-.hero img {
+.hero-slide {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: 55vh;
   position: absolute;
-  top: 0; left: 0;
+  object-fit: cover;
   opacity: 0;
-  transition: opacity 1.5s ease-in-out;
+  transition: opacity 1.2s ease-in-out;
 }
-.hero img.active { opacity: 1; }
-
+.hero-slide.active {
+  opacity: 1;
+}
 .hero-text {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 2.8em;
-  letter-spacing: 3px;
-  text-shadow: 0 3px 8px rgba(0,0,0,0.6);
-  animation: fadeIn 2s ease-in-out;
-  z-index: 10;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translate(-50%, -40%); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
+  bottom: 10%;
+  left: 5%;
+  font-size: 2.8rem;
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(0,0,0,.6);
 }
 
-/* ========== イベントカード ========== */
+/* ------------------------------
+   直近のイベント
+------------------------------ */
 .main-content {
-  max-width: 1100px;
-  margin: 50px auto;
-  text-align: center;
-  padding: 0 20px;
+  padding: 40px 30px;
 }
 .main-content h2 {
-  color: #004080;
-  font-size: 2em;
+  font-size: 2.2rem;
+  border-left: 8px solid #ff6f61;
+  padding-left: 15px;
   margin-bottom: 25px;
 }
+
 .card-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 30px;
+  display: grid;
+  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 .card {
-  background: white;
+  background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  width: 300px;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  transition: transform 0.35s, box-shadow 0.35s;
 }
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
 }
 .card img {
   width: 100%;
-  height: 180px;
+  aspect-ratio: 16/10;
   object-fit: cover;
 }
 .card h3 {
-  margin: 15px 0 8px;
-  color: #003366;
+  padding: 15px 18px 5px;
+  font-size: 1.3rem;
 }
 .card p {
-  padding: 0 15px 15px;
-  font-size: 0.95em;
-  color: #444;
+  padding: 0 18px 15px;
 }
-.card a {
-  display: inline-block;
-  background-color: #004080;
-  color: white;
-  text-decoration: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  margin-bottom: 18px;
-  transition: 0.3s;
-}
-.card a:hover { background-color: #0073e6; }
 
-/* ========== フッター ========== */
-footer {
-  background-color: #004080;
-  color: white;
-  text-align: center;
-  padding: 15px;
-  margin-top: 60px;
-  font-size: 0.9em;
+/* ------------------------------
+   2カラム スライダー
+------------------------------ */
+.top-visual-area {
+  margin: 50px auto;
+  max-width: 1200px;
+}
+.slider-2col {
+  display: flex;
+  gap: 20px;
+}
+.slider-column {
+  width: 50%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  border: 3px solid #f0f0f0;
+  box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  background: #fff;
+}
+.slide-item {
+  position: absolute;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+.slide-item.active {
+  opacity: 1;
+}
+.slide-item img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+.slide-caption {
+  position: absolute;
+  bottom: 10px;
+  left: 15px;
+  padding: 6px 12px;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+/* ------------------------------
+   トピックス
+------------------------------ */
+.topics-area {
+  padding: 50px 25px;
+  background: #fafafa;
+}
+.topics-title {
+  font-size: 1.8rem;
+  border-left: 7px solid #ff9659;
+  padding-left: 15px;
+  margin-bottom: 20px;
+}
+.topics-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.topic-item {
+  display: flex;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid #e2e2e2;
+}
+.topic-date {
+  font-weight: bold;
+  min-width: 90px;
+  color: #666;
+}
+.topic-more {
+  color: #007bff;
+  font-size: 0.9rem;
+  margin-left: 10px;
 }
 </style>
-</head>
-<body>
 
-<header>
-  <div class="logo">
-    <img src="../images/aicon.png" alt="にばナビ ロゴ">
-    <span>べにばナビ</span>
-  </div>
 
-  <nav>
-    <a href="index.jsp">トップ</a>
-    <a href="start.jsp">コース</a>
-    <a href="#">スポット</a>
-    <a href="#">イベント</a>
-    <a href="main/souvenir.jsp">お土産紹介</a>
-    <a href="main/yamagata.jsp">アクセス情報</a>
-    <a href="main/reservation.jsp">宿泊、レンタカー・カーシェア予約</a>
-  </nav>
 
-  <div class="right-menu">
-    <button class="btn">ログイン</button>
-    <button class="btn">メニュー</button>
-  </div>
-</header>
-
-<!-- ===== ヒーロースライドショー ===== -->
+<!-- ====================== HERO ====================== -->
 <section class="hero" id="hero">
-  <img src="../images/sample1.jpg" alt="山形の風景1" class="active">
-  <img src="../images/sample2.jpg" alt="山形の風景2">
-  <img src="../images/sample3.jpg" alt="山形の風景3">
+  <img src="../images/sample1.jpg" alt="山形の風景1" class="hero-slide active">
+  <img src="../images/sample2.jpg" alt="山形の風景2" class="hero-slide">
+  <img src="../images/sample3.jpg" alt="山形の風景3" class="hero-slide">
+
   <div class="hero-text">ようこそ、べにばナビへ</div>
 </section>
 
-<!-- ===== 直近のイベント ===== -->
+
+
+<!-- ====================== イベント ====================== -->
 <section class="main-content">
   <h2>直近のイベント</h2>
 
   <div class="card-container">
     <div class="card">
-      <img src="../images/event1.jpg" alt="世界はとなりやまがたフェス">
+      <img src="../images/event1.jpg" alt="">
       <h3>世界はとなりやまがたフェス</h3>
-      <p>10/25（土）＠やまぎん県民ホール広場。多文化ステージ＆多国籍料理で世界とつながる。</p>
-      <a href="#">詳しく見る</a>
+      <p>10/25（土） やまぎん県民ホール広場</p>
     </div>
 
     <div class="card">
-      <img src="../images/event2.jpg" alt="全国ぐっと！！餃子まつり">
+      <img src="../images/event2.jpg" alt="">
       <h3>全国ぐっと！！餃子まつり</h3>
-      <p>10/24（金）〜27（月）＠道の駅やまがた蔵王。全国の餃子が山形に集結！</p>
-      <a href="#">詳しく見る</a>
+      <p>10/24〜27 道の駅やまがた蔵王</p>
     </div>
 
     <div class="card">
-      <img src="../images/event3.jpg" alt="やまがた秋の芸術祭">
+      <img src="../images/event3.jpg" alt="">
       <h3>やまがた秋の芸術祭</h3>
-      <p>9/1〜11/30＠山形市ほか。音楽やアートで街全体が彩られる文化の秋。</p>
-      <a href="#">詳しく見る</a>
+      <p>9/1〜11/30 @山形市ほか</p>
     </div>
   </div>
 </section>
 
-<footer>
-  &copy; 2025 べにばナビ All Rights Reserved.
-</footer>
 
-<script>
-// ===== スライドショー制御 =====
-let current = 0;
-const slides = document.querySelectorAll('#hero img');
-let interval;
 
-function showNext() {
-  slides[current].classList.remove('active');
-  current = (current + 1) % slides.length;
-  slides[current].classList.add('active');
-}
+<!-- ====================== 2カラムスライダー ====================== -->
+<section class="top-visual-area">
+  <div class="slider-2col">
 
-function startSlide() { interval = setInterval(showNext, 4000); }
-function stopSlide() { clearInterval(interval); }
+    <!-- 左 -->
+    <div class="slider-column" id="leftSlider">
+      <c:forEach var="s" items="${leftSlides}" varStatus="st">
+        <div class="slide-item ${st.first ? 'active' : ''}">
+          <img src="${s.img}" alt="${s.alt}">
+          <div class="slide-caption">${s.cap}</div>
+        </div>
+      </c:forEach>
+    </div>
 
-startSlide();
+    <!-- 右 -->
+    <div class="slider-column" id="rightSlider">
+      <c:forEach var="s" items="${rightSlides}" varStatus="st">
+        <div class="slide-item ${st.first ? 'active' : ''}">
+          <img src="${s.img}" alt="${s.alt}">
+          <div class="slide-caption">${s.cap}</div>
+        </div>
+      </c:forEach>
+    </div>
 
-const hero = document.getElementById('hero');
-hero.addEventListener('mouseenter', stopSlide);
-hero.addEventListener('mouseleave', startSlide);
-</script>
+  </div>
+</section>
 
-</body>
-</html>
+
+
+<!-- ====================== トピックス ====================== -->
+<section class="topics-area">
+  <h2 class="topics-title">直近のイベントトピック</h2>
+
+  <ul class="topics-list">
+    <c:forEach var="t" items="${topics}">
+      <li class="topic-item">
+        <div class="topic-date">${t.date}</div>
+        <div class="topic-body">
+          ${t.title}
+          <span class="topic-more">${t.more}</span>
+        </div>
+      </li>
+    </c:forEach>
+  </ul>
+</section>
+
+
+
+</c:param>
+</c:import>
