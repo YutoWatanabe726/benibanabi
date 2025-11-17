@@ -1,174 +1,173 @@
-/* ===============================
-      グローバルデザイン
-================================= */
-body {
-  font-family: "Noto Sans JP", sans-serif;
-  background: #f5f5f7;
-  margin: 0;
-  padding: 0;
-  color: #333;
-  overflow-x: hidden;   /* 横スクロール禁止 */
-}
-
-/* ===============================
-      ガラス風ヘッダー
-================================= */
-header {
+/* ======================
+   HERO（紅花 × スライドショー）
+====================== */
+.hero {
+  position: relative;
   width: 100%;
-  padding: 16px 20px;   /* ← 左右を20pxに縮小 */
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
-  border-bottom: 1px solid rgba(255,255,255,0.4);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #333;
-}
-
-.header.shrink {
-  padding: 8px 20px;
-}
-
-
-/* ===============================
-      スライド画像（これが重要！！！）
-================================= */
-.hero, .slider, .top-visual-area {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0;
+  height: 85vh;
   overflow: hidden;
+  border-radius: 0 0 40px 40px;
 }
 
-.hero img,
-.slider img,
-.top-visual-area img {
+.hero-slide {
   width: 100%;
-  height: auto;
-  display: block;
+  height: 100%;
   object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+}
+
+.hero-slide.active {
+  opacity: 1;
+}
+
+/* 色を戻す → 完全透明 */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: none;
 }
 
 
-/* ===============================
-      コンテンツ
-================================= */
-main {
-  max-width: 960px;     /* 1100px → 960px に統一 */
-  margin: 0 auto;
-  padding: 20px;
+/* テキスト */
+.hero-content {
+  position: absolute;
+  bottom: 18%;
+  left: 8%;
+  color: #fff;
+  z-index: 10;
 }
 
-main h2 {
-  font-size: 1.7rem;
-  border-left: 6px solid #ff7a45;
-  padding-left: 12px;
-  margin-bottom: 20px;
+.hero-content h1 {
+  font-size: 3.1rem;
+  font-weight: 900;
+  text-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.hero-content p {
+  font-size: 1.25rem;
+  margin-top: 12px;
+  opacity: 0.9;
+}
+
+.hero-btn {
+  display: inline-block;
+  margin-top: 25px;
+  padding: 14px 34px;
+  background: linear-gradient(90deg, #FFB35E, #D92929);
+  color: #fff;
+  border-radius: 50px;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #333;
+  text-decoration: none;
+  box-shadow: 0 10px 22px rgba(217,41,41,0.35);
+  transition: 0.3s;
 }
 
-main p {
-  font-size: 1rem;
-  margin-bottom: 22px;
-  line-height: 1.8;
+.hero-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(217,41,41,0.48);
+}
+
+/* 花びらアニメーション */
+@keyframes petal {
+  0% { transform: translateY(-5%) rotate(0deg); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(115%) rotate(360deg); opacity: 0; }
+}
+
+.petal {
+  position: absolute;
+  top: -40px;
+  width: 26px;
+  opacity: 0.8;
+  animation: petal 8s linear infinite;
+  z-index: 11;
+}
+
+/* ======================
+   セクションタイトル
+====================== */
+.section-title {
+  font-size: 2rem;
+  margin: 60px 0 25px;
+  padding-left: 18px;
+  border-left: 8px solid #FF7A45;
+  font-weight: 800;
+  color: #333;
+  position: relative;
+}
+
+.section-title::before {
+  content: "✿";
+  position: absolute;
+  left: -32px;
+  top: -4px;
+  color: #FF7A45;
+  font-size: 1.5rem;
+}
+
+/* ======================
+   イベントカード
+====================== */
+.event-list {
+  display: grid;
+  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.event-item {
+  background: #fff;
+  border-radius: 16px;
+  border-top: 6px solid #D92929;
+  padding: 22px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+
+.event-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 26px rgba(217,41,41,0.22);
+}
+
+.event-item h3 {
+  color: #D92929;
+  margin-bottom: 8px;
+}
+
+.event-item p {
   color: #444;
 }
 
-
-/* ===============================
-      タブデザイン
-================================= */
-.tab-container {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
+/* ======================
+   トピックス
+====================== */
+.topic-item {
   background: #fff;
-  padding: 10px 0;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  position: sticky;
-  top: 70px;
-  z-index: 900;
+  padding: 18px 16px;
+  border-left: 5px solid #FF7A45;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: 0.2s;
 }
 
-.tab {
-  padding: 10px 20px;
-  background: #f0f0f0;
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: 0.3s;
-  color: #555;
+.topic-item:hover {
+  background: #fff5f1;
+  transform: translateX(6px);
 }
 
-.tab:hover {
-  background: #ffe2d8;
-  color: #d94c4c;
+.topic-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
 }
 
-.tab.active {
-  background: #ffffff;
-  color: #d94c4c;
-  border-bottom: 3px solid #d94c4c;
-}
-
-
-/* ===============================
-      カードデザイン
-================================= */
-.souvenir-list {
-  display: grid;
-  gap: 25px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-}
-
-.souvenir-item {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  overflow: hidden;
-  transition: 0.35s;
-}
-
-.souvenir-item:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 10px 26px rgba(0,0,0,0.18);
-}
-
-.souvenir-item img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-}
-
-.souvenir-item h3 {
-  font-size: 1.3rem;
-  padding: 16px;
-  margin: 0;
-  color: #d94c4c;
-}
-
-.souvenir-item p {
-  padding: 0 16px 16px;
-  margin: 0;
-  color: #555;
-  line-height: 1.6;
-}
-
-@media (max-width: 650px) {
-  .souvenir-item img {
-    height: 140px;
-  }
-  header {
-    font-size: 1.4rem;
-    padding: 12px 18px;
-  }
+.topic-meta {
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 6px;
 }

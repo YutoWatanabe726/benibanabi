@@ -1,301 +1,299 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-
 <c:import url="../common/base.jsp">
   <c:param name="title" value="べにばナビ TOP" />
   <c:param name="content">
 
 <style>
 
-/* ======================
-   HERO（スライドショー）
-====================== */
+/* =====================================================
+      HERO（紅花 × スライドショー）
+===================================================== */
 .hero {
   position: relative;
   width: 100%;
-  height: 90vh;
+  height: 85vh;
   overflow: hidden;
+  border-radius: 0 0 40px 40px;
 }
 
+/* スライド画像 */
 .hero-slide {
   width: 100%;
-  height: 55vh;
+  height: 100%;
   object-fit: cover;
   position: absolute;
   top: 0;
   left: 0;
   opacity: 0;
   transition: opacity 1.2s ease-in-out;
+  filter: brightness(0.75);
 }
-
 .hero-slide.active {
   opacity: 1;
 }
 
-.hero-text {
+/* 紅花オーバーレイ */
+.hero-overlay {
   position: absolute;
-  bottom: 10%;
-  left: 5%;
-  font-size: 2.8rem;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(217,41,41,0.35), rgba(255,255,255,0));
+  z-index: 3;
+}
+
+/* HERO テキスト */
+.hero-content {
+  position: absolute;
+  bottom: 18%;
+  left: 8%;
   color: #fff;
-  font-weight: 700;
-  text-shadow: 0 0 8px rgba(0,0,0,.7);
+  z-index: 10;
 }
-
-/* ======================
-   イベントカード
-====================== */
-.main-content {
-  padding: 40px 30px;
+.hero-content h1 {
+  font-size: 3.2rem;
+  font-weight: 900;
+  text-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
-
-.main-content h2 {
-  font-size: 2.2rem;
-  border-left: 8px solid #ff6f61;
-  padding-left: 15px;
-  margin-bottom: 25px;
+.hero-content p {
+  font-size: 1.25rem;
+  margin-top: 12px;
 }
-
-.card-container {
-  display: grid;
-  gap: 25px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-.card {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-  transition: 0.35s;
-  padding: 20px;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-}
-
-/* ======================
-   トピックス（Topics）
-====================== */
-
-.topics-wrapper {
-  max-width: 1100px;
-  margin: 40px auto 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-}
-
-.topic-item {
-  display: grid;
-  grid-template-columns: 70px 1fr 40px;
-  align-items: center;
-  padding: 18px 10px;
-  border-bottom: 1px solid #ddd;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.topic-item:hover {
-  background: #fafafa;
-}
-
-/* 左の丸アイコン */
-.topic-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f2f2f2;
-}
-
-.topic-icon img {
-  width: 70%;
-  opacity: 0.9;
-}
-
-/* メタ情報 */
-.topic-meta {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 3px;
-}
-
-.topic-meta .date {
-  color: #666;
-}
-
-.topic-meta .label {
+.hero-btn {
   display: inline-block;
-  font-size: 0.75rem;
-  padding: 2px 6px;
-  border-radius: 4px;
+  margin-top: 25px;
+  padding: 14px 34px;
+  background: linear-gradient(90deg, #FFB35E, #D92929);
+  color: #fff;
+  border-radius: 50px;
+  font-size: 1.2rem;
   font-weight: 700;
-  margin-left: 6px;
+  text-decoration: none;
+  box-shadow: 0 10px 22px rgba(217,41,41,0.35);
+  transition: 0.3s;
+}
+.hero-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(217,41,41,0.48);
 }
 
-.label.new {
-  background: #ff4f6e;
-  color: #fff;
+/* =====================================================
+      花びらゆらゆら アニメーション
+===================================================== */
+@keyframes petalFall {
+  0% {
+    transform: translateY(-20px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  15% { opacity: 1; }
+  30% {
+    transform: translateY(200px) translateX(-30px) rotate(60deg);
+  }
+  50% {
+    transform: translateY(400px) translateX(20px) rotate(160deg);
+  }
+  80% {
+    transform: translateY(600px) translateX(-15px) rotate(260deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(850px) translateX(0px) rotate(360deg);
+    opacity: 0;
+  }
 }
 
-.label.check {
-  background: #ffb3b3;
-  color: #fff;
+.petal {
+  position: absolute;
+  top: -50px;
+  width: 28px;
+  opacity: 0.9;
+  z-index: 12;
+  pointer-events: none;
 }
 
-.topic-meta .category {
-  margin-left: 6px;
-  color: #999;
-}
-
-/* タイトル */
-.topic-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  line-height: 1.4;
+/* =====================================================
+      セクションタイトル
+===================================================== */
+.section-title {
+  font-size: 2rem;
+  margin: 60px 0 25px;
+  padding-left: 18px;
+  border-left: 8px solid #FF7A45;
+  font-weight: 800;
   color: #333;
 }
 
-/* 矢印 */
-.topic-arrow {
-  font-size: 1.4rem;
-  color: #20a0ff;
-  font-weight: bold;
-  text-align: center;
-  transition: transform 0.2s;
+/* =====================================================
+      イベントカード
+===================================================== */
+.event-list {
+  display: grid;
+  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.event-item {
+  background: #fff;
+  border-radius: 16px;
+  border-top: 6px solid #D92929;
+  padding: 22px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+.event-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 26px rgba(217,41,41,0.22);
+}
+.event-item h3 {
+  color: #D92929;
 }
 
-.topic-item:hover .topic-arrow {
-  transform: translateX(4px);
+/* =====================================================
+      トピックス
+===================================================== */
+.topic-item {
+  background: #fff;
+  padding: 18px 16px;
+  border-left: 5px solid #FF7A45;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: 0.2s;
 }
-
-@media (max-width: 650px) {
-  .topic-item {
-    grid-template-columns: 50px 1fr 30px;
-    padding: 15px 5px;
-  }
-
-  .topic-icon {
-    width: 50px;
-    height: 50px;
-  }
-
-  .topic-title {
-    font-size: 1rem;
-  }
+.topic-item:hover {
+  background: #fff5f1;
+  transform: translateX(6px);
+}
+.topic-meta {
+  font-size: 0.9rem;
+  color: #777;
+}
+.topic-title {
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 </style>
 
 
-<!-- ======================
+
+<!-- =====================================================
       HERO（スライドショー）
-====================== -->
-<section class="hero" id="hero">
-  <img src="../images/9_倉津川の桜2.jpg" alt="山形の風景1" class="hero-slide active">
-  <img src="../images/1674_飛島の海岸.jpg" alt="山形の風景2" class="hero-slide">
-  <img src="../images/199_月山遠景.jpg" alt="山形の風景3" class="hero-slide">
-  <img src="../images/110_銀山温泉4.jpg" alt="山形の風景4" class="hero-slide">
+===================================================== -->
+<section class="hero">
 
-  <div class="hero-text">ようこそ、べにばナビへ</div>
-</section>
+  <!-- スライド画像 -->
+  <img src="../images/9_倉津川の桜2.jpg"  class="hero-slide active">
+  <img src="../images/1674_飛島の海岸.jpg" class="hero-slide">
+  <img src="../images/199_月山遠景.jpg"   class="hero-slide">
+  <img src="../images/110_銀山温泉4.jpg" class="hero-slide">
 
+  <div class="hero-overlay"></div>
 
-<!-- ======================
-      イベント
-====================== -->
-<section class="main-content">
-  <h2>直近のイベント</h2>
-
-  <div class="card-container">
-    <div class="card">
-      <h3>世界はとなりやまがたフェス</h3>
-      <p>10/25（土）＠やまぎん県民ホール広場</p>
-    </div>
-
-    <div class="card">
-      <h3>全国ぐっと！！餃子まつり</h3>
-      <p>10/24〜27＠道の駅やまがた蔵王</p>
-    </div>
-
-    <div class="card">
-      <h3>やまがた秋の芸術祭</h3>
-      <p>9/1〜11/30＠山形市ほか</p>
-    </div>
-  </div>
-</section>
-
-
-<!-- ======================
-      トピックス（Topics）
-====================== -->
-<section class="topics-wrapper">
-
-  <!-- 1 -->
-  <div class="topic-item">
-    <div class="topic-icon">
-      <img src="../images/icon_info.png">
-    </div>
-
-    <div class="topic-text">
-      <div class="topic-meta">
-        <span class="date">2025.11.12</span>
-        <span class="label new">NEW</span>
-        <span class="category">— 大蔵村 —</span>
-      </div>
-      <div class="topic-title">
-        【イベント情報】東京の高円寺で「やまがた村祭り」を開催します
-      </div>
-    </div>
-
-    <div class="topic-arrow">→</div>
+  <div class="hero-content">
+    <h1>紅花が彩る、山形の旅。</h1>
+    <p>伝統 × 自然 × 食 × 温泉　もう一歩ふかく。</p>
+    <a href="<c:url value='/benibanabi/start.jsp' />" class="hero-btn">コースを作成する</a>
   </div>
 
-  <!-- 2 -->
-  <div class="topic-item">
-    <div class="topic-icon">
-      <img src="../images/icon_youtube.png">
-    </div>
-
-    <div class="topic-text">
-      <div class="topic-meta">
-        <span class="date">2022.05.19</span>
-        <span class="label check">CHECK</span>
-        <span class="category">— 山形県観光文化協会 —</span>
-      </div>
-      <div class="topic-title">
-        【動画配信】ワクワク！やまがた旅番組をYouTubeで配信中！
-      </div>
-    </div>
-
-    <div class="topic-arrow">→</div>
-  </div>
+  <!-- 花びら（位置＆遅延はランダム） -->
+  <img class="petal" style="left:10%; animation:petalFall 9s linear infinite 0s;">
+  <img class="petal" style="left:25%; animation:petalFall 10s linear infinite 1s;">
+  <img class="petal" style="left:40%; animation:petalFall 11s linear infinite 0.5s;">
+  <img class="petal" style="left:55%; animation:petalFall 9.5s linear infinite 2s;">
+  <img class="petal" style="left:70%; animation:petalFall 12s linear infinite 1s;">
+  <img class="petal" style="left:85%; animation:petalFall 8s linear infinite 0.3s;">
 
 </section>
 
 
-<!-- ======================
-      スライドショー JavaScript
-====================== -->
+
+<!-- =====================================================
+      スライド × 季節別エフェクト 自動切替 JS
+===================================================== -->
 <script>
-  let current = 0;
   const slides = document.querySelectorAll(".hero-slide");
+  let current = 0;
 
+  // スライド → 季節 対応（あなたの画像に合わせてある）
+  const slideSeasons = [
+    "spring", // 桜
+    "summer", // 飛島の海
+    "autumn", // 月山
+    "winter"  // 銀山温泉
+  ];
+
+  // 季節別 花びら画像
+  const petalImgs = {
+    spring: "../images/桜花弁.png",
+    summer: "../images/夏雫.png",
+    autumn: "../images/秋.png",
+    winter: "../images/冬.png"
+  };
+
+  // スライド切り替え
   function showSlide() {
     slides[current].classList.remove("active");
     current = (current + 1) % slides.length;
     slides[current].classList.add("active");
+
+    changeSeasonEffect(slideSeasons[current]);
   }
 
-  setInterval(showSlide, 4000);
+  // 季節に合わせて花びら画像を全て変更
+  function changeSeasonEffect(season) {
+    const petals = document.querySelectorAll(".petal");
+    petals.forEach(p => {
+      p.src = petalImgs[season];
+    });
+  }
+
+  // 初期状態：春
+  changeSeasonEffect(slideSeasons[0]);
+
+  // 4.5秒ごとにスライド切り替え
+  setInterval(showSlide, 4500);
 </script>
+
+
+
+<!-- =====================================================
+      イベント
+===================================================== -->
+<h2 class="section-title">直近のイベント</h2>
+
+<div class="event-list">
+  <div class="event-item">
+    <h3>世界はとなりやまがたフェス</h3>
+    <p>10/25（土）＠やまぎん県民ホール広場</p>
+  </div>
+
+  <div class="event-item">
+    <h3>全国ぐっと！！餃子まつり</h3>
+    <p>10/24〜27＠道の駅やまがた蔵王</p>
+  </div>
+
+  <div class="event-item">
+    <h3>やまがた秋の芸術祭</h3>
+    <p>9/1〜11/30＠山形市ほか</p>
+  </div>
+</div>
+
+
+<!-- =====================================================
+      トピックス
+===================================================== -->
+<h2 class="section-title">最新トピックス</h2>
+
+<div class="topic-item">
+  <div class="topic-meta">2025.11.12 — 大蔵村</div>
+  <div class="topic-title">【イベント】高円寺で「やまがた村祭り」を開催</div>
+</div>
+
+<div class="topic-item">
+  <div class="topic-meta">2025.05.19 — 山形県観光文化協会</div>
+  <div class="topic-title">【動画公開】山形旅番組を YouTube にて配信中</div>
+</div>
+
 
 </c:param>
 </c:import>
