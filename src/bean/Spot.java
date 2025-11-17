@@ -1,6 +1,7 @@
 package bean;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class Spot implements Serializable {
 
@@ -43,6 +44,11 @@ public class Spot implements Serializable {
 	 *エリア:String
 	 */
 	private String area;
+
+	/*
+	 *タグ名:String
+	 */
+	private List<Tag> tagName;
 
 
 	/*
@@ -112,4 +118,11 @@ public class Spot implements Serializable {
 		this.area = area;
 	}
 
+	public List<Tag> getTagname() {
+        return tagName;
+    }
+
+    public void setTagname(List<Tag> tagName) {
+        this.tagName = tagName;
+    }
 }
