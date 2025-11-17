@@ -2,7 +2,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<c:import url="/common/base.jsp">
+<c:import url="/common/admin_base.jsp">
 	<c:param name="title">
 		管理者アカウント削除
 	</c:param>
@@ -24,7 +24,5 @@
         </div>
     </form>
 </div>
-
-	</div>
-	</c:param>
+</c:param>
 </c:import>
