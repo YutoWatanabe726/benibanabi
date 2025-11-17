@@ -1,4 +1,4 @@
-package benibanabi;
+package benibanabi.main;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
