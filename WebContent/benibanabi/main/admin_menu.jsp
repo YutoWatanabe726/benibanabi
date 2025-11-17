@@ -65,6 +65,8 @@
 
     <a href="admin_spot.jsp" class="menu-item">観光スポットの登録・更新・削除</a>
     <a href="admin_comment.jsp" class="menu-item">コメント管理</a>
+    <a href="AdminDelete.action" class="menu-item">アカウント削除</a>
+    <a href="AdminPasswordUpdate.action" class="menu-item">パスワード編集</a>
 
   </div>
 

@@ -84,6 +84,8 @@
     <input type="password" id="password" name="password" required>
 
     <button type="submit" class="btn-login">ログイン</button>
+
+    <a href="AdminCreate.action" class="menu-item">新規作成</a>
   </form>
 </div>
 
