@@ -15,7 +15,7 @@ public class AdminDeleteExecuteAction extends Action {
 
         // ▼ セッション（ログイン中の管理者）
         HttpSession session = req.getSession();
-        Admin loginAdmin = (Admin) session.getAttribute("admin");
+        Admin admin = (Admin) session.getAttribute("admin");
 
         // ▼ リクエストパラメータ（削除対象の管理者ID）
         String id = req.getParameter("admin_id");
