@@ -1,18 +1,16 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html lang="ja">
+
 <jsp:include page="../../common/header.jsp" />
 
 <head>
 <meta charset="UTF-8">
 <title>山形への行き方｜べにばナビ</title>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-
 </head>
 
 <body>
-
-
 
 <div class="tab-container">
   <button class="tab active">山形への行き方</button>

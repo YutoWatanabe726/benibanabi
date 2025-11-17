@@ -24,13 +24,13 @@
 
   <div class="souvenir-list">
     <div class="souvenir-item">
-      <img src="../../images/rentalcar.jpg" alt="レンタカー">
+      <img src="../../images/NSX.jpg" alt="レンタカー">
       <h3>🚗 レンタカー</h3>
       <p>山形駅や空港で利用可能。主要観光地を巡るのに便利。</p>
     </div>
 
     <div class="souvenir-item">
-      <img src="../../images/train.jpg" alt="電車">
+      <img src="../../images/train.png" alt="電車">
       <h3>🚃 電車</h3>
       <p>奥羽本線・仙山線などを利用し、主要都市を移動可能。</p>
     </div>

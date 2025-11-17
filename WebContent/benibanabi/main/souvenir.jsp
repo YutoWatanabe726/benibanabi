@@ -30,13 +30,13 @@
     </div>
 
     <div class="souvenir-item">
-      <img src="../../images/yonezawagyu.jpg" alt="米沢牛">
+      <img src="../../images/usi.png" alt="米沢牛">
       <h3>🥩 米沢牛</h3>
       <p>きめ細かな霜降りと柔らかい肉質を誇る、世界的ブランド牛。</p>
     </div>
 
     <div class="souvenir-item">
-      <img src="../../images/tamakon.jpg" alt="玉こんにゃく">
+      <img src="../../images/tama.jpg" alt="玉こんにゃく">
       <h3>🥢 玉こんにゃく</h3>
       <p>山形名物。丸いこんにゃくを醤油ベースで煮込んだ素朴な逸品。</p>
     </div>
