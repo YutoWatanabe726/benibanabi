@@ -21,9 +21,11 @@ public class SpotDAO extends Dao {
      */
     public List<Spot> searchSpots(String keyword, List<String> areaList, List<String> tagList) throws Exception {
 
+        System.out.println("[INFO] SpotDAO.searchSpots: START");
+
         List<Spot> list = new ArrayList<>();
 
-        // --- 重複排除（必要最低限の処理） ---
+        // --- 重複排除 ---
         if (tagList != null && !tagList.isEmpty()) {
             tagList = new ArrayList<>(new HashSet<>(tagList));
         }
@@ -34,19 +36,16 @@ public class SpotDAO extends Dao {
         sql.append("s.SPOT_PHOTO, s.LATITUDE, s.LONGITUDE, s.ADDRESS ");
         sql.append("FROM SPOT s WHERE 1=1 ");
 
-        // キーワード
         if (keyword != null && !keyword.isEmpty()) {
             sql.append("AND (s.SPOT_NAME LIKE ? OR s.DESCRIPTION LIKE ?) ");
         }
 
-        // エリア
         if (areaList != null && !areaList.isEmpty()) {
             sql.append("AND s.AREA IN (");
             sql.append(String.join(",", Collections.nCopies(areaList.size(), "?")));
             sql.append(") ");
         }
 
-        // タグ（AND 条件：EXISTS を tagList 分だけ追加）
         if (tagList != null && !tagList.isEmpty()) {
             for (int i = 0; i < tagList.size(); i++) {
                 sql.append("AND EXISTS (");
@@ -59,27 +58,31 @@ public class SpotDAO extends Dao {
 
         sql.append("ORDER BY s.SPOT_NAME");
 
-        System.out.println("[DEBUG] SpotDAO.searchSpots SQL = " + sql);
+        // --- SQLログ ---
+        System.out.println("[DEBUG] SQL = " + sql.toString());
+
+        // --- パラメータログ（中身は出さない） ---
+        System.out.println("[DEBUG] Params: "
+                + "keyword=" + keyword
+                + ", areaCount=" + (areaList != null ? areaList.size() : 0)
+                + ", tagCount=" + (tagList != null ? tagList.size() : 0));
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             int idx = 1;
 
-            // ▼ キーワード
             if (keyword != null && !keyword.isEmpty()) {
                 ps.setString(idx++, "%" + keyword + "%");
                 ps.setString(idx++, "%" + keyword + "%");
             }
 
-            // ▼ エリア
             if (areaList != null && !areaList.isEmpty()) {
                 for (String area : areaList) {
                     ps.setString(idx++, area);
                 }
             }
 
-            // ▼ タグ
             if (tagList != null && !tagList.isEmpty()) {
                 for (String tag : tagList) {
                     ps.setString(idx++, tag);
@@ -87,6 +90,8 @@ public class SpotDAO extends Dao {
             }
 
             ResultSet rs = ps.executeQuery();
+
+            int count = 0;
             while (rs.next()) {
                 Spot spot = new Spot();
                 spot.setSpotId(rs.getInt("SPOT_ID"));
@@ -97,28 +102,36 @@ public class SpotDAO extends Dao {
                 spot.setLatitude(rs.getDouble("LATITUDE"));
                 spot.setLongitude(rs.getDouble("LONGITUDE"));
                 spot.setAddress(rs.getString("ADDRESS"));
+
                 list.add(spot);
+                count++;
             }
 
+            System.out.println("[INFO] SpotDAO.searchSpots: 取得件数=" + count);
+
         } catch (SQLException e) {
-            System.err.println("[ERROR] SpotDAO.searchSpots SQL失敗: " + sql);
+            System.err.println("[ERROR] SpotDAO.searchSpots: SQL実行エラー");
             throw new SQLException("観光スポット検索中にエラーが発生しました。", e);
         }
 
+        System.out.println("[INFO] SpotDAO.searchSpots: END");
         return list;
     }
+
 
     /**
      * 観光スポットIDで1件の詳細を取得
      */
     public Spot findById(int spotId) throws Exception {
 
-        String sql =
-            "SELECT SPOT_ID, SPOT_NAME, AREA, DESCRIPTION, SPOT_PHOTO, " +
-            "LATITUDE, LONGITUDE, ADDRESS " +
-            "FROM SPOT WHERE SPOT_ID = ?";
+        System.out.println("[INFO] SpotDAO.findById: START spotId=" + spotId);
 
-        System.out.println("[DEBUG] SpotDAO.findById SQL = " + sql + ", spotId=" + spotId);
+        String sql =
+            "SELECT SPOT_ID, SPOT_NAME, AREA, DESCRIPTION, SPOT_PHOTO, "
+            + "LATITUDE, LONGITUDE, ADDRESS "
+            + "FROM SPOT WHERE SPOT_ID = ?";
+
+        System.out.println("[DEBUG] SQL = " + sql);
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -136,14 +149,21 @@ public class SpotDAO extends Dao {
                 spot.setLatitude(rs.getDouble("LATITUDE"));
                 spot.setLongitude(rs.getDouble("LONGITUDE"));
                 spot.setAddress(rs.getString("ADDRESS"));
+
+                System.out.println("[INFO] SpotDAO.findById: Hit spotId=" + spotId);
+                System.out.println("[INFO] SpotDAO.findById: END");
+
                 return spot;
+            } else {
+                System.out.println("[WARN] SpotDAO.findById: データなし spotId=" + spotId);
             }
 
         } catch (SQLException e) {
-            System.err.println("[ERROR] SpotDAO.findById SQL失敗 spotId=" + spotId);
+            System.err.println("[ERROR] SpotDAO.findById: SQL実行エラー");
             throw new SQLException("観光スポット詳細取得中にエラーが発生しました。", e);
         }
 
+        System.out.println("[INFO] SpotDAO.findById: END");
         return null;
     }
 }

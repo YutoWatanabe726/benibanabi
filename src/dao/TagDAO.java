@@ -3,100 +3,90 @@ package dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 import bean.Tag;
 
 /**
- * タグ情報を扱うDAO（完全版）
- * ・指定スポットのタグ一覧取得
- * ・全タグ一覧取得（検索プルダウン用）
+ * タグ情報を取得するDAO。
+ * ・スポットごとに登録されているタグを取得
+ * ・全タグ一覧を取得（検索用）
  */
 public class TagDAO extends Dao {
 
-    // ----------------------------------------------
-    // ① 指定したスポットに紐づくタグ一覧を取得する
-    // ----------------------------------------------
     /**
-     * 指定したスポットに紐づくタグ一覧を取得する
-     * @param spotId SPOT_ID
-     * @return タグ一覧（0件の場合は空リスト）
-     * @throws Exception DBエラー
+     * 指定した観光スポットに設定されているタグ一覧を取得する
      */
-    public List<Tag> findTagsBySpotId(int spotId) throws Exception {
+    public ArrayList<Tag> findTagsBySpotId(int spotId) throws Exception {
 
-        System.out.println("[TagDAO] スポットID=" + spotId + " のタグ取得開始");
+        System.out.println("[TagDAO] findTagsBySpotId() 開始 spotId=" + spotId);
 
-        List<Tag> tagList = new ArrayList<>();
+        ArrayList<Tag> list = new ArrayList<>();
 
-        String sql = "SELECT t.TAG_ID, t.TAG_NAME "
-                   + "FROM TAG t "
-                   + "JOIN SPOT_TAG st ON t.TAG_ID = st.TAG_ID "
-                   + "WHERE st.SPOT_ID = ? "
-                   + "ORDER BY t.TAG_ID";
+        String sql = "SELECT t.tag_id, t.tag_name "
+                   + "FROM tags t "
+                   + "JOIN spot_tags st ON t.tag_id = st.tag_id "
+                   + "WHERE st.spot_id = ? "
+                   + "ORDER BY t.tag_id";
 
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection cn = getConnection();
+             PreparedStatement st = cn.prepareStatement(sql)) {
 
-            ps.setInt(1, spotId);
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Tag tag = new Tag();
-                tag.setTagId(rs.getInt("TAG_ID"));
-                tag.setTagName(rs.getString("TAG_NAME"));
-                tagList.add(tag);
-            }
-
-            System.out.println("[TagDAO] 取得件数: " + tagList.size());
-
-        } catch (Exception e) {
-            System.err.println("[TagDAO] タグ取得中エラー");
-            throw new Exception("タグ情報の取得中にエラーが発生しました", e);
-        }
-
-        return tagList;
-    }
-
-
-    // ----------------------------------------------
-    // ② 全タグ一覧を取得（検索プルダウン用）
-    // ----------------------------------------------
-    /**
-     * 全タグ一覧を取得（検索画面のプルダウンなどで使用）
-     * @return タグ一覧
-     * @throws Exception
-     */
-    public List<Tag> findAllTags() throws Exception {
-
-        System.out.println("[TagDAO] 全タグ一覧取得開始");
-
-        List<Tag> tagList = new ArrayList<>();
-
-        String sql = "SELECT TAG_ID, TAG_NAME "
-                   + "FROM TAG "
-                   + "ORDER BY TAG_ID";
-
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            st.setInt(1, spotId);
+            ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
                 Tag tag = new Tag();
-                tag.setTagId(rs.getInt("TAG_ID"));
-                tag.setTagName(rs.getString("TAG_NAME"));
-                tagList.add(tag);
+                tag.setTagId(rs.getInt("tag_id"));
+                tag.setTagName(rs.getString("tag_name"));
+                list.add(tag);
             }
 
-            System.out.println("[TagDAO] 全タグ取得数: " + tagList.size());
+            System.out.println("[TagDAO] スポットタグ取得件数: " + list.size());
 
-        } catch (Exception e) {
-            System.err.println("[TagDAO] 全タグ一覧取得中にエラー");
-            throw new Exception("全タグ一覧取得中にエラーが発生しました", e);
+        } catch (SQLException e) {
+            System.err.println("[TagDAO] findTagsBySpotId() でエラー発生");
+            e.printStackTrace();
+            throw e;
         }
 
-        return tagList;
+        System.out.println("[TagDAO] findTagsBySpotId() 正常終了");
+        return list;
     }
 
+
+    /**
+     * 全タグ一覧を取得（検索プルダウン使用）
+     */
+    public ArrayList<Tag> findAllTags() throws Exception {
+
+        System.out.println("[TagDAO] findAllTags() 開始");
+
+        ArrayList<Tag> list = new ArrayList<>();
+
+        String sql = "SELECT tag_id, tag_name FROM tags ORDER BY tag_id";
+
+        try (Connection cn = getConnection();
+             PreparedStatement st = cn.prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+
+            while (rs.next()) {
+                Tag tag = new Tag();
+                tag.setTagId(rs.getInt("tag_id"));
+                tag.setTagName(rs.getString("tag_name"));
+                list.add(tag);
+            }
+
+            System.out.println("[TagDAO] 全タグ取得件数: " + list.size());
+
+        } catch (SQLException e) {
+            System.err.println("[TagDAO] findAllTags() でエラー発生");
+            e.printStackTrace();
+            throw e;
+        }
+
+        System.out.println("[TagDAO] findAllTags() 正常終了");
+        return list;
+    }
 }

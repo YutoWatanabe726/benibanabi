@@ -3,11 +3,14 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>現地移動手段</title>
-<link rel="stylesheet" href="../../common/style.css">
+<title>現地移動手段｜べにばナビ</title>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+<jsp:include page="../../common/header.jsp" />
+
 </head>
+
 <body>
-<header>アクセス情報</header>
+
 
 <div class="tab-container">
   <button class="tab" onclick="location.href='yamagata.jsp'">山形への行き方</button>
@@ -39,5 +42,6 @@
     </div>
   </div>
 </main>
+
 </body>
 </html>
