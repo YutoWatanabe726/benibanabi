@@ -25,8 +25,8 @@ public class TagDAO extends Dao {
         ArrayList<Tag> list = new ArrayList<>();
 
         String sql = "SELECT t.tag_id, t.tag_name "
-                   + "FROM tags t "
-                   + "JOIN spot_tags st ON t.tag_id = st.tag_id "
+                   + "FROM tag t "
+                   + "JOIN spot_tag st ON t.tag_id = st.tag_id "
                    + "WHERE st.spot_id = ? "
                    + "ORDER BY t.tag_id";
 
@@ -65,7 +65,7 @@ public class TagDAO extends Dao {
 
         ArrayList<Tag> list = new ArrayList<>();
 
-        String sql = "SELECT tag_id, tag_name FROM tags ORDER BY tag_id";
+        String sql = "SELECT tag_id, tag_name FROM tag ORDER BY tag_id";
 
         try (Connection cn = getConnection();
              PreparedStatement st = cn.prepareStatement(sql);
