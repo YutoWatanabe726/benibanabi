@@ -1,6 +1,77 @@
-/* ======================
-   HERO（紅花 × スライドショー）
-====================== */
+/* ===============================
+      グローバルデザイン
+================================= */
+body {
+  font-family: "Noto Sans JP", sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f5f7;
+  overflow-x: hidden;
+  color: #333;
+}
+
+/* ===============================
+      ヘッダー（左寄せ）
+================================= */
+.header {
+  width: 100%;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 40px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+}
+
+.header.shrink {
+  padding: 8px 32px;
+}
+
+.header .logo img {
+  height: 58px;
+  transition: 0.3s;
+}
+.header.shrink .logo img { height: 48px; }
+
+.header nav {
+  display: flex;
+  gap: 32px;
+}
+
+.header nav a {
+  text-decoration: none;
+  font-size: 1.06rem;
+  font-weight: 600;
+  color: #333;
+  padding-bottom: 6px;
+  position: relative;
+}
+
+.header nav a:hover { color: #d61e1e; }
+
+.header nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, #e02828, #ff5a5a);
+  transition: width 0.35s;
+}
+header nav a:hover::after { width: 100%; }
+
+
+/* ===============================
+      HERO（スライドショー）
+================================= */
 .hero {
   position: relative;
   width: 100%;
@@ -17,80 +88,85 @@
   top: 0;
   left: 0;
   opacity: 0;
-  transition: opacity 1.2s ease-in-out;
+  transition: opacity 1.3s ease-in-out;
 }
 
-.hero-slide.active {
-  opacity: 1;
-}
+.hero-slide.active { opacity: 1; }
 
-/* 色を戻す → 完全透明 */
 .hero-overlay {
   position: absolute;
   inset: 0;
   background: none;
 }
 
-
-/* テキスト */
+/* HEROテキスト */
 .hero-content {
   position: absolute;
   bottom: 18%;
   left: 8%;
-  color: #fff;
   z-index: 10;
+  color: #fff;
 }
 
 .hero-content h1 {
-  font-size: 3.1rem;
+  font-size: 3rem;
   font-weight: 900;
-  text-shadow: 0 0 20px rgba(0,0,0,0.5);
+  text-shadow: 0 0 16px rgba(0,0,0,0.6);
 }
 
 .hero-content p {
   font-size: 1.25rem;
-  margin-top: 12px;
-  opacity: 0.9;
 }
 
 .hero-btn {
   display: inline-block;
-  margin-top: 25px;
+  margin-top: 22px;
   padding: 14px 34px;
-  background: linear-gradient(90deg, #FFB35E, #D92929);
-  color: #fff;
-  border-radius: 50px;
   font-size: 1.2rem;
-  font-weight: 700;
+  color: #fff;
   text-decoration: none;
+  font-weight: 700;
+  border-radius: 50px;
+  background: linear-gradient(90deg, #FFB35E, #D92929);
   box-shadow: 0 10px 22px rgba(217,41,41,0.35);
   transition: 0.3s;
 }
-
 .hero-btn:hover {
   transform: translateY(-4px);
   box-shadow: 0 14px 28px rgba(217,41,41,0.48);
 }
 
-/* 花びらアニメーション */
-@keyframes petal {
-  0% { transform: translateY(-5%) rotate(0deg); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateY(115%) rotate(360deg); opacity: 0; }
+
+/* ===============================
+      花びら（季節で切替）
+================================= */
+@keyframes petalFall {
+  0%   { transform: translateY(-10%) rotate(0deg); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translateY(120vh) rotate(360deg); opacity: 0; }
 }
 
 .petal {
   position: absolute;
   top: -40px;
-  width: 26px;
-  opacity: 0.8;
-  animation: petal 8s linear infinite;
-  z-index: 11;
+  width: 32px;
+  height: 32px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  animation: petalFall linear infinite;
+  pointer-events: none;
+  z-index: 20;
 }
 
-/* ======================
-   セクションタイトル
-====================== */
+.spring { background-image: url('../images/petal_sakura.png'); }
+.summer { background-image: url('../images/petal_summer.png'); }
+.autumn { background-image: url('../images/petal_maple.png '); }
+.winter { background-image: url('../images/petal_snow.png'); }
+
+
+/* ===============================
+      セクションタイトル
+================================= */
 .section-title {
   font-size: 2rem;
   margin: 60px 0 25px;
@@ -98,21 +174,11 @@
   border-left: 8px solid #FF7A45;
   font-weight: 800;
   color: #333;
-  position: relative;
 }
 
-.section-title::before {
-  content: "✿";
-  position: absolute;
-  left: -32px;
-  top: -4px;
-  color: #FF7A45;
-  font-size: 1.5rem;
-}
-
-/* ======================
-   イベントカード
-====================== */
+/* ===============================
+      イベントカード
+================================= */
 .event-list {
   display: grid;
   gap: 25px;
@@ -133,18 +199,11 @@
   box-shadow: 0 12px 26px rgba(217,41,41,0.22);
 }
 
-.event-item h3 {
-  color: #D92929;
-  margin-bottom: 8px;
-}
+.event-item h3 { color: #D92929; }
 
-.event-item p {
-  color: #444;
-}
-
-/* ======================
-   トピックス
-====================== */
+/* ===============================
+      トピックス
+================================= */
 .topic-item {
   background: #fff;
   padding: 18px 16px;
@@ -160,14 +219,13 @@
   transform: translateX(6px);
 }
 
+.topic-meta {
+  font-size: 0.9rem;
+  color: #777;
+}
+
 .topic-title {
   font-size: 1.1rem;
   font-weight: 700;
   color: #333;
-}
-
-.topic-meta {
-  font-size: 0.9rem;
-  color: #777;
-  margin-bottom: 6px;
 }

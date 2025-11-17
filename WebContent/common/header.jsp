@@ -12,9 +12,9 @@
   padding: 18px 48px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;   /* ← 修正点 */
+  gap: 40px;                     /* ← 任意（メニューとロゴが詰まらないように） */
 
-  /* ガラス風背景 */
   background: rgba(255,255,255,0.55);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -25,22 +25,6 @@
   transition: 0.35s ease;
   border-bottom: 1px solid rgba(255,255,255,0.4);
   box-shadow: 0 4px 14px rgba(0,0,0,0.05);
-}
-
-/* ===== スクロール時に小さくなる ===== */
-.header.shrink {
-  padding: 8px 48px;
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 4px 18px rgba(0,0,0,0.1);
-}
-
-/* ===== ロゴ ===== */
-.header .logo img {
-  height: 60px;
-  transition: 0.3s ease;
-}
-.header.shrink .logo img {
-  height: 48px;
 }
 
 /* ===============================
