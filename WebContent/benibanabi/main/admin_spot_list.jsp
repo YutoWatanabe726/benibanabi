@@ -24,7 +24,7 @@
 <%
     try {
         SpotDAO dao = new SpotDAO();
-        List<Spot> spotList = dao.searchSpots(null, null, null); // 条件なしで全件取得
+        List<Spot> spotList = dao.searchSpots(null, null, null); // 全件取得
 
         if (spotList.isEmpty()) {
 %>
@@ -50,8 +50,8 @@
         %>
         <h3><%= sp.getSpotName() %></h3>
         <p>エリア: <%= sp.getArea() %></p>
-        <!-- 口コミを見るボタン -->
-        <a href="admin_reviews.jsp?spotId=<%= sp.getSpotId() %>">口コミを見る</a>
+        <!-- Action 経由で口コミ一覧に遷移 -->
+        <a href="<%= request.getContextPath() %>/benibanabi/main/AdminReviews.action?spotId=<%= sp.getSpotId() %>">口コミを見る</a>
     </div>
 <%
             }

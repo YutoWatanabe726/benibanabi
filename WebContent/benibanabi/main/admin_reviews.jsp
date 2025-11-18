@@ -1,8 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List" %>
 <%@ page import="bean.Reviews" %>
-<%@ page import="dao.ReviewsDAO" %>
-<%@ page import="dao.SpotDAO" %>
 <%@ page import="bean.Spot" %>
 <!DOCTYPE html>
 <html lang="ja">
@@ -12,7 +10,7 @@
 <style>
   body { font-family: "Noto Sans JP", sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 20px; }
   h1 { margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
   th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
   th { background-color: #eee; }
   .delete-btn { padding: 4px 8px; background-color: #cc0000; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
@@ -24,36 +22,38 @@
 <body>
 
 <%
-    String spotIdStr = request.getParameter("spotId");
-    if (spotIdStr == null || spotIdStr.isEmpty()) {
-%>
-<p>スポットが指定されていません。</p>
-<%
-    } else {
-        try {
-            int spotId = Integer.parseInt(spotIdStr);
-            SpotDAO spotDao = new SpotDAO();
-            Spot spot = spotDao.findById(spotId);
+    String error = (String) request.getAttribute("error");
+    Spot spot = (Spot) request.getAttribute("spot");
+    List<Reviews> reviews = (List<Reviews>) request.getAttribute("reviews");
 
-            if (spot == null) {
+    if (error != null) {
 %>
-<p>指定されたスポットは存在しません。</p>
+    <p><%= error %></p>
 <%
-            } else {
+        return;
+    }
+
+    if (spot == null) {
 %>
+    <p>スポットが見つかりません。</p>
+<%
+        return;
+    }
+%>
+
 <h1>「<%= spot.getSpotName() %>」の口コミ一覧</h1>
-<a href="admin_spot_list.jsp" class="back">← スポット一覧に戻る</a>
+<a href="<%= request.getContextPath() %>/benibanabi/main/admin_spot_list.jsp" class="back">← スポット一覧に戻る</a>
+
+
 
 <%
-                ReviewsDAO reviewDao = new ReviewsDAO();
-                List<Reviews> reviews = reviewDao.findBySpotId(spotId);
-
-                if (reviews.isEmpty()) {
+    if (reviews == null || reviews.isEmpty()) {
 %>
 <p>このスポットにはまだ口コミがありません。</p>
 <%
-                } else {
+    } else {
 %>
+
 <table>
     <thead>
         <tr>
@@ -65,34 +65,28 @@
     </thead>
     <tbody>
 <%
-                    for (Reviews rv : reviews) {
+        for (Reviews rv : reviews) {
 %>
         <tr>
             <td><%= rv.getReviewId() %></td>
             <td><%= rv.getReviewText() %></td>
             <td><%= rv.getReviewDate() %></td>
             <td>
-                <form method="post" action="AdminDeleteReviewAction" onsubmit="return confirm('本当に削除しますか？');">
+                <form method="post" action="<%= request.getContextPath() %>/benibanabi/main/AdminDeleteReview.action"
+                      onsubmit="return confirm('本当に削除しますか？');">
                     <input type="hidden" name="reviewId" value="<%= rv.getReviewId() %>">
-                    <input type="hidden" name="spotId" value="<%= spotId %>">
+                    <input type="hidden" name="spotId" value="<%= spot.getSpotId() %>">
                     <button type="submit" class="delete-btn">削除</button>
                 </form>
             </td>
         </tr>
 <%
-                    }
+        }
 %>
     </tbody>
 </table>
+
 <%
-                }
-            }
-        } catch (Exception e) {
-%>
-<p>口コミの取得中にエラーが発生しました: <%= e.getMessage() %></p>
-<%
-            e.printStackTrace();
-        }
     }
 %>
 
