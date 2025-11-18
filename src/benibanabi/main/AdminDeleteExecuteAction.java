@@ -13,22 +13,25 @@ public class AdminDeleteExecuteAction extends Action {
     @Override
     public void execute(HttpServletRequest req, HttpServletResponse res) throws Exception {
 
-        // ▼ セッション（ログイン中の管理者）
         HttpSession session = req.getSession();
-        Admin admin = (Admin) session.getAttribute("admin");
+        Admin currentAdmin = (Admin) session.getAttribute("admin");
 
-        // ▼ リクエストパラメータ（削除対象の管理者ID）
-        String id = req.getParameter("admin_id");
+        if (currentAdmin == null) {
+            req.setAttribute("errorMessage", "ログインしていません。");
+            req.getRequestDispatcher("login.jsp").forward(req, res);
+            return;
+        }
 
-        // ▼ DAO の準備
+        // 修正：Admin クラスの getter に合わせる
+        String adminId = currentAdmin.getId();
         AdminDAO adminDAO = new AdminDAO();
 
-        // ▼ IDが null でない場合のみ削除
-        if(id != null && !id.isEmpty()){
-            adminDAO.deleteAdmin(id);   // ← IDで削除する
+        try {
+            adminDAO.deleteAdmin(adminId);
+            session.invalidate(); // 自分のアカウント削除なのでセッション破棄
             req.getRequestDispatcher("admin_delete_done.jsp").forward(req, res);
-        } else {
-            // IDが無い場合 → エラー画面へ
+        } catch (Exception e) {
+            req.setAttribute("errorMessage", "削除処理でエラーが発生しました: " + e.getMessage());
             req.getRequestDispatcher("admin_delete.jsp").forward(req, res);
         }
     }

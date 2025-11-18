@@ -1,18 +1,18 @@
-<%-- 管理者削除完了JSP --%>
+<%-- 管理者ログアウトJSP --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <c:import url="/common/admin_base.jsp">
 	<c:param name="title">
-		新規作成
+		管理者ログアウト
 	</c:param>
 
 	<c:param name="content">
-    <div class="container mt-4">
-			<h2>新規作成登録完了</h2>
-			<div>
-				<p>登録が完了しました</p>
-				<a href="AdminLogin.action">管理者ログインへ</a>
+		<div id="wrap_box">
+			<h2>管理者ログアウト</h2>
+			<div id="wrap_box">
+				<p>ログアウトしました</p>
+				<a href="AdminLogin.action">ログイン</a>
 			</div>
 		</div>
 	</c:param>

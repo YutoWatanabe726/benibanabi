@@ -2,17 +2,21 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<c:import url="/common/base.jsp">
-    <c:param name="title">
-        管理者パスワード変更
-    </c:param>
+
+<c:import url="/common/admin_base.jsp">
+    <c:param name="title">管理者パスワード変更</c:param>
 
     <c:param name="content">
 
     <div class="container mt-4">
         <h2 class="mb-4">管理者パスワード変更</h2>
 
-        <form action="AdminPasswordUpdate.action" method="post" class="w-50">
+        <!-- エラーメッセージ -->
+        <c:if test="${not empty error}">
+            <div class="alert alert-danger">${error}</div>
+        </c:if>
+
+        <form action="AdminPasswordUpdateExecute.action" method="post" class="w-50">
 
             <!-- 現在のパスワード -->
             <div class="mb-3">
@@ -32,9 +36,8 @@
                 <input type="password" id="newPass2" name="newPass2" class="form-control" required>
             </div>
 
-            <!-- 送信ボタン -->
             <button type="submit" class="btn btn-primary">変更する</button>
-            <a href="Menu.action" class="btn btn-secondary">戻る</a>
+            <a href="admin_menu.jsp" class="btn btn-secondary">戻る</a>
 
         </form>
 

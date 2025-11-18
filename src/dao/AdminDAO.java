@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * 管理者DAO（最小限ログ）
+ * 管理者DAO（最小限）
  */
 public class AdminDAO extends Dao {
 
@@ -42,15 +42,18 @@ public class AdminDAO extends Dao {
     }
 
     // ----------------------------
-    // ログアウト（ログは不要）
+    // ログアウト
     // ----------------------------
     public boolean logout(String adminId) throws Exception {
         updateLoginStatus(adminId, false);
         return true;
     }
 
+    /**
+     * LAST_LOGIN を削除 → IS_LOGGED_IN のみ更新
+     */
     private void updateLoginStatus(String adminId, boolean loggedIn) throws Exception {
-        String sql = "UPDATE ADMIN SET IS_LOGGED_IN = ?, LAST_LOGIN = CURRENT_TIMESTAMP WHERE ADMIN_ID = ?";
+        String sql = "UPDATE ADMIN SET IS_LOGGED_IN = ? WHERE ADMIN_ID = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -151,7 +154,7 @@ public class AdminDAO extends Dao {
     }
 
     // ----------------------------
-    // 管理者存在チェック
+    // 存在チェック
     // ----------------------------
     private boolean existsAdmin(String adminId) throws Exception {
         String sql = "SELECT 1 FROM ADMIN WHERE ADMIN_ID = ?";

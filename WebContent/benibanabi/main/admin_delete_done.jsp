@@ -12,7 +12,8 @@
 			<h2>管理者アカウント削除</h2>
 			<div>
 				<p>削除が完了しました</p>
-				<a href="">管理者新規作成へ</a>
+				<a href="AdminCreate.action">管理者新規作成へ</a>
+				<a href="AdminLogin.action">管理者ログインへ</a>
 			</div>
 		</div>
 	</c:param>

@@ -1,93 +1,75 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<title>管理者ログイン</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<%-- 管理者ログインJSP --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<c:import url="/common/admin_base.jsp">
+	<c:param name="title">
+		管理者ログイン
+	</c:param>
 
-<style>
-  body {
-    font-family: "Noto Sans JP", sans-serif;
-    background: #f3f4f6;
-    margin: 0;
-    padding: 0;
-  }
-  .container {
-    width: 100%;
-    max-width: 420px;
-    margin: 80px auto;
-    padding: 24px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  label {
-    display: block;
-    margin-top: 15px;
-    font-size: 14px;
-    color: #444;
-  }
-  input[type="text"],
-  input[type="password"] {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-  }
-  .btn-login {
-    width: 100%;
-    margin-top: 20px;
-    background: #2563eb;
-    color: white;
-    padding: 12px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  .btn-login:hover {
-    background: #1e4db7;
-  }
-  .error {
-    color: #e11d48;
-    background: #ffe4e6;
-    padding: 8px;
-    border-radius: 5px;
-    margin-top: 10px;
-    text-align: center;
-  }
-</style>
-</head>
-<body>
+	<c:param name="scripts">
+		<script type="text/javascript">
+			$(function() {
+				// 「パスワードを表示」が変更された時の処理
+				$('#password-display').change(function() {
+					if ($(this).prop('checked')) {
+						// チェックが入っている場合
+						// パスワード入力欄をテキストにする
+						$('#password-input').attr('type', 'text');
+					} else {
+						// チェックが外れている場合
+						// パスワード入力欄をパスワードにする
+						$('#password-input').attr('type', 'password');
+					}
+				});
+			});
+		</script>
+	</c:param>
 
-<div class="container">
-  <h2>管理者ログイン</h2>
+	<c:param name="content">
+		<section class="w-75 text-center m-auto border pb-3">
+			<form action = "AdminLoginExecute.action" method="post">
+				<div id="wrap_box">
+					<h2 class="h3 mb-3 fw-norma bg-secondary bg-opacity-10 py-2">ログイン</h2>
+					<c:if test="${errors.size()>0}">
+						<div>
+							<ul>
+								<c:forEach var="error" items="${errors}">
+									<li>${error}</li>
+								</c:forEach>
+							</ul>
+						</div>
+					</c:if>
+					<div>
+						<!-- ＩＤ -->
+						<div class="form-floating mx-5">
+							<input class="form-control px-5 fs-5" autocomplete="off"
+								id="id-input" maxlength="20" name="id" placeholder="半角でご入力下さい"
+								style="ime-mode: disabled" type="text" value="${id}" required />
+							<label>ＩＤ</label>
+						</div>
+						<!-- パスワード -->
+						<div class="form-floating mx-5 mt-3">
+							<input class="form-control px-5 fs-5" autocomplete="off"
+								id="password-input" maxlength="20" name="password"
+								placeholder="20文字以内の半角英数字でご入力下さい" style="ime-mode: disabled"
+								type="password" required />
+							<label>パスワード</label>
+						</div>
+						<div class="form-check mt-3">
+							<label class="form-check-label" for="password-display">
+								<input class="form-check-input" id="password-display" name="chk_d_ps" type="checkbox" />
+								パスワードを表示
+							</label>
+						</div>
+					</div>
 
-  <!-- ログイン失敗時のエラー表示 -->
-  <c:if test="${not empty error}">
-      <div class="error">${error}</div>
-  </c:if>
-
-  <form action="AdminLogin.action" method="post">
-    <label for="adminId">管理者ID</label>
-    <input type="text" id="adminId" name="adminId" required>
-
-    <label for="password">パスワード</label>
-    <input type="password" id="password" name="password" required>
-
-    <button type="submit" class="btn-login">ログイン</button>
-
-    <a href="AdminCreate.action" class="menu-item">新規作成</a>
-  </form>
-</div>
-
-</body>
-</html>
+					<div class="mt-4">
+						<input class="w-25 btn btn-lg btn-primary" type="submit" name="login" value="ログイン"/>
+					</div>
+					<a href="AdminCreate.action" class="menu-item">新規作成</a>
+				</div>
+			</form>
+		</section>
+	</c:param>
+</c:import>
