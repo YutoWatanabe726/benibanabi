@@ -225,7 +225,7 @@
   // 季節別 花びら画像
   const petalImgs = {
     spring: "../images/petal_sakura.png",
-    summer: "../images/petal_summer.png",
+    summer: "../images/benibana.png",
     autumn: "../images/petal_maple.png",
     winter: "../images/petal_snow.png"
   };

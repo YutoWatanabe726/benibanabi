@@ -6,11 +6,9 @@
 <title>現地移動手段｜べにばナビ</title>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 <jsp:include page="../../common/header.jsp" />
-
 </head>
 
 <body>
-
 
 <div class="tab-container">
   <button class="tab" onclick="location.href='yamagata.jsp'">山形への行き方</button>
@@ -23,23 +21,37 @@
   <p>山形県内の主要な交通手段を紹介します。</p>
 
   <div class="souvenir-list">
-    <div class="souvenir-item">
-      <img src="../../images/NSX.jpg" alt="レンタカー">
-      <h3>🚗 レンタカー</h3>
-      <p>山形駅や空港で利用可能。主要観光地を巡るのに便利。</p>
-    </div>
 
-    <div class="souvenir-item">
-      <img src="../../images/train.png" alt="電車">
-      <h3>🚃 電車</h3>
-      <p>奥羽本線・仙山線などを利用し、主要都市を移動可能。</p>
-    </div>
+    <!-- レンタカー -->
+    <a href="https://rent.toyota.co.jp/"
+       target="_blank" class="link-card">
+      <div class="souvenir-item">
+        <img src="../../images/NSX.jpg" alt="レンタカー">
+        <h3>🚗 レンタカー</h3>
+        <p>山形駅や空港で利用可能。主要観光地を巡るのに便利。</p>
+      </div>
+    </a>
 
-    <div class="souvenir-item">
-      <img src="../../images/bus.jpg" alt="バス">
-      <h3>🚌 バス</h3>
-      <p>市街地や観光地を結ぶバス網が発達。山交バス・庄内交通が主要。</p>
-    </div>
+    <!-- 電車 -->
+    <a href="https://www.jreast.co.jp/area/yamagata/"
+       target="_blank" class="link-card">
+      <div class="souvenir-item">
+        <img src="../../images/train.png" alt="電車">
+        <h3>🚃 電車</h3>
+        <p>奥羽本線・仙山線などを利用し、主要都市を移動可能。</p>
+      </div>
+    </a>
+
+    <!-- バス -->
+    <a href="https://www.yamakobus.jp/"
+       target="_blank" class="link-card">
+      <div class="souvenir-item">
+        <img src="../../images/bus.jpg" alt="バス">
+        <h3>🚌 バス</h3>
+        <p>市街地や観光地を結ぶバス網が発達。山交バス・庄内交通が主要。</p>
+      </div>
+    </a>
+
   </div>
 </main>
 

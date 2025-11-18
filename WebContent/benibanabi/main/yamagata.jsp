@@ -24,29 +24,33 @@
 
   <div class="souvenir-list">
 
-    <div class="souvenir-item">
+    <!-- 飛行機 -->
+    <a href="https://www.yamagata-airport.co.jp/" target="_blank" class="souvenir-item link-card">
       <img src="../../images/airport.jpg" alt="山形空港">
       <h3>✈️ 飛行機</h3>
       <p>羽田空港 ⇔ 山形空港（約1時間）<br>空港から市街地まで車で約30分。</p>
-    </div>
+    </a>
 
-    <div class="souvenir-item">
+    <!-- 新幹線 -->
+    <a href="https://www.eki-net.com/" target="_blank" class="souvenir-item link-card">
       <img src="../../images/shinkansen.jpg" alt="山形新幹線">
       <h3>🚄 新幹線</h3>
       <p>東京 ⇔ 山形駅（つばさ号 約2時間30分）<br>乗り換えなしで快適なアクセス。</p>
-    </div>
+    </a>
 
-    <div class="souvenir-item">
+    <!-- 高速バス -->
+    <a href="https://www.kousokubus.net/" target="_blank" class="souvenir-item link-card">
       <img src="../../images/bus.jpg" alt="高速バス">
       <h3>🚌 高速バス</h3>
       <p>新宿 ⇔ 山形駅前（約6時間30分）<br>お得な料金で利用可能。夜行便もあり。</p>
-    </div>
+    </a>
 
-    <div class="souvenir-item">
+    <!-- 自家用車 -->
+    <a href="https://www.driveplaza.com/" target="_blank" class="souvenir-item link-card">
       <img src="../../images/car.jpg" alt="自家用車">
       <h3>🚗 自家用車</h3>
       <p>東北自動車道 → 山形自動車道で約5時間。<br>ドライブにも最適。</p>
-    </div>
+    </a>
 
   </div>
 </main>

@@ -66,8 +66,11 @@ body {
   background: linear-gradient(90deg, #e02828, #ff5a5a);
   transition: width 0.35s;
 }
-header nav a:hover::after { width: 100%; }
 
+/* ✔ 修正済み：ドットが抜けていた */
+.header nav a:hover::after {
+  width: 100%;
+}
 
 /* ===============================
       HERO（スライドショー）
@@ -99,7 +102,6 @@ header nav a:hover::after { width: 100%; }
   background: none;
 }
 
-/* HEROテキスト */
 .hero-content {
   position: absolute;
   bottom: 18%;
@@ -136,7 +138,6 @@ header nav a:hover::after { width: 100%; }
   box-shadow: 0 14px 28px rgba(217,41,41,0.48);
 }
 
-
 /* ===============================
       花びら（季節で切替）
 ================================= */
@@ -160,9 +161,8 @@ header nav a:hover::after { width: 100%; }
 
 .spring { background-image: url('../images/petal_sakura.png'); }
 .summer { background-image: url('../images/petal_summer.png'); }
-.autumn { background-image: url('../images/petal_maple.png '); }
+.autumn { background-image: url('../images/petal_maple.png'); }
 .winter { background-image: url('../images/petal_snow.png'); }
-
 
 /* ===============================
       セクションタイトル
@@ -230,7 +230,6 @@ header nav a:hover::after { width: 100%; }
   color: #333;
 }
 
-
 /* ===============================
       タブメニュー
 ================================= */
@@ -238,7 +237,7 @@ header nav a:hover::after { width: 100%; }
   display: flex;
   gap: 10px;
   padding: 20px 40px;
-  margin-top: 100px; /* ヘッダーの高さ分ずらす */
+  margin-top: 100px;
 }
 
 .tab {
@@ -254,9 +253,7 @@ header nav a:hover::after { width: 100%; }
   transition: 0.25s ease;
 }
 
-.tab:hover {
-  background: #ffe1d2;
-}
+.tab:hover { background: #ffe1d2; }
 
 .tab.active {
   background: linear-gradient(90deg, #FFB35E, #D92929);
@@ -284,7 +281,7 @@ main p {
 }
 
 /* ===============================
-      アクセス方法カード（流用：お土産カード）
+      アクセス方法カード
 ================================= */
 .souvenir-list {
   display: grid;
@@ -354,4 +351,16 @@ main p {
   }
 }
 
+/* ===============================
+      カードをリンク化する場合
+================================= */
+.link-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  border-radius: 18px;
+}
 
+.link-card:hover {
+  opacity: 0.9;
+}
