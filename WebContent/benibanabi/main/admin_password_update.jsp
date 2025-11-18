@@ -37,7 +37,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary">変更する</button>
-            <a href="Menu.action" class="btn btn-secondary">戻る</a>
+            <a href="admin_menu.jsp" class="btn btn-secondary">戻る</a>
 
         </form>
 

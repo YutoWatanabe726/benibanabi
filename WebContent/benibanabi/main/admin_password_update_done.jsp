@@ -12,8 +12,8 @@
 			<h2>管理者パスワード変更完了</h2>
 			<div>
 				<p>パスワードの変更が完了しました</p>
-				<a href="">管理者機能一覧へ</a>
-				<a href="">管理者ログインへ</a>
+				<a href="admin_menu.jsp">管理者機能一覧へ</a>
+				<a href="AdminLogin.action">管理者ログインへ</a>
 			</div>
 		</div>
 	</c:param>
