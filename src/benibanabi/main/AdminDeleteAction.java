@@ -12,19 +12,17 @@ public class AdminDeleteAction extends Action {
     @Override
     public void execute(HttpServletRequest req, HttpServletResponse res) throws Exception {
 
-        // ▼ セッション（ログイン中管理者情報）
         HttpSession session = req.getSession();
-        Admin admin = (Admin) session.getAttribute("admin");
+        Admin currentAdmin = (Admin) session.getAttribute("admin");
 
-        // ▼ リクエストパラメータ取得
-        String admin_id = req.getParameter("id");
-        String admin_password = req.getParameter("password");
+        if (currentAdmin == null) {
+            req.setAttribute("errorMessage", "ログインしていません。");
+            req.getRequestDispatcher("login.jsp").forward(req, res);
+            return;
+        }
 
-        // ▼ JSP で表示するためにセット
-        req.setAttribute("admin_id", admin_id);
-        req.setAttribute("admin_password", admin_password);
-
-        // ▼ 削除確認画面へ遷移
+        // 修正：Admin クラスの getter に合わせる
+        req.setAttribute("admin_id", currentAdmin.getId());
         req.getRequestDispatcher("admin_delete.jsp").forward(req, res);
     }
 }
