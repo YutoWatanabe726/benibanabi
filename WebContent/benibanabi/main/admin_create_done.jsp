@@ -12,7 +12,7 @@
 			<h2>新規作成登録完了</h2>
 			<div>
 				<p>登録が完了しました</p>
-				<a href="">管理者ログインへ</a>
+				<a href="AdminLogin.action">管理者ログインへ</a>
 			</div>
 		</div>
 	</c:param>

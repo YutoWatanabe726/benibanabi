@@ -11,7 +11,7 @@
 	<div class="container mt-4">
 		<h2 class="mb-4">新規作成</h2>
 
-		<form action="registerAction" method="post" class="form">
+		<form action="AdminCreateExecute.action" method="post" class="form">
 
 			<div class="mb-3">
 				<label for="name" class="form-label">管理者ID</label>
@@ -25,7 +25,7 @@
 
 			<div class="d-flex mt-4">
 				<button type="submit" class="btn btn-primary me-3">登録</button>
-				<a href="Menu.action" class="btn btn-secondary">戻る</a>
+				<a href="AdminLogin.action" class="btn btn-secondary">戻る</a>
 			</div>
 		</form>
 	</div>
