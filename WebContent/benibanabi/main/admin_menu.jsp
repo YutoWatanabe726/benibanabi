@@ -13,11 +13,12 @@
     <div class="container">
       <h1>管理者機能</h1>
 
-      <a href="AdminSpot.action" class="menu-item">観光スポットの登録・更新・削除</a>
-      <a href="admin_spot_list.jsp" class="menu-item">コメント管理</a>
-      <a href="AdminPasswordUpdate.action" class="menu-item">パスワード編集</a>
-      <a href="AdminDelete.action" class="menu-item">アカウント削除</a>
-      <a href="AdminLogout.action" class="menu-item">ログアウト</a>
+      <a href="AdminSpotSetting.action" class="menu-item">観光スポットの登録・更新・削除</a>
+	  <a href="${pageContext.request.contextPath}/benibanabi/main/AdminSpotList.action" class="menu-item">コメント管理</a>
+	  <a href="AdminPasswordUpdate.action" class="menu-item">パスワード編集</a>
+	  <a href="AdminDelete.action" class="menu-item">アカウント削除</a>
+	  <a href="AdminLogout.action" class="menu-item">ログアウト</a>
+
     </div>
 
     <script>
