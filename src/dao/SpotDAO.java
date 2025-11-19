@@ -58,10 +58,7 @@ public class SpotDAO extends Dao {
 
         sql.append("ORDER BY s.SPOT_NAME");
 
-        // --- SQLログ ---
         System.out.println("[DEBUG] SQL = " + sql.toString());
-
-        // --- パラメータログ（中身は出さない） ---
         System.out.println("[DEBUG] Params: "
                 + "keyword=" + keyword
                 + ", areaCount=" + (areaList != null ? areaList.size() : 0)
@@ -118,7 +115,6 @@ public class SpotDAO extends Dao {
         return list;
     }
 
-
     /**
      * 観光スポットIDで1件の詳細を取得
      */
@@ -165,5 +161,49 @@ public class SpotDAO extends Dao {
 
         System.out.println("[INFO] SpotDAO.findById: END");
         return null;
+    }
+
+    /**
+     * 観光スポットを全件取得
+     */
+    public List<Spot> findAll() throws Exception {
+
+        System.out.println("[INFO] SpotDAO.findAll: START");
+
+        List<Spot> list = new ArrayList<>();
+        String sql = "SELECT SPOT_ID, SPOT_NAME, AREA, DESCRIPTION, SPOT_PHOTO, LATITUDE, LONGITUDE, ADDRESS "
+                   + "FROM SPOT ORDER BY SPOT_NAME";
+
+        System.out.println("[DEBUG] SQL = " + sql);
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            int count = 0;
+            while (rs.next()) {
+                Spot spot = new Spot();
+                spot.setSpotId(rs.getInt("SPOT_ID"));
+                spot.setSpotName(rs.getString("SPOT_NAME"));
+                spot.setArea(rs.getString("AREA"));
+                spot.setDescription(rs.getString("DESCRIPTION"));
+                spot.setSpotPhoto(rs.getString("SPOT_PHOTO"));
+                spot.setLatitude(rs.getDouble("LATITUDE"));
+                spot.setLongitude(rs.getDouble("LONGITUDE"));
+                spot.setAddress(rs.getString("ADDRESS"));
+
+                list.add(spot);
+                count++;
+            }
+
+            System.out.println("[INFO] SpotDAO.findAll: 取得件数=" + count);
+
+        } catch (SQLException e) {
+            System.err.println("[ERROR] SpotDAO.findAll: SQL実行エラー");
+            throw new SQLException("観光スポット全件取得中にエラーが発生しました。", e);
+        }
+
+        System.out.println("[INFO] SpotDAO.findAll: END");
+        return list;
     }
 }
