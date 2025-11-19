@@ -42,7 +42,7 @@
 %>
 
 <h1>「<%= spot.getSpotName() %>」の口コミ一覧</h1>
-<a href="${pageContext.request.contextPath}/benibanabi/main/AdminSpotList.action">
+<a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action">
     ← スポット一覧に戻る
 </a>
 
