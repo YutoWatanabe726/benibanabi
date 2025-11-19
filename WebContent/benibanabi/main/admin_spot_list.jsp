@@ -7,6 +7,7 @@
 <head>
 <meta charset="UTF-8">
 <title>観光スポット一覧</title>
+
 <style>
   body { font-family: "Noto Sans JP", sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 20px; }
   .spot-container { display: flex; flex-wrap: wrap; gap: 20px; }
@@ -20,6 +21,7 @@
 </head>
 <body>
 <h1>観光スポット一覧</h1>
+<a href="<%= request.getContextPath() %>/benibanabi/main/admin_menu.jsp" class="back">← 管理メニューに戻る</a>
 
 <%
     try {
@@ -34,29 +36,18 @@
 %>
 <div class="spot-container">
 <%
-            for (Spot sp : spotList) {
+    for (Spot sp : spotList) {
 %>
     <div class="spot-card">
-        <%
-            if (sp.getSpotPhoto() != null && !sp.getSpotPhoto().isEmpty()) {
-        %>
-        <img src="<%= sp.getSpotPhoto() %>" alt="<%= sp.getSpotName() %>">
-        <%
-            } else {
-        %>
-        <img src="images/noimage.png" alt="No Image">
-        <%
-            }
-        %>
         <h3><%= sp.getSpotName() %></h3>
         <p>エリア: <%= sp.getArea() %></p>
-        <!-- Action 経由で口コミ一覧に遷移 -->
         <a href="<%= request.getContextPath() %>/benibanabi/main/AdminReviews.action?spotId=<%= sp.getSpotId() %>">口コミを見る</a>
     </div>
 <%
-            }
+    }
 %>
 </div>
+
 <%
         }
     } catch (Exception e) {
@@ -66,6 +57,8 @@
         e.printStackTrace();
     }
 %>
+
+<a href="<%= request.getContextPath() %>/benibanabi/main/admin_menu.jsp" class="back">← 管理メニューに戻る</a>
 
 </body>
 </html>

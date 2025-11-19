@@ -22,7 +22,7 @@ button:hover { background:#1e4fd6; }
 <body>
 <header>スタート地点設定</header>
 <main>
-<form id="startForm" action="courseAction" method="post">
+<form id="startForm" action="Course.action" method="post">
   <label for="courseTitle">コースタイトル</label>
   <input type="text" id="courseTitle" name="courseTitle" placeholder="例：山形名所巡りコース" required />
 
