@@ -13,21 +13,15 @@
 <!-- Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<style>
-/* 基本レイアウト */
-body { font-family: Arial, sans-serif; background:#f8f8f8; margin:0; padding:16px; }
-h3 { margin-bottom:16px; }
-.sidebar button { margin-bottom:6px; }
-.route-history { max-height:200px; overflow-y:auto; border-top:1px solid #ccc; padding-top:8px; }
-.modal-card { border:1px solid #ddd; padding:8px; margin:6px; cursor:pointer; position:relative; border-radius:6px; background:#fff; }
-.favorite { position:absolute; top:6px; right:6px; cursor:pointer; color:#ccc; user-select:none; }
-.favorite.active { color:gold; }
+<style> /* 基本レイアウト */ body { font-family: Arial, sans-serif; background:#f8f8f8; margin:0; padding:0px; } h3 { margin-bottom:16px; }
+.sidebar button { margin-bottom:6px; } .route-history { max-height:200px; overflow-y:auto; border-top:1px solid #ccc; padding-top:8px; } .modal-card { border:1px solid #ddd; padding:8px; margin:6px; cursor:pointer; position:relative; border-radius:6px; background:#fff; } .favorite { position:absolute; top:6px; right:6px; cursor:pointer; color:#ccc; user-select:none; } .favorite.active { color:gold; }
 #routesContainer .day-section { margin-bottom:20px; }
 .map-container { flex:1; height:400px; min-height:300px; }
-.route-item { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px dashed #eee; }
-.form-inline { display:flex; gap:8px; align-items:center; }
+.route-item { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px dashed #eee; } .form-inline { display:flex; gap:8px; align-items:center; }
 .small-muted { color:#666; font-size:0.9rem; }
 </style>
+
+
 </head>
 
 <body>
@@ -38,6 +32,7 @@ h3 { margin-bottom:16px; }
 <div class="container mb-3">
   <div class="row">
     <div class="col-md-8">
+
       <div><strong>コース：</strong><span id="courseTitle"><%= request.getAttribute("courseTitle") != null ? request.getAttribute("courseTitle") : "未設定" %></span></div>
       <div><strong>日数：</strong><span id="tripDaysDisplay"><%= request.getAttribute("tripDays") != null ? request.getAttribute("tripDays") : 1 %></span> 日</div>
       <div><strong>開始地点：</strong><span id="startPointDisplay"><%= request.getAttribute("startPoint") != null ? request.getAttribute("startPoint") : "山形駅" %></span>
@@ -52,7 +47,7 @@ h3 { margin-bottom:16px; }
 </div>
 
 <!-- ルートセクションをここに追加 -->
-<div id="routesContainer" class="container"></div>
+<div id="routesContainer" class="container" style="margin-left: unset; margin-right: unset; padding-left: unset; padding-right: unset;"></div>
 
 <!-- スポット選択モーダル -->
 <div id="spotModal" class="modal fade" tabindex="-1" aria-hidden="true">
@@ -228,16 +223,9 @@ function createDaySection(day, startLat = 38.2404, startLng = 140.3633, startNam
   const html = `
     <div class="day-section" id="\${sectionId}">
       <h5>Day \${day}</h5>
-      <div style="display:flex; gap:12px;">
-        <div id="\${sidebarId}" class="sidebar card p-2" style="width:350px;">
+      <div style="display:flex; width:100vw;">
+        <div id="\${sidebarId}" class="sidebar card p-2" style="width:30%;">
           <div class="route-history mt-3" id="routeHistoryDay\${day}"></div>
-          <label class="mt-2">移動手段</label>
-          <select class="form-select transportSelect mb-2">
-            <option>徒歩</option><option>車</option><option>電車</option>
-          </select>
-          <label class="mt-2">滞在時間（分）</label>
-          <input type="number" class="form-control stayTime" value="60"/>
-          <p class="mt-2 small-muted">予測所要時間: <span class="estimatedTime">0</span> 分</p>
           <button class="btn btn-primary w-100 mb-2 nextSpotBtn">次の地点へ</button>
           <button class="btn btn-warning w-100 mb-2 addMealBtn">食事スポット追加</button>
           <button class="btn btn-success w-100 mb-2 setGoalBtn">ゴール設定</button>
@@ -351,23 +339,63 @@ function addRouteHistory(dayIndex, name, lat, lng, type = "normal", existingCirc
 
 
 function renderRouteHistory(dayIndex) {
-  const list = routesByDay[dayIndex] || [];
-  let html = "";
-  list.forEach((item, i) => {
-    html += `
-      <div class="route-item" data-index="\${i}">
-        <div>
-          <div><strong>\${escapeHtml(item.name)}</strong></div>
-          <div class="small-muted">\${item.type}</div>
-        </div>
-        <div>
-          <button class="btn btn-sm btn-danger" onclick="removeRoute(\${dayIndex},\${i})">×</button>
-        </div>
-      </div>
-    `;
-  });
-  $(`#routeHistoryDay\${dayIndex+1}`).html(html);
-}
+	  const list = routesByDay[dayIndex] || [];
+	  let html = "";
+
+	  for (let i = 0; i < list.length; i++) {
+	    const item = list[i];
+	    const prev = i > 0 ? list[i-1] : null;
+
+	    // 移動手段・距離・所要時間
+	    let transportInfo = "";
+	    if (prev) {
+	      const dist = calcDistance(prev.lat, prev.lng, item.lat, item.lng).toFixed(1);
+	      const transport = item.transport || "徒歩";
+	      const speed = speedMap[transport] || 5;
+	      const timeMin = Math.round(dist / speed * 60);
+
+	      transportInfo = `
+	        <div class="small-muted">
+	          ↓ 移動手段:
+	          <select class="form-select form-select-sm transportSelect" data-index="\${i}" style="width:100px; display:inline-block;">
+	            <option \${transport==="徒歩"?"selected":""}>徒歩</option>
+	            <option \${transport==="車"?"selected":""}>車</option>
+	            <option \${transport==="電車"?"selected":""}>電車</option>
+	          </select>
+	          予測時間: <span class="estimatedTime">\${timeMin}</span>分 / 概算距離: \${dist}km
+	        </div>
+	      `;
+	    }
+
+	    // 滞在時間・メモ
+	    const stayTime = item.stayTime != null ? item.stayTime : 30;
+	    const memo = item.memo || "";
+
+	    html += `
+	    	<div class="route-item" data-index="\${i}"> <div> <strong>\${escapeHtml(item.name)}</strong> \${item.type === "start" ? "(スタート地点)" : item.type === "goal" ? "(ゴール地点)" : ""} <button class="btn btn-sm btn-danger removeBtn">×</button> </div> \${transportInfo} <div class="small-muted"> 滞在時間: <input type="number" class="stayTimeInput" value="\${stayTime}" data-index="\${i}" style="width:60px"/> 分 </div> <div> メモ: <input type="text" class="memoInput form-control form-control-sm" value="\${escapeHtml(memo)}" data-index="\${i}" /> </div> </div>
+	    	</div>
+	    `;
+	  }
+
+	  $(`#routeHistoryDay\${dayIndex+1}`).html(html);
+
+	  // 削除ボタンのイベント
+	  $(`#routeHistoryDay\${dayIndex+1} .removeBtn`).off("click").on("click", function() {
+	    const index = $(this).closest(".route-item").data("index");
+	    removeRoute(dayIndex, index);
+	  });
+
+	  // 移動手段変更時の反映
+	  $(`#routeHistoryDay\${dayIndex+1} .transportSelect`).off("change").on("change", function() {
+	    const idx = $(this).data("index");
+	    const val = $(this).val();
+	    if (list[idx]) {
+	      list[idx].transport = val;
+	      updateEstimatedTime(dayIndex);
+	    }
+	  });
+	}
+
 
 function removeRoute(dayIndex, index) {
 	  if (!routesByDay[dayIndex]) return;
@@ -539,57 +567,113 @@ $(document).on("click", ".addMealBtn", function () {
 	});
 
 $(document).on("click", ".setGoalBtn", function () {
+
 	  const daySection = $(this).closest(".day-section");
+
 	  const dayIndex = $(".day-section").index(daySection);
 
-	  // どの Day のゴール設定か保持
 	  window.currentGoalDayIndex = dayIndex;
 
-	  // モーダルを開くだけ（住所入力）
 	  const modalEl = document.getElementById('goalModal');
+
 	  const modal = new bootstrap.Modal(modalEl);
+
 	  modal.show();
+
 	});
-$("#goalAddressSubmitBtn").on("click", function () {
+
+	/* ゴール住所決定（検索機能統合版・シンプル表示） */
+
+	$("#goalAddressSubmitBtn").on("click", async function () {
+
 	  const address = $("#goalAddressInput").val().trim();
+
 	  if (!address) {
+
 	    alert("住所を入力してください");
+
 	    return;
+
 	  }
 
 	  const dayIndex = window.currentGoalDayIndex;
+
 	  if (dayIndex == null) return;
 
-	  // モーダル閉じる
+	  // モーダルを閉じる
+
 	  const modalEl = document.getElementById('goalModal');
+
 	  const modal = bootstrap.Modal.getInstance(modalEl);
-	  modal.hide();
 
-	  // 住所 → 緯度経度
-	  geocodeAddressNominatim(address)
-	    .then(res => {
-	      const lat = parseFloat(res.lat);
-	      const lng = parseFloat(res.lon);
+	  if (modal) {
 
-	      // マップにゴール地点マーカーを追加
-	      addRouteHistory(dayIndex, address, lat, lng, "goal");
+	    modal.hide();
 
-	      // マップをその地点に移動
+	  }
+
+	  try {
+
+	    const url = `https://nominatim.openstreetmap.org/search?format=json&q=\${encodeURIComponent(address)}&addressdetails=1`;
+
+	    const res = await fetch(url);
+
+	    const data = await res.json();
+
+	    if (!Array.isArray(data) || data.length === 0) {
+
+	      alert("住所が見つかりませんでした。入力を確認してください。");
+
+	      return;
+
+	    }
+
+	    const result = data[0];
+
+	    const lat = parseFloat(result.lat);
+
+	    const lng = parseFloat(result.lon);
+
+	    // 住所オブジェクトをきれいに整形（日本語のまま）
+
+	    const formattedAddress = formatAddress(result.address) || address;
+
+	    // ゴールを履歴に追加
+
+	    addRouteHistory(dayIndex, formattedAddress, lat, lng, "goal");
+
+	    // ゴール地点へマップ移動
+
+	    if (mapsByDay[dayIndex] && mapsByDay[dayIndex].map) {
+
 	      mapsByDay[dayIndex].map.setView([lat, lng], 14);
 
-	      // 次の日（Day +1）作成処理は既存のままでOK
-	      if (dayCount < tripDays) {
-	        createDaySection(dayCount + 1, lat, lng, address);
-	        alert("ゴールを設定しました。次の日のスタート地点として登録されました。");
-	      } else {
-	        alert("ゴール設定しました。これ以上の日程はありません。");
-	      }
-	    })
-	    .catch(err => {
-	      console.error("ジオコーディング失敗", err);
-	      alert("住所の座標を取得できませんでした。住所を確認してください。");
-	    });
+	    }
+
+	    // 残り日数があれば次の日を作成
+
+	    if (dayCount < tripDays) {
+
+	      createDaySection(dayCount + 1, lat, lng, formattedAddress);
+
+	      alert("ゴールを設定しました。次の日のスタート地点として登録されました。");
+
+	    } else {
+
+	      alert("ゴールを設定しました。これ以上の日程はありません。");
+
+	    }
+
+	  } catch (err) {
+
+	    console.error("ゴール検索エラー:", err);
+
+	    alert("住所の検索中にエラーが発生しました。");
+
+	  }
+
 	});
+
 
 
 $("#confirmRouteBtn").on("click", function () {
@@ -617,6 +701,31 @@ function loadAllSpots() {
 	spotModalEl.addEventListener('show.bs.modal', function () {
 	  loadAllSpots();
 	});
+
+function formatAddress(addr) {
+
+		  if (!addr) return "";
+
+		  const parts = [];
+
+		  if (addr.state) parts.push(addr.state);
+
+		  if (addr.city || addr.town || addr.municipality)
+
+		    parts.push(addr.city || addr.town || addr.municipality);
+
+		  if (addr.suburb || addr.neighbourhood)
+
+		    parts.push(addr.suburb || addr.neighbourhood);
+
+		  if (addr.road) parts.push(addr.road);
+
+		  if (addr.house_number) parts.push(addr.house_number);
+
+		  return parts.join("");
+
+		}
+
 
 /* ------------------------
    ユーティリティ
