@@ -193,7 +193,7 @@ function saveFavsToCookie(favs) {
    - 完全無料、キー不要
    - rate limiting に注意（ここでは単発使用を想定）
    ------------------------ */
-function geocodeAddressNominatim(address) {
+ function geocodeAddressNominatim(address) {
   return new Promise((resolve, reject) => {
     if (!address || address.trim() === "") {
       reject("住所が空です");
@@ -230,9 +230,6 @@ function createDaySection(day, startLat = 38.2404, startLng = 140.3633, startNam
       <h5>Day \${day}</h5>
       <div style="display:flex; gap:12px;">
         <div id="\${sidebarId}" class="sidebar card p-2" style="width:350px;">
-          <button class="btn btn-primary w-100 mb-2 nextSpotBtn">次の地点へ</button>
-          <button class="btn btn-warning w-100 mb-2 addMealBtn">食事スポット追加</button>
-          <button class="btn btn-success w-100 mb-2 setGoalBtn">ゴール設定</button>
           <div class="route-history mt-3" id="routeHistoryDay\${day}"></div>
           <label class="mt-2">移動手段</label>
           <select class="form-select transportSelect mb-2">
@@ -241,7 +238,10 @@ function createDaySection(day, startLat = 38.2404, startLng = 140.3633, startNam
           <label class="mt-2">滞在時間（分）</label>
           <input type="number" class="form-control stayTime" value="60"/>
           <p class="mt-2 small-muted">予測所要時間: <span class="estimatedTime">0</span> 分</p>
-        </div>
+          <button class="btn btn-primary w-100 mb-2 nextSpotBtn">次の地点へ</button>
+          <button class="btn btn-warning w-100 mb-2 addMealBtn">食事スポット追加</button>
+          <button class="btn btn-success w-100 mb-2 setGoalBtn">ゴール設定</button>
+          </div>
         <div id="\${mapId}" class="map-container card"></div>
       </div>
     </div>
