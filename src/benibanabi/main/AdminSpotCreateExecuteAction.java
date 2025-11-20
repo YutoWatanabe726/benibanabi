@@ -1,6 +1,12 @@
 package benibanabi.main;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,8 +16,11 @@ import org.apache.tomcat.util.http.fileupload.FileItem;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import bean.Spot;
+import bean.Tag;
 import dao.SpotAdminDAO;
 import tool.Action;
 
@@ -20,7 +29,6 @@ public class AdminSpotCreateExecuteAction extends Action {
     @Override
     public void execute(HttpServletRequest req, HttpServletResponse res) throws Exception {
 
-        // multipart/form-data チェック
         if (!ServletFileUpload.isMultipartContent(req)) {
             req.setAttribute("error", "不正なフォーム送信です。");
             req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
@@ -29,79 +37,125 @@ public class AdminSpotCreateExecuteAction extends Action {
 
         req.setCharacterEncoding("UTF-8");
 
-        // 入力値格納用
         String spotName = null;
         String description = null;
+        String district = null;
         String city = null;
-        String spotPhoto = null;
+        String address = null;
+        String photoFileName = null;
+        List<Tag> tagList = new ArrayList<>();
 
-        // ファイルアップロード準備
         DiskFileItemFactory factory = new DiskFileItemFactory();
         ServletFileUpload upload = new ServletFileUpload(factory);
-
         List<FileItem> items = upload.parseRequest(new ServletRequestContext(req));
 
-        for (FileItem item : items) {
+        String uploadDir = req.getServletContext().getRealPath("/upload/spot_img");
+        File uploadFolder = new File(uploadDir);
+        if (!uploadFolder.exists()) uploadFolder.mkdirs();
 
+        for (FileItem item : items) {
             if (item.isFormField()) {
+                String value = item.getString("UTF-8");
                 switch (item.getFieldName()) {
-                    case "spotName":
-                        spotName = item.getString("UTF-8");
-                        break;
-                    case "description":
-                        description = item.getString("UTF-8");
-                        break;
-                    case "city":
-                        city = item.getString("UTF-8");
+                    case "spotName": spotName = value; break;
+                    case "description": description = value; break;
+                    case "district": district = value; break;
+                    case "city": city = value; break;
+                    case "address": address = value; break;
+                    case "tags":
+                        if (value != null && !value.isEmpty()) {
+                            Tag t = new Tag();
+                            t.setTagId(Integer.parseInt(value));
+                            tagList.add(t);
+                        }
                         break;
                 }
-
             } else {
-                // ファイルフォーム
                 if (item.getSize() > 0) {
-                    spotPhoto = System.currentTimeMillis() + "_" + item.getName();
-
-                    String uploadPath = req.getServletContext().getRealPath("/upload_spot");
-                    File dir = new File(uploadPath);
-                    if (!dir.exists()) {
-                        dir.mkdirs();
-                    }
-
-                    item.write(new File(dir, spotPhoto));
+                    photoFileName = System.currentTimeMillis() + "_" + new File(item.getName()).getName();
+                    item.write(new File(uploadFolder, photoFileName));
                 }
             }
         }
 
-        // 必須チェック
+        // バリデーション
         if (spotName == null || spotName.isEmpty()) {
             req.setAttribute("error", "観光スポット名は必須です。");
             req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
             return;
         }
+
         if (city == null || city.isEmpty()) {
             req.setAttribute("error", "市町村は必須です。");
             req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
             return;
         }
 
-        // Spot Bean にセット（area は空、city のみ登録）
         Spot spot = new Spot();
         spot.setSpotName(spotName);
         spot.setDescription(description);
-        spot.setArea(city);  // 市町村名のみセット
-        spot.setSpotPhoto(spotPhoto);
+        spot.setArea(city);
+        spot.setAddress(address);
 
-        // DAO 登録（タグは未指定なので null）
-        SpotAdminDAO dao = new SpotAdminDAO();
-        boolean result = dao.insertSpotWithTags(spot, null);
+        // -----------------------------
+        // Community Geocoder で緯度経度を取得
+        // -----------------------------
+        double[] latlng = getLatLngFromCommunityGeocoder("山形県", city, address);
+        spot.setLatitude(latlng[0]);
+        spot.setLongitude(latlng[1]);
 
-        if (!result) {
-            req.setAttribute("error", "登録に失敗しました。");
-            req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
-            return;
+        if (photoFileName != null) {
+            spot.setSpotPhoto("/benibanabi/images/" + photoFileName);
         }
 
-        // 完了画面へ
+        SpotAdminDAO dao = new SpotAdminDAO();
+        dao.insertSpotWithTags(spot, tagList);
+
         req.getRequestDispatcher("admin_spot_create_done.jsp").forward(req, res);
+    }
+
+    // -----------------------------
+    // Community Geocoder で住所から緯度経度を取得
+    // -----------------------------
+    private double[] getLatLngFromCommunityGeocoder(String prefecture, String city, String address) {
+        double[] latlng = new double[]{38.2554, 140.3396}; // デフォルト：山形駅
+        try {
+            StringBuilder fullAddress = new StringBuilder();
+            if (prefecture != null && !prefecture.trim().isEmpty()) fullAddress.append(prefecture.trim()).append(" ");
+            if (city != null && !city.trim().isEmpty()) fullAddress.append(city.trim()).append(" ");
+            if (address != null && !address.trim().isEmpty()) fullAddress.append(address.trim());
+
+            String encodedAddress = URLEncoder.encode(fullAddress.toString(), "UTF-8");
+            String urlStr = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates"
+                          + "?SingleLine=" + encodedAddress
+                          + "&f=pjson";
+
+            System.out.println("debug: Community Geocoder URL > " + urlStr);
+
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+            reader.close();
+
+            JSONObject json = new JSONObject(sb.toString());
+            JSONArray candidates = json.getJSONArray("candidates");
+            if (candidates.length() > 0) {
+                JSONObject location = candidates.getJSONObject(0).getJSONObject("location");
+                latlng[0] = location.getDouble("y"); // 緯度
+                latlng[1] = location.getDouble("x"); // 経度
+            } else {
+                System.out.println("debug: 住所から緯度経度が取得できませんでした。");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("debug: 緯度=" + latlng[0] + ", 経度=" + latlng[1]);
+        return latlng;
     }
 }

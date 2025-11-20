@@ -32,3 +32,7 @@ public class AdminReviewsSpotListAction extends Action {
         req.getRequestDispatcher("admin_reviews_spot_list.jsp").forward(req, res);
     }
 }
+
+
+
+
