@@ -364,3 +364,12 @@ main p {
 .link-card:hover {
   opacity: 0.9;
 }
+
+
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;    /* ←中央寄せ */
+  padding: 40px 20px;
+}
+

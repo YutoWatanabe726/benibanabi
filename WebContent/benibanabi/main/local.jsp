@@ -23,7 +23,7 @@
   <div class="souvenir-list">
 
     <!-- レンタカー -->
-    <a href="https://rent.toyota.co.jp/"
+    <a href="http://localhost:8080/benibanabi/benibanabi/main/reservation.jsp"
        target="_blank" class="link-card">
       <div class="souvenir-item">
         <img src="../../images/NSX.jpg" alt="レンタカー">
@@ -33,7 +33,7 @@
     </a>
 
     <!-- 電車 -->
-    <a href="https://www.jreast.co.jp/area/yamagata/"
+    <a href="https://www.navitime.co.jp/diagram/area/06/"
        target="_blank" class="link-card">
       <div class="souvenir-item">
         <img src="../../images/train.png" alt="電車">

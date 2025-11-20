@@ -16,9 +16,10 @@
   <jsp:include page="/common/header.jsp" />
 
   <!-- 各ページの中身 -->
-  <main>
-    ${param.content}
+  <main class="page-container">
+  ${param.content}
   </main>
+
 
   <!-- フッター読込 -->
   <jsp:include page="/common/footer.jsp" />
