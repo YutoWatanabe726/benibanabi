@@ -1,40 +1,43 @@
-/* css/admin_menu.css */
+/* ページ全体中央寄せ */
+.menu-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* コンテンツ本体 */
 .container {
-  background-color: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  width: 600px;
-  padding: 40px;
-  text-align: center;
+    width: 600px;
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 h1 {
-  color: #1f2937;
-  margin-bottom: 30px;
-  font-size: 1.8rem;
-  border-bottom: 2px solid #040913;
-  display: inline-block;
-  padding-bottom: 8px;
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 30px;
 }
 
+/* メニューリンク */
 .menu-item {
-  background-color: #030710;
-  color: white;
-  padding: 15px 20px;
-  margin: 12px 0;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
-  text-decoration: none;
-  display: block;
+    display: block;
+    width: 100%;
+    padding: 16px 0;
+    margin-bottom: 20px;
+
+    background: #02050A;
+    color: #fff;
+    text-decoration: none;
+    font-size: 20px;
+    text-align: center;
+    border-radius: 10px;
+
+    transition: 0.2s;
 }
 
 .menu-item:hover {
-  background-color: #040814;
-  transform: scale(1.03);
-}
-
-.menu-item.active {
-  background-color: #05060a;
+    opacity: 0.85;
+    transform: translateY(-2px);
 }
