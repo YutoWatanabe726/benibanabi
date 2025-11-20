@@ -26,3 +26,23 @@
 
 </body>
 </html>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const targets = document.querySelectorAll('.fade-up, .fade-left, .fade-right, .fade-zoom');
+  const options = { threshold: 0.15 };
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('show');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, options);
+
+  targets.forEach(el => observer.observe(el));
+});
+</script>
