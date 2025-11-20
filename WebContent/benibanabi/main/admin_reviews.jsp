@@ -7,17 +7,9 @@
 <head>
 <meta charset="UTF-8">
 <title>管理者用口コミ一覧</title>
-<style>
-  body { font-family: "Noto Sans JP", sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 20px; }
-  h1 { margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-  th { background-color: #eee; }
-  .delete-btn { padding: 4px 8px; background-color: #cc0000; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-  .delete-btn:hover { background-color: #990000; }
-  a.back { display: inline-block; margin-bottom: 20px; color: #0066cc; text-decoration: none; }
-  a.back:hover { text-decoration: underline; }
-</style>
+
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_reviews.css">
+
 </head>
 <body>
 
@@ -42,7 +34,8 @@
 %>
 
 <h1>「<%= spot.getSpotName() %>」の口コミ一覧</h1>
-<a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action">
+
+<a class="back" href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action">
     ← スポット一覧に戻る
 </a>
 
