@@ -315,155 +315,243 @@
       <main>
         <!-- 春 -->
         <section id="spring" class="season-content active fade-up">
-          <h2 class="fade-left">🌸 春の名産品</h2>
-          <p class="lead fade-left">桜と共に楽しみたい、山形の春の味覚。</p>
-          <div class="souvenir-list">
-            <div class="souvenir-item fade-up">
-              <img src="../../images/sakuranbo.jpg" alt="さくらんぼ">
-              <h3>🍒 さくらんぼ（佐藤錦）</h3>
-              <p>山形を代表する果物。甘みと酸味のバランスが絶妙。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.1s">
-              <img src="../../images/sansai.jpg" alt="山菜">
-              <h3>🌱 春の山菜セット</h3>
-              <p>こごみ・わらび・たらの芽など、春山の恵みがぎゅっと。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.2s">
-              <img src="../../images/dashi.jpg" alt="だし">
-              <h3>🥢 山形のだし</h3>
-              <p>刻んだ野菜を醤油で和えた郷土料理。ご飯にも冷奴にも合う。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.3s">
-              <img src="../../images/ukogi.jpg" alt="うこぎご飯">
-              <h3>🍚 うこぎご飯の素</h3>
-              <p>米沢藩ゆかりの食材。独特の風味がクセになる。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.4s">
-              <img src="../../images/yamadera_manju.jpg" alt="山寺まんじゅう">
-              <h3>🍡 山寺まんじゅう</h3>
-              <p>山寺参拝のお土産として人気の素朴な甘さの和菓子。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.5s">
-              <img src="../../images/atsumikabu.jpg" alt="あつみかぶ漬け">
-              <h3>🥬 あつみかぶ漬け</h3>
-              <p>鮮やかな赤色とシャキッとした食感が楽しい漬物。</p>
-            </div>
-          </div>
-        </section>
+
+  <h2 class="fade-left">🌸 春の名産品</h2>
+  <p class="lead fade-left">桜と共に楽しみたい、山形の春の味覚。</p>
+
+  <div class="souvenir-list">
+
+    <a href="https://www.yamagata-bussan.co.jp/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/sakuranbo.jpg" alt="さくらんぼ">
+        <h3>🍒 さくらんぼ（佐藤錦）</h3>
+        <p>山形を代表する果物。甘みと酸味のバランスが絶妙。</p>
+      </div>
+    </a>
+
+    <a href="https://www.dewaya.com/season/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/山菜.jpg" alt="山菜">
+        <h3>🌱 春の山菜セット</h3>
+        <p>こごみ・わらび・たらの芽など、春山の恵みがぎゅっと。</p>
+      </div>
+    </a>
+
+    <a href="https://www.yamagatabussan.com/oishii-yamagata/products/detail/104" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/山形のだし.jpg" alt="だし">
+        <h3>🥢 山形のだし</h3>
+        <p>刻んだ野菜を醤油で和えた郷土料理。ご飯にも冷奴にも合う。</p>
+      </div>
+    </a>
+
+    <a href="https://www.yonezawa-kankou-navi.com/souvenir/dentoyasai.html" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/ウコギ.jpg" alt="うこぎご飯">
+        <h3>🍚 うこぎご飯の素</h3>
+        <p>米沢藩ゆかりの食材。独特の風味がクセになる。</p>
+      </div>
+    </a>
+
+    <a href="https://tabelog.com/yamagata/A0601/A060101/6000821/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/山寺饅頭.jpg" alt="山寺まんじゅう">
+        <h3>🍡 山寺まんじゅう</h3>
+        <p>山寺参拝のお土産として人気の素朴な甘さの和菓子。</p>
+      </div>
+    </a>
+
+    <a href="https://mokkedano.net/feature/atsumikabu/top" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/あつみかぶずけ.jpg" alt="あつみかぶ漬け">
+        <h3>🥬 あつみかぶ漬け</h3>
+        <p>鮮やかな赤色とシャキッとした食感が楽しい漬物。</p>
+      </div>
+    </a>
+
+  </div>
+</section>
+
 
         <!-- 夏 -->
         <section id="summer" class="season-content fade-up">
-          <h2 class="fade-left">🌻 夏の名産品</h2>
-          <p class="lead fade-left">暑い夏を乗り切る、瑞々しくて力強い味わい。</p>
-          <div class="souvenir-list">
-            <div class="souvenir-item fade-up">
-              <img src="../../images/suika.jpg" alt="尾花沢スイカ">
-              <h3>🍉 尾花沢スイカ</h3>
-              <p>糖度の高さで有名な夏の王様。シャリっと爽快。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.1s">
-              <img src="../../images/dadacha.jpg" alt="だだちゃ豆">
-              <h3>🫘 だだちゃ豆</h3>
-              <p>庄内地方のブランド枝豆。香りと甘みが段違い。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.2s">
-              <img src="../../images/momo.jpg" alt="桃">
-              <h3>🍑 山形の桃</h3>
-              <p>ジューシーでとろける甘さ。夏の贈り物にも人気。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.3s">
-              <img src="../../images/tomato.jpg" alt="完熟トマト">
-              <h3>🍅 完熟トマトジュース</h3>
-              <p>山形産トマトをギュッと搾った濃厚な1本。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.4s">
-              <img src="../../images/hiyashi_ramen.jpg" alt="冷やしラーメン">
-              <h3>🍜 冷やしラーメン（お土産用）</h3>
-              <p>山形発祥の冷たいラーメンを自宅でも楽しめるセット。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.5s">
-              <img src="../../images/melon.jpg" alt="メロン">
-              <h3>🍈 庄内メロン</h3>
-              <p>香り高く上品な甘さの夏のフルーツ。</p>
-            </div>
-          </div>
-        </section>
+
+  <h2 class="fade-left">🌻 夏の名産品</h2>
+  <p class="lead fade-left">暑い夏を乗り切る、瑞々しくて力強い味わい。</p>
+
+  <div class="souvenir-list">
+
+    <a href="https://www.kiyokawaya.com/p/search?keyword=%E3%81%99%E3%81%84%E3%81%8B" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/すいか.jpg" alt="尾花沢スイカ">
+        <h3>🍉 尾花沢スイカ</h3>
+        <p>糖度の高さで有名な夏の王様。シャリっと爽快。</p>
+      </div>
+    </a>
+
+    <a href="https://www.kiyokawaya.com/c/gr7/gr2" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/だだちゃ豆.jpg" alt="だだちゃ豆">
+        <h3>🫘 だだちゃ豆</h3>
+        <p>庄内地方のブランド枝豆。香りと甘みが段違い。</p>
+      </div>
+    </a>
+
+    <a href="https://www.kiyokawaya.com/c/gr7/gr372" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/桃.jpg" alt="桃">
+        <h3>🍑 山形の桃</h3>
+        <p>ジューシーでとろける甘さ。夏の贈り物にも人気。</p>
+      </div>
+    </a>
+
+    <a href="https://yamagata.chokuso-keikaku.jp/s0078/0078-001/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/トマトジュース.jpg" alt="完熟トマト">
+        <h3>🍅 完熟トマトジュース</h3>
+        <p>山形産トマトを搾った濃厚な1本。</p>
+      </div>
+    </a>
+
+    <a href="https://www.yakitoriyuuki.com/ramen.php" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/冷やしラーメン.jpg" alt="冷やしラーメン">
+        <h3>🍜 冷やしラーメン（お土産用）</h3>
+        <p>山形発祥の冷たいラーメンを自宅でも。</p>
+      </div>
+    </a>
+
+    <a href="https://www.kiyokawaya.com/c/gr7/gr341" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/メロン.jpg" alt="メロン">
+        <h3>🍈 庄内メロン</h3>
+        <p>香り高く上品な甘さの夏のフルーツ。</p>
+      </div>
+    </a>
+
+  </div>
+</section>
+
 
         <!-- 秋 -->
-        <section id="autumn" class="season-content fade-up">
-          <h2 class="fade-left">🍁 秋の名産品</h2>
-          <p class="lead fade-left">“実りの秋”を全身で味わえる、山形の食卓。</p>
-          <div class="souvenir-list">
-            <div class="souvenir-item fade-up">
-              <img src="../../images/lafrance.jpg" alt="ラ・フランス">
-              <h3>🍐 ラ・フランス</h3>
-              <p>とろける食感と芳醇な香り。秋の人気No.1フルーツ。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.1s">
-              <img src="../../images/apple.jpg" alt="りんご">
-              <h3>🍎 りんご</h3>
-              <p>酸味と甘みのバランスが良い山形産りんご。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.2s">
-              <img src="../../images/shinmai.jpg" alt="新米">
-              <h3>🍚 新米（つや姫・はえぬき）</h3>
-              <p>炊き立ての香りとツヤがたまらないブランド米。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.3s">
-              <img src="../../images/kinoko.jpg" alt="きのこ">
-              <h3>🍄 きのこセット</h3>
-              <p>なめこ・舞茸・しめじなど、秋の山の恵みを詰め合わせ。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.4s">
-              <img src="../../images/imo_ni_pack.jpg" alt="芋煮セット">
-              <h3>🍲 芋煮セット</h3>
-              <p>里芋・牛肉・こんにゃくが揃った山形の秋定番。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.5s">
-              <img src="../../images/grape.jpg" alt="ぶどう">
-              <h3>🍇 デラウェア・ぶどう</h3>
-              <p>小粒でも濃厚な甘さが魅力のぶどう。</p>
-            </div>
-          </div>
-        </section>
+       <section id="autumn" class="season-content fade-up">
+
+  <h2 class="fade-left">🍁 秋の名産品</h2>
+  <p class="lead fade-left">実りの秋をそのまま味わえる山形の恵み。</p>
+
+  <div class="souvenir-list">
+
+    <a href="https://www.kiyokawaya.com/c/gr7/gr195/gr3" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/ラ・フランス.jpg" alt="ラ・フランス">
+        <h3>🍐 ラ・フランス</h3>
+        <p>とろける食感と芳醇な香り。秋の女王。</p>
+      </div>
+    </a>
+
+    <a href="https://www.tabechoku.com/products/categories/200003?srsltid=AfmBOopGhv18Y-vUrQiyR7Y-hJjJuT5WZ-TkyGC8RKerxwmv7U490IBc" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/リンゴ.jpg" alt="りんご">
+        <h3>🍎 りんご</h3>
+        <p>甘み・酸味のバランスが良い山形りんご。</p>
+      </div>
+    </a>
+
+    <a href="https://www.tuyahime.jp/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/つや姫.jpg" alt="新米">
+        <h3>🍚 新米（つや姫／はえぬき）</h3>
+        <p>炊き立ての香りとツヤが格別のブランド米。</p>
+      </div>
+    </a>
+
+    <a href="https://www.dewaya.com/season/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/きのこ.jpg" alt="きのこ">
+        <h3>🍄 きのこセット</h3>
+        <p>秋の山の恵みを詰め合わせた人気セット。</p>
+      </div>
+    </a>
+
+    <a href="https://imoni-fes.jp/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/芋煮会.jpg" alt="芋煮セット">
+        <h3>🍲 芋煮セット</h3>
+        <p>山形の秋の風物詩をそのまま持ち帰れる。</p>
+      </div>
+    </a>
+
+    <a href="https://www.ja-town.com/shop/f/f1060_ssp/?filtercode2=S02-006" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/ぶどう.jpg" alt="ぶどう">
+        <h3>🍇 デラウェア・ぶどう</h3>
+        <p>濃厚な甘さが魅力。</p>
+      </div>
+    </a>
+
+  </div>
+</section>
+
 
         <!-- 冬 -->
-        <section id="winter" class="season-content fade-up">
-          <h2 class="fade-left">❄ 冬の名産品</h2>
-          <p class="lead fade-left">雪国だからこそ生まれた、あたたかくて深い味。</p>
-          <div class="souvenir-list">
-            <div class="souvenir-item fade-up">
-              <img src="../../images/sake.jpg" alt="地酒">
-              <h3>🍶 冬造りの地酒</h3>
-              <p>寒造りならではのキレとコクを楽しめる日本酒。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.1s">
-              <img src="../../images/imo.png" alt="いも煮">
-              <h3>🍲 いも煮</h3>
-              <p>山形の冬のソウルフード。レトルトやセットも人気。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.2s">
-              <img src="../../images/soba.jpg" alt="そば">
-              <h3>🥢 板そば・田舎そば</h3>
-              <p>コシの強い太めのそばで味わう、山形の冬の味。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.3s">
-              <img src="../../images/oshinko.jpg" alt="おしんこ">
-              <h3>🥬 冬の漬物</h3>
-              <p>雪の下でじっくり漬け込んだ、味わい深い漬物。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.4s">
-              <img src="../../images/hoshigaki.jpg" alt="干し柿">
-              <h3>🍊 干し柿</h3>
-              <p>ぎゅっと凝縮された甘さが特徴の冬のおやつ。</p>
-            </div>
-            <div class="souvenir-item fade-up" style="transition-delay:0.5s">
-              <img src="../../images/ginzan_pudding.jpg" alt="銀山温泉プリン">
-              <h3>🍮 銀山温泉プリン</h3>
-              <p>レトロな温泉街発の人気スイーツ。</p>
-            </div>
-          </div>
-        </section>
+       <section id="winter" class="season-content fade-up">
+
+  <h2 class="fade-left">❄ 冬の名産品</h2>
+  <p class="lead fade-left">雪国ならではの温かい味覚。</p>
+
+  <div class="souvenir-list">
+
+    <a href="https://yamagata-sake.or.jp/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/sake.jpg" alt="地酒">
+        <h3>🍶 冬造りの地酒</h3>
+        <p>キレとコクが際立つ寒造りの日本酒。</p>
+      </div>
+    </a>
+
+    <a href="https://shop.yamagata-nokyo.or.jp/products/list?category_id=9" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/imo.png" alt="いも煮">
+        <h3>🍲 いも煮</h3>
+        <p>山形の定番。冬にも嬉しい味。</p>
+      </div>
+    </a>
+
+    <a href="https://www.benibanasoba.co.jp/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/soba.jpg" alt="そば">
+        <h3>🥢 板そば・田舎そば</h3>
+        <p>太くコシの強い山形そば。</p>
+      </div>
+    </a>
+
+    <a href="https://www.yamagata-bussan.co.jp/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/oshinko.jpg" alt="おしんこ">
+        <h3>🥬 冬の漬物</h3>
+        <p>雪の下で熟成された深い味。</p>
+      </div>
+    </a>
+
+    <a href="https://yamagata-nokyo.jp/special/hoshigaki/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/hoshigaki.jpg" alt="干し柿">
+        <h3>🍊 干し柿</h3>
+        <p>濃縮された甘さが魅力。</p>
+      </div>
+    </a>
+
+    <a href="https://www.ginzanonsen.jp/" target="_blank" class="link-card">
+      <div class="souvenir-item fade-up">
+        <img src="../../images/ginzan_pudding.jpg" alt="銀山温泉プリン">
+        <h3>🍮 銀山温泉プリン</h3>
+        <p>名物スイーツとして人気。</p>
+      </div>
+    </a>
+
+  </div>
+</section>
+
       </main>
     </div>
   </div>
