@@ -49,9 +49,9 @@ public class AdminSpotCreateExecuteAction extends Action {
         ServletFileUpload upload = new ServletFileUpload(factory);
         List<FileItem> items = upload.parseRequest(new ServletRequestContext(req));
 
-        String uploadDir = req.getServletContext().getRealPath("/upload/spot_img");
-        File uploadFolder = new File(uploadDir);
-        if (!uploadFolder.exists()) uploadFolder.mkdirs();
+        String uploadDirPath = req.getServletContext().getRealPath("/spotimages");
+        File uploadDir = new File(uploadDirPath);
+        if (!uploadDir.exists()) uploadDir.mkdirs();
 
         for (FileItem item : items) {
             if (item.isFormField()) {
@@ -70,11 +70,18 @@ public class AdminSpotCreateExecuteAction extends Action {
                         }
                         break;
                 }
-            } else {
-                if (item.getSize() > 0) {
-                    photoFileName = System.currentTimeMillis() + "_" + new File(item.getName()).getName();
-                    item.write(new File(uploadFolder, photoFileName));
+            } else if (item.getFieldName().equals("spotPhoto") && item.getSize() > 0) {
+                String fileName = new File(item.getName()).getName();
+                String ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+                if (!ext.equals("jpg") && !ext.equals("jpeg") && !ext.equals("png") && !ext.equals("gif")) {
+                    req.setAttribute("error", "画像ファイルのみアップロード可能です。");
+                    req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
+                    return;
                 }
+                // タイムスタンプ付けて重複回避
+                photoFileName = System.currentTimeMillis() + "_" + fileName;
+                File saveFile = new File(uploadDir, photoFileName);
+                item.write(saveFile);
             }
         }
 
@@ -84,7 +91,6 @@ public class AdminSpotCreateExecuteAction extends Action {
             req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
             return;
         }
-
         if (city == null || city.isEmpty()) {
             req.setAttribute("error", "市町村は必須です。");
             req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
@@ -96,42 +102,27 @@ public class AdminSpotCreateExecuteAction extends Action {
         spot.setDescription(description);
         spot.setArea(city);
         spot.setAddress(address);
+        if (photoFileName != null) spot.setSpotPhoto("/spotimages/" + photoFileName);
 
-        // -----------------------------
-        // Community Geocoder で緯度経度を取得
-        // -----------------------------
+        // 緯度経度取得
         double[] latlng = getLatLngFromCommunityGeocoder("山形県", city, address);
         spot.setLatitude(latlng[0]);
         spot.setLongitude(latlng[1]);
 
-        if (photoFileName != null) {
-            spot.setSpotPhoto("/benibanabi/images/" + photoFileName);
-        }
-
+        // DB登録
         SpotAdminDAO dao = new SpotAdminDAO();
         dao.insertSpotWithTags(spot, tagList);
 
         req.getRequestDispatcher("admin_spot_create_done.jsp").forward(req, res);
     }
 
-    // -----------------------------
-    // Community Geocoder で住所から緯度経度を取得
-    // -----------------------------
     private double[] getLatLngFromCommunityGeocoder(String prefecture, String city, String address) {
-        double[] latlng = new double[]{38.2554, 140.3396}; // デフォルト：山形駅
+        double[] latlng = new double[]{38.2554, 140.3396};
         try {
-            StringBuilder fullAddress = new StringBuilder();
-            if (prefecture != null && !prefecture.trim().isEmpty()) fullAddress.append(prefecture.trim()).append(" ");
-            if (city != null && !city.trim().isEmpty()) fullAddress.append(city.trim()).append(" ");
-            if (address != null && !address.trim().isEmpty()) fullAddress.append(address.trim());
-
-            String encodedAddress = URLEncoder.encode(fullAddress.toString(), "UTF-8");
+            String fullAddr = (prefecture + " " + city + " " + address).trim();
             String urlStr = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates"
-                          + "?SingleLine=" + encodedAddress
+                          + "?SingleLine=" + URLEncoder.encode(fullAddr, "UTF-8")
                           + "&f=pjson";
-
-            System.out.println("debug: Community Geocoder URL > " + urlStr);
-
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -145,17 +136,13 @@ public class AdminSpotCreateExecuteAction extends Action {
             JSONObject json = new JSONObject(sb.toString());
             JSONArray candidates = json.getJSONArray("candidates");
             if (candidates.length() > 0) {
-                JSONObject location = candidates.getJSONObject(0).getJSONObject("location");
-                latlng[0] = location.getDouble("y"); // 緯度
-                latlng[1] = location.getDouble("x"); // 経度
-            } else {
-                System.out.println("debug: 住所から緯度経度が取得できませんでした。");
+                JSONObject loc = candidates.getJSONObject(0).getJSONObject("location");
+                latlng[0] = loc.getDouble("y");
+                latlng[1] = loc.getDouble("x");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("debug: 緯度=" + latlng[0] + ", 経度=" + latlng[1]);
         return latlng;
     }
 }

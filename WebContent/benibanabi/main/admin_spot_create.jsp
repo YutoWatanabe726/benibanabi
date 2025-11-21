@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <c:import url="/common/admin_base.jsp">
     <c:param name="title">観光スポット新規作成</c:param>
@@ -13,29 +13,29 @@
             <div class="alert alert-danger">${error}</div>
         </c:if>
 
-        <form action="AdminSpotCreateExecute.action"
-              method="post"
-              enctype="multipart/form-data"
-              class="form">
+        <form action="AdminSpotCreateExecute.action" method="post" enctype="multipart/form-data" class="form">
 
+            <!-- 観光スポット名 -->
             <div class="mb-3">
                 <label class="form-label">観光スポット名（必須）</label>
-                <input type="text" name="spotName" class="form-control" required>
+                <input type="text" name="spotName" class="form-control" required placeholder="例:○○温泉">
             </div>
 
+            <!-- 説明 -->
             <div class="mb-3">
-                <label class="form-label">説明</label>
+                <label class="form-label">観光スポット説明</label>
                 <textarea name="description" class="form-control" rows="4"></textarea>
             </div>
 
+            <!-- 写真アップロード -->
             <div class="mb-3">
-                <label class="form-label">写真アップロード</label>
+                <label class="form-label">観光スポット写真</label>
                 <input type="file" name="spotPhoto" accept="image/*" class="form-control">
             </div>
 
-            <!-- ★ 画面上表示のみ（DB保存なし） -->
+            <!-- エリア（地区） -->
             <div class="mb-3">
-                <label class="form-label">エリア（地区）</label>
+                <label class="form-label">地区（必須）</label>
                 <select name="district" id="areaSelect" class="form-control" required>
                     <option value="">選択してください</option>
                     <option value="庄内地区">庄内地区</option>
@@ -45,7 +45,7 @@
                 </select>
             </div>
 
-            <!-- ★ DB に保存する市町村 -->
+            <!-- 市町村（エリア連動） -->
             <div class="mb-3">
                 <label class="form-label">市町村（必須）</label>
                 <select name="city" id="citySelect" class="form-control" required>
@@ -53,18 +53,20 @@
                 </select>
             </div>
 
+            <!-- 住所 -->
             <div class="mb-3">
-                <label class="form-label">住所（任意）</label>
-                <input type="text" name="address" class="form-control">
+                <label class="form-label">住所(番地以降)(必須)</label>
+                <input type="text" name="address" class="form-control" required placeholder="例：○○町0-00-00">
             </div>
 
+            <!-- タグ（複数チェックボックス） -->
             <div class="mb-3">
                 <label class="form-label">タグ（複数選択可）</label><br>
                 <c:forEach var="tag" items="${tagList}">
-                    <label>
-                        <input type="checkbox" name="tags" value="${tag.tagId}">
+                    <label class="form-check-label me-3">
+                        <input type="checkbox" name="tags" value="${tag.tagId}" class="form-check-input">
                         ${tag.tagName}
-                    </label><br>
+                    </label>
                 </c:forEach>
             </div>
 
@@ -74,6 +76,7 @@
         </form>
     </div>
 
+    <!-- JS：エリア選択に応じて市町村を切り替える -->
     <script type="text/javascript">
         const areaCities = {
             "庄内地区": ["鶴岡市","酒田市","庄内町","遊佐町","三川町"],
