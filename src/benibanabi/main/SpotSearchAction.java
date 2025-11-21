@@ -1,8 +1,10 @@
 package benibanabi.main;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -12,9 +14,6 @@ import dao.SpotDAO;
 import dao.TagDAO;
 import tool.Action;
 
-/**
- * 観光スポット一覧の検索実行を行うアクション（検索ボタン押下時）
- */
 public class SpotSearchAction extends Action {
 
     @Override
@@ -22,40 +21,77 @@ public class SpotSearchAction extends Action {
 
         req.setCharacterEncoding("UTF-8");
 
-        // --- パラメータ取得 ---
+        // -----------------------------
+        // 1. パラメータ取得
+        // -----------------------------
         String keyword = req.getParameter("keyword");
-        String selectedArea = req.getParameter("area");
+        if (keyword == null) keyword = "";
 
-        // タグ（複数選択）
-        String[] tags = req.getParameterValues("tag");
+        String[] areaValues = req.getParameterValues("area");
+        List<String> areaList = areaValues != null
+                ? new ArrayList<>(Arrays.asList(areaValues))
+                : new ArrayList<>();
 
-        List<String> tagList = new ArrayList<>();
-        if (tags != null) {
-            for (String t : tags) tagList.add(t);
+        String[] tagValues = req.getParameterValues("tag");
+        List<String> tagList = tagValues != null
+                ? new ArrayList<>(Arrays.asList(tagValues))
+                : new ArrayList<>();
+
+        boolean isFavoriteOnly = "on".equals(req.getParameter("favoriteOnly"));
+
+        // -----------------------------
+        // 2. Cookie からお気に入りID取得
+        // -----------------------------
+        List<String> favoriteIds = new ArrayList<>();
+        Cookie[] cookies = req.getCookies();
+
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if ("favoriteIds".equals(c.getName())
+                        && c.getValue() != null
+                        && !c.getValue().isEmpty()) {
+
+                    // ★ URLデコード（重要）
+                    String decoded = java.net.URLDecoder.decode(c.getValue(), "UTF-8");
+
+                    // カンマで分割
+                    favoriteIds.addAll(Arrays.asList(decoded.split(",")));
+                }
+            }
         }
 
-        // エリアもリストで扱う（SpotDAO に合わせるため）
-        List<String> areaList = new ArrayList<>();
-        if (selectedArea != null && !selectedArea.isEmpty()) {
-            areaList.add(selectedArea);
+        // -----------------------------
+        // 3. DAO による検索
+        // -----------------------------
+        SpotDAO dao = new SpotDAO();
+        List<Spot> spotList = dao.searchSpots(keyword, areaList, tagList);
+
+        // -----------------------------
+        // 4. お気に入りのみ表示
+        // -----------------------------
+        if (isFavoriteOnly) {
+            spotList.removeIf(s -> !favoriteIds.contains(String.valueOf(s.getSpotId())));
         }
 
-        // --- DAO 呼び出し ---
-        SpotDAO sDao = new SpotDAO();
-        List<Spot> spotList = sDao.searchSpots(keyword, areaList, tagList);
+        // -----------------------------
+        // 5. タグ一覧取得
+        // -----------------------------
+        TagDAO tagDao = new TagDAO();
+        ArrayList<Tag> tagAllList = tagDao.findAllTags();
 
-        TagDAO tDao = new TagDAO();
-        ArrayList<Tag> tagAllList = tDao.findAllTags();
-
-        // --- JSP に渡す ---
+        // -----------------------------
+        // 6. JSP へ渡す
+        // -----------------------------
         req.setAttribute("spotList", spotList);
         req.setAttribute("tagAllList", tagAllList);
-
-        req.setAttribute("keyword", keyword != null ? keyword : "");
-        req.setAttribute("selectedArea", selectedArea != null ? selectedArea : "");
+        req.setAttribute("keyword", keyword);
+        req.setAttribute("selectedAreas", areaList);
         req.setAttribute("selectedTags", tagList);
+        req.setAttribute("favoriteOnly", isFavoriteOnly ? "on" : null);
 
-        // --- フォワード ---
-        req.getRequestDispatcher("spot_list.jsp").forward(req, res);
+        // -----------------------------
+        // 7. JSP へフォワード
+        // -----------------------------
+        req.getRequestDispatcher("/benibanabi/main/spot_list.jsp").forward(req, res);
     }
 }

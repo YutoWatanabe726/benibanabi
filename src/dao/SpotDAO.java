@@ -17,7 +17,7 @@ import bean.Spot;
 public class SpotDAO extends Dao {
 
     /**
-     * 条件に応じて観光スポット一覧を取得する
+     * 条件に応じて観光スポット一覧を取得する（タグ検索は OR 条件）
      */
     public List<Spot> searchSpots(String keyword, List<String> areaList, List<String> tagList) throws Exception {
 
@@ -25,7 +25,7 @@ public class SpotDAO extends Dao {
 
         List<Spot> list = new ArrayList<>();
 
-        // --- 重複排除 ---
+        // --- タグ重複排除 ---
         if (tagList != null && !tagList.isEmpty()) {
             tagList = new ArrayList<>(new HashSet<>(tagList));
         }
@@ -36,31 +36,33 @@ public class SpotDAO extends Dao {
         sql.append("s.SPOT_PHOTO, s.LATITUDE, s.LONGITUDE, s.ADDRESS ");
         sql.append("FROM SPOT s WHERE 1=1 ");
 
+        // キーワード（名前 or 説明）
         if (keyword != null && !keyword.isEmpty()) {
             sql.append("AND (s.SPOT_NAME LIKE ? OR s.DESCRIPTION LIKE ?) ");
         }
 
+        // エリア OR 条件
         if (areaList != null && !areaList.isEmpty()) {
             sql.append("AND s.AREA IN (");
             sql.append(String.join(",", Collections.nCopies(areaList.size(), "?")));
             sql.append(") ");
         }
 
+        // タグ OR 条件（修正版）
         if (tagList != null && !tagList.isEmpty()) {
-            for (int i = 0; i < tagList.size(); i++) {
-                sql.append("AND EXISTS (");
-                sql.append(" SELECT 1 FROM SPOT_TAG st ");
-                sql.append(" JOIN TAG t ON st.TAG_ID = t.TAG_ID ");
-                sql.append(" WHERE st.SPOT_ID = s.SPOT_ID AND t.TAG_NAME = ? ");
-                sql.append(") ");
-            }
+            sql.append("AND s.SPOT_ID IN ( ");
+            sql.append("  SELECT st.SPOT_ID FROM SPOT_TAG st ");
+            sql.append("  JOIN TAG t ON st.TAG_ID = t.TAG_ID ");
+            sql.append("  WHERE t.TAG_NAME IN (");
+            sql.append(String.join(",", Collections.nCopies(tagList.size(), "?")));
+            sql.append(") ");
+            sql.append(") ");
         }
 
         sql.append("ORDER BY s.SPOT_NAME");
 
         System.out.println("[DEBUG] SQL = " + sql.toString());
-        System.out.println("[DEBUG] Params: "
-                + "keyword=" + keyword
+        System.out.println("[DEBUG] Params: keyword=" + keyword
                 + ", areaCount=" + (areaList != null ? areaList.size() : 0)
                 + ", tagCount=" + (tagList != null ? tagList.size() : 0));
 
@@ -69,17 +71,20 @@ public class SpotDAO extends Dao {
 
             int idx = 1;
 
+            // キーワード
             if (keyword != null && !keyword.isEmpty()) {
                 ps.setString(idx++, "%" + keyword + "%");
                 ps.setString(idx++, "%" + keyword + "%");
             }
 
+            // エリア
             if (areaList != null && !areaList.isEmpty()) {
                 for (String area : areaList) {
                     ps.setString(idx++, area);
                 }
             }
 
+            // タグ（OR 条件）
             if (tagList != null && !tagList.isEmpty()) {
                 for (String tag : tagList) {
                     ps.setString(idx++, tag);
@@ -116,7 +121,7 @@ public class SpotDAO extends Dao {
     }
 
     /**
-     * 観光スポットIDで1件の詳細を取得
+     * 観光スポットIDで1件取得
      */
     public Spot findById(int spotId) throws Exception {
 
@@ -148,7 +153,6 @@ public class SpotDAO extends Dao {
 
                 System.out.println("[INFO] SpotDAO.findById: Hit spotId=" + spotId);
                 System.out.println("[INFO] SpotDAO.findById: END");
-
                 return spot;
             } else {
                 System.out.println("[WARN] SpotDAO.findById: データなし spotId=" + spotId);
@@ -171,8 +175,10 @@ public class SpotDAO extends Dao {
         System.out.println("[INFO] SpotDAO.findAll: START");
 
         List<Spot> list = new ArrayList<>();
-        String sql = "SELECT SPOT_ID, SPOT_NAME, AREA, DESCRIPTION, SPOT_PHOTO, LATITUDE, LONGITUDE, ADDRESS "
-                   + "FROM SPOT ORDER BY SPOT_NAME";
+        String sql =
+            "SELECT SPOT_ID, SPOT_NAME, AREA, DESCRIPTION, SPOT_PHOTO, "
+          + "LATITUDE, LONGITUDE, ADDRESS "
+          + "FROM SPOT ORDER BY SPOT_NAME";
 
         System.out.println("[DEBUG] SQL = " + sql);
 
