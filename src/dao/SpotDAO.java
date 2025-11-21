@@ -212,4 +212,21 @@ public class SpotDAO extends Dao {
         System.out.println("[INFO] SpotDAO.findAll: END");
         return list;
     }
+
+    public List<String> getAllAreas() throws Exception {
+        List<String> areas = new ArrayList<>();
+        String sql = "SELECT DISTINCT AREA FROM SPOT ORDER BY AREA"; // 重複削除＋ソート
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while(rs.next()) {
+                String area = rs.getString("AREA");
+                if(area != null && !area.isEmpty()) {
+                    areas.add(area);
+                }
+            }
+        }
+        return areas;
+    }
 }
