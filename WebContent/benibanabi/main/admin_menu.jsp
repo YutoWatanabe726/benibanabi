@@ -13,6 +13,8 @@
       <h1>管理者機能</h1>
 
       <a href="AdminSpotSetting.action" class="menu-item">観光スポットの登録・更新・削除</a>
+      <a href="AdminTopic.action" class="menu-item">トピックの追加、編集</a>
+      <a href="AdminSouvenir.action" class="menu-item">特産品の追加、編集</a>
 	  <a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action" class="menu-item">コメント管理</a>
 	  <a href="AdminPasswordUpdate.action" class="menu-item">パスワード編集</a>
 	  <a href="AdminDelete.action" class="menu-item">アカウント削除</a>
