@@ -509,33 +509,27 @@
       </div>
     </a>
 
-    <a href="https://shop.yamagata-nokyo.or.jp/products/list?category_id=9" target="_blank" class="link-card">
-      <div class="souvenir-item fade-up">
-        <img src="../../images/imo.png" alt="いも煮">
-        <h3>🍲 いも煮</h3>
-        <p>山形の定番。冬にも嬉しい味。</p>
-      </div>
-    </a>
 
-    <a href="https://www.benibanasoba.co.jp/" target="_blank" class="link-card">
+
+    <a href="https://www.tendodays.com/blog/kanchu-hikinukisoba/" target="_blank" class="link-card">
       <div class="souvenir-item fade-up">
-        <img src="../../images/soba.jpg" alt="そば">
+        <img src="../../images/そば.jpg" alt="そば">
         <h3>🥢 板そば・田舎そば</h3>
-        <p>太くコシの強い山形そば。</p>
+        <p>太くコシの強い山形そば。天童で冬しか食べられない寒中挽き抜きそば</p>
       </div>
     </a>
 
-    <a href="https://www.yamagata-bussan.co.jp/" target="_blank" class="link-card">
+    <a href="https://www.kiyokawaya.com/c/gr13/gr86/gr12" target="_blank" class="link-card">
       <div class="souvenir-item fade-up">
-        <img src="../../images/oshinko.jpg" alt="おしんこ">
+        <img src="../../images/つけもの.jpg" alt="おしんこ">
         <h3>🥬 冬の漬物</h3>
         <p>雪の下で熟成された深い味。</p>
       </div>
     </a>
 
-    <a href="https://yamagata-nokyo.jp/special/hoshigaki/" target="_blank" class="link-card">
+    <a href="https://www.kiyokawaya.com/c/gr5/gr62/FA116" target="_blank" class="link-card">
       <div class="souvenir-item fade-up">
-        <img src="../../images/hoshigaki.jpg" alt="干し柿">
+        <img src="../../images/かき.jpg" alt="干し柿">
         <h3>🍊 干し柿</h3>
         <p>濃縮された甘さが魅力。</p>
       </div>
@@ -543,7 +537,7 @@
 
     <a href="https://www.ginzanonsen.jp/" target="_blank" class="link-card">
       <div class="souvenir-item fade-up">
-        <img src="../../images/ginzan_pudding.jpg" alt="銀山温泉プリン">
+        <img src="../../images/プリン.jpg" alt="銀山温泉プリン">
         <h3>🍮 銀山温泉プリン</h3>
         <p>名物スイーツとして人気。</p>
       </div>
