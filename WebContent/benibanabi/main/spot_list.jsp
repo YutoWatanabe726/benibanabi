@@ -4,10 +4,13 @@
 <%@ page import="bean.Tag" %>
 
 <%
+    // ================================
+    // request 属性を安全に受け取る
+    // ================================
     List<Spot> spotList = (List<Spot>) request.getAttribute("spotList");
     if (spotList == null) spotList = new ArrayList<>();
 
-    ArrayList<Tag> tagAllList = (ArrayList<Tag>) request.getAttribute("tagAllList");
+    List<Tag> tagAllList = (List<Tag>) request.getAttribute("tagAllList");
     if (tagAllList == null) tagAllList = new ArrayList<>();
 
     String keyword = (String) request.getAttribute("keyword");
@@ -18,6 +21,9 @@
 
     List<String> selectedTags = (List<String>) request.getAttribute("selectedTags");
     if (selectedTags == null) selectedTags = new ArrayList<>();
+
+    String favoriteOnly = (String) request.getAttribute("favoriteOnly");
+    boolean favoriteFlag = "on".equals(favoriteOnly);
 %>
 
 <!DOCTYPE html>
@@ -25,187 +31,236 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>観光スポット一覧｜やまがたへの旅</title>
+<title>観光スポット一覧</title>
 
 <style>
-body { font-family:"Noto Sans JP", sans-serif; margin:0; padding:0; background:#f2f2f2; }
-header { background:#2563eb; color:#fff; padding:15px 20px; font-size:22px; text-align:center; }
+body { font-family:"Noto Sans JP",sans-serif; margin:0; padding:0; background:#fafafa; }
 
-#searchMenu { background:#fff; padding:15px; border-bottom:1px solid #ddd; display:flex; justify-content:center; }
-#searchMenu form { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+/* =======================
+   検索メニュー
+======================= */
+#searchMenu { background:#fff; padding:15px; display:flex; justify-content:center; box-shadow:0 2px 4px #0002; }
+#searchMenu form { display:flex; flex-wrap:wrap; gap:10px; }
+#searchMenu button, #searchMenu input[type="text"] { padding:8px; font-size:14px; }
 
-#searchMenu button, #searchMenu input[type=text] {
-    padding:6px 12px;
-    border-radius:6px;
-    border:1px solid #ccc;
-    font-size:14px;
-    cursor:pointer;
-}
+/* 詳細選択BOX */
+.searchDetailBox { display:none; position:absolute; background:#fff; border:1px solid #ddd; box-shadow:0 2px 4px #0003; padding:10px; width:160px; z-index:10; }
+.searchDetailBox ul { list-style:none; padding:0; margin:0; }
+.searchDetailBox li { margin-bottom:6px; }
+.searchDetailClose { cursor:pointer; float:right; padding:2px; }
 
-#searchMenu input[type=text] { width:200px; }
-
-.searchDetailBox {
-    display: none;
-    position: absolute;
-    top:100%;
-    left:0;
-    background:#fff;
-    border:1px solid #ccc;
-    border-radius:6px;
-    padding:10px;
-    z-index:100;
-    max-height:300px;
-    overflow-y:auto;
-    box-shadow:0 4px 10px rgba(0,0,0,0.15);
-    min-width:200px;
-}
-
-.searchDetailBox.show { display:block; }
-
-.searchDetailBox ul {
-    display:flex;
-    flex-wrap:wrap;
-    padding:0;
-    margin:0;
-    list-style:none;
-    gap:5px;
-}
-
-.searchDetailBox label {
-    flex:1 0 45%;
-    display:flex;
-    align-items:center;
-    gap:5px;
-    margin-bottom:5px;
-}
-
-.searchDetailClose {
-    cursor:pointer;
-    font-size:18px;
-    float:right;
-}
-
-.card-container { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px; padding:15px; }
-.card { background:#fff; border-radius:8px; overflow:hidden; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
-.card img { width:100%; height:180px; object-fit:cover; }
+/* =======================
+   カード一覧
+======================= */
+.card-container { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; padding:20px; }
+.card { position:relative; background:#fff; border-radius:8px; box-shadow:0 2px 6px #0002; overflow:hidden; transition:transform 0.2s; cursor:pointer; }
+.card:hover { transform:scale(1.02); }
+.card img { width:100%; height:160px; object-fit:cover; }
 .card-content { padding:12px; }
+.card-content h3 { font-size:18px; margin:6px 0; }
+.card-content p { font-size:14px; color:#444; }
 
-footer { text-align:center; padding:10px; color:#666; }
+/* ===== 星マークをタイトル横に配置 ===== */
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.favorite-star {
+    font-size: 22px;
+    cursor: pointer;
+    color: #cfcfcf;
+    user-select: none;
+    transition: 0.15s;
+    margin-left: 8px;
+}
+
+/* 星（お気に入りON） */
+.favorite-star.active {
+    color: #3399ff;      /* 青色 */
+    text-shadow: 0 0 6px #66b3ff; /* 青系の光に変更（任意） */
+}
+
+/* 以前の absolute 指定を無効化 */
+.favorite-star {
+    position: static !important;
+}
+
+.result-count { width:100%; text-align:center; font-size:15px; color:#333; padding:10px 0; background:#fff; border-bottom:1px solid #ddd; }
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+// ================================
+// Cookie 操作
+// ================================
+function getFavoriteList() {
+    const match = document.cookie.match(/favoriteIds=([^;]+)/);
+    if (!match) return [];
+    return decodeURIComponent(match[1]).split(",").map(v => v.trim()).filter(v => v);
+}
 
-    // プルダウンボタン切替
-    document.querySelectorAll('#searchMenu button[id$="Btn"]').forEach(btn=>{
-        btn.addEventListener('click', e=>{
+function saveFavoriteList(list) {
+    const unique = Array.from(new Set(list.map(String)));
+    document.cookie = "favoriteIds=" + encodeURIComponent(unique.join(",")) + "; path=/; max-age=" + (60*60*24*365);
+}
+
+// ================================
+// 星の初期化とクリック処理
+// ================================
+function initFavorites() {
+    const favs = getFavoriteList();
+
+    document.querySelectorAll(".card").forEach(card => {
+        const id = card.dataset.id.toString();
+        const star = card.querySelector(".favorite-star");
+
+        const active = favs.includes(id);
+        star.textContent = active ? "★" : "☆";
+        star.classList.toggle("active", active);
+
+        star.onclick = function(e) {
             e.stopPropagation();
-            const box = btn.nextElementSibling;
-            if(!box) return;
-            document.querySelectorAll('.searchDetailBox').forEach(b=>{
-                if(b!==box) b.classList.remove('show');
-            });
-            box.classList.toggle('show');
+            let updatedFavs = getFavoriteList();
+            if (updatedFavs.includes(id)) {
+                updatedFavs = updatedFavs.filter(x => x !== id);
+            } else {
+                updatedFavs.push(id);
+            }
+            saveFavoriteList(updatedFavs);
+
+            const nowActive = updatedFavs.includes(id);
+            star.textContent = nowActive ? "★" : "☆";
+            star.classList.toggle("active", nowActive);
+        };
+
+        card.onclick = function() {
+            location.href = "SpotDetail.action?id=" + id;
+        };
+    });
+}
+
+// ================================
+// 検索条件クリア
+// ================================
+function clearConditions() {
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    const keywordInput = document.querySelector('input[name="keyword"]');
+    if (keywordInput) keywordInput.value = "";
+    const fav = document.querySelector('input[name="favoriteOnly"]');
+    if (fav) fav.checked = false;
+
+    document.querySelector('#searchMenu form').submit();
+}
+
+// ================================
+// ドロップダウン
+// ================================
+function initDropdown() {
+    const areaBtn = document.getElementById("areaBtn");
+    const tagBtn = document.getElementById("tagBtn");
+    const boxes = document.querySelectorAll(".searchDetailBox");
+
+    const toggleBox = (btn, box) => {
+        btn.addEventListener("click", () => {
+            boxes.forEach(b => b.style.display = "none");
+            box.style.display = "block";
         });
-    });
-
-    // ×ボタンで閉じる
-    document.querySelectorAll('.searchDetailClose').forEach(span=>{
-        span.addEventListener('click', e=>{
-            e.stopPropagation();
-            span.closest('.searchDetailBox').classList.remove('show');
+        box.querySelector(".searchDetailClose").addEventListener("click", () => {
+            box.style.display = "none";
         });
-    });
+    };
 
-    // プルダウン内クリックは閉じない
-    document.querySelectorAll('.searchDetailBox').forEach(box=>{
-        box.addEventListener('click', e => e.stopPropagation());
-    });
+    toggleBox(areaBtn, areaBtn.nextElementSibling);
+    toggleBox(tagBtn, tagBtn.nextElementSibling);
+}
 
-    // 画面クリックで閉じる
-    document.addEventListener('click', ()=>{
-        document.querySelectorAll('.searchDetailBox').forEach(b=>b.classList.remove('show'));
-    });
-
-    // ボタン文字更新
-    function updateButton(btnId, inputs, defaultText){
-        const selected = Array.from(inputs).filter(cb=>cb.checked).map(cb=>cb.value);
-        document.getElementById(btnId).textContent = selected.length===0 ? defaultText + " ▼" : `${defaultText} (${selected.length}) ▼`;
-    }
-
-    const areaCheckboxes = document.querySelectorAll('input[name="area"]');
-    areaCheckboxes.forEach(cb=>cb.addEventListener('change', ()=>updateButton('areaBtn', areaCheckboxes, 'エリア')));
-    updateButton('areaBtn', areaCheckboxes, 'エリア');
-
-    const tagCheckboxes = document.querySelectorAll('input[name="tag"]');
-    tagCheckboxes.forEach(cb=>cb.addEventListener('change', ()=>updateButton('tagBtn', tagCheckboxes, 'タグ')));
-    updateButton('tagBtn', tagCheckboxes, 'タグ');
+// ================================
+// 初期処理
+// ================================
+window.addEventListener("DOMContentLoaded", () => {
+    initFavorites();
+    initDropdown();
 });
-
-// スポット詳細へ遷移
-function goToDetail(url) { location.href = url; }
 </script>
 </head>
-<body>
 
-<header>観光スポット一覧｜やまがたへの旅</header>
+<body>
 
 <div id="searchMenu">
     <form action="SpotSearch.action" method="post">
+
         <!-- エリア -->
         <div style="position:relative;">
-            <button type="button" id="areaBtn"><%= selectedAreas.isEmpty() ? "エリア ▼" : "エリア (" + selectedAreas.size() + ") ▼" %></button>
+            <button type="button" id="areaBtn">
+                <%= selectedAreas.isEmpty() ? "エリア ▼" : "エリア (" + selectedAreas.size() + ") ▼" %>
+            </button>
             <div class="searchDetailBox">
                 <span class="searchDetailClose">×</span>
                 <ul>
-                    <li><label><input type="checkbox" name="area" value="庄内" <%= selectedAreas.contains("庄内") ? "checked" : "" %> />庄内</label></li>
-                    <li><label><input type="checkbox" name="area" value="最上" <%= selectedAreas.contains("最上") ? "checked" : "" %> />最上</label></li>
-                    <li><label><input type="checkbox" name="area" value="置賜" <%= selectedAreas.contains("置賜") ? "checked" : "" %> />置賜</label></li>
-                    <li><label><input type="checkbox" name="area" value="村山" <%= selectedAreas.contains("村山") ? "checked" : "" %> />村山</label></li>
+                    <li><label><input type="checkbox" name="area" value="庄内" <%= selectedAreas.contains("庄内") ? "checked" : "" %>>庄内</label></li>
+                    <li><label><input type="checkbox" name="area" value="最上" <%= selectedAreas.contains("最上") ? "checked" : "" %>>最上</label></li>
+                    <li><label><input type="checkbox" name="area" value="置賜" <%= selectedAreas.contains("置賜") ? "checked" : "" %>>置賜</label></li>
+                    <li><label><input type="checkbox" name="area" value="村山" <%= selectedAreas.contains("村山") ? "checked" : "" %>>村山</label></li>
                 </ul>
             </div>
         </div>
 
         <!-- タグ -->
         <div style="position:relative;">
-            <button type="button" id="tagBtn"><%= selectedTags.isEmpty() ? "タグ ▼" : "タグ (" + selectedTags.size() + ") ▼" %></button>
+            <button type="button" id="tagBtn">
+                <%= selectedTags.isEmpty() ? "タグ ▼" : "タグ (" + selectedTags.size() + ") ▼" %>
+            </button>
             <div class="searchDetailBox">
                 <span class="searchDetailClose">×</span>
                 <ul>
-                <% for(Tag t : tagAllList){
-                       boolean checked = selectedTags.contains(t.getTagName());
-                %>
-                    <li><label>
-                        <input type="checkbox" name="tag" value="<%= t.getTagName() %>" <%= checked ? "checked" : "" %> />
-                        <%= t.getTagName() %>
-                    </label></li>
+                <% for(Tag t : tagAllList){ %>
+                    <li>
+                        <label>
+                            <input type="checkbox" name="tag" value="<%= t.getTagName() %>" <%= selectedTags.contains(t.getTagName()) ? "checked" : "" %>>
+                            <%= t.getTagName() %>
+                        </label>
+                    </li>
                 <% } %>
                 </ul>
             </div>
         </div>
 
-        <!-- テキスト検索 -->
+        <!-- キーワード -->
         <input type="text" name="keyword" value="<%= keyword %>" placeholder="キーワードを入力">
 
-        <!-- 検索ボタン -->
-        <button type="submit" class="doSearch">検索</button>
+        <!-- お気に入り -->
+        <label style="display:flex; align-items:center; gap:4px;">
+            <input type="checkbox" name="favoriteOnly" value="on" <%= favoriteFlag ? "checked" : "" %>>
+            お気に入り
+        </label>
+
+        <button type="submit" onclick="setTimeout(initFavorites, 50)">検索</button>
+        <button type="button" onclick="clearConditions()">検索条件クリア</button>
     </form>
 </div>
 
-<!-- スポット一覧 -->
+<!-- 件数表示 -->
+<div class="result-count">
+    <%= spotList.size() %> 件表示
+</div>
+
+<!-- カード一覧 -->
 <div class="card-container">
 <% for (Spot s : spotList) { %>
-    <div class="card" onclick="goToDetail('SpotDetail.action?id=<%= s.getSpotId() %>')">
-        <img src="<%= request.getContextPath() + s.getSpotPhoto() %>" alt="<%= s.getSpotName() %>" />
+    <div class="card" data-id="<%= s.getSpotId() %>">
+        <img src="<%= request.getContextPath() + s.getSpotPhoto() %>" alt="<%= s.getSpotName() %>">
+
         <div class="card-content">
-            <h3><%= s.getSpotName() %></h3>
+            <div class="title-row">
+                <h3><%= s.getSpotName() %></h3>
+                <span class="favorite-star">☆</span>
+            </div>
             <p><%= s.getDescription() %></p>
         </div>
     </div>
 <% } %>
 </div>
-
-<footer>© 2025 山形観光サイト</footer>
 
 </body>
 </html>
