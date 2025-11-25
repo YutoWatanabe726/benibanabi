@@ -5,7 +5,6 @@
 
 <c:import url="/common/admin_base.jsp">
     <c:param name="title">観光スポット更新</c:param>
-
     <c:param name="content">
     <div class="container mt-4">
         <h2 class="mb-4">観光スポット更新</h2>
@@ -30,16 +29,23 @@
                 <textarea name="description" class="form-control" rows="4">${spot.description}</textarea>
             </div>
 
-            <!-- 写真アップロード -->
-            <div class="mb-3">
-                <label class="form-label">観光スポット写真</label>
-                <input type="file" name="spotPhoto" accept="image/*" class="form-control">
-                <c:if test="${not empty spot.spotPhoto}">
-                    <div class="mt-2">
-                        <img src="/spotimages/${spot.spotPhoto}" alt="current photo" style="max-width:200px;">
-                    </div>
-                </c:if>
-            </div>
+			<!-- 写真アップロード -->
+			<div class="mb-3">
+			    <label class="form-label">観光スポット写真</label>
+			    <input type="file" name="spotPhoto" accept="image/*" class="form-control">
+			</div>
+
+			<!-- 現在の写真表示-->
+			<div class="mb-3">
+				<label class="form-label">現在の観光スポット写真</label>
+			    <c:if test="${not empty spot.spotPhoto}">
+			        <div class="mt-2">
+			            <img src="${pageContext.request.contextPath}${spot.spotPhoto}"
+			                 alt="current photo" style="max-width:200px;">
+			            <input type="hidden" name="oldPhoto" value="${spot.spotPhoto}">
+			        </div>
+			    </c:if>
+			</div>
 
             <!-- エリア（地区） -->
             <div class="mb-3">
@@ -53,7 +59,7 @@
                 </select>
             </div>
 
-            <!-- 市町村（エリア連動） -->
+            <!-- 市町村 -->
             <div class="mb-3">
                 <label class="form-label">市町村（必須）</label>
                 <select name="city" id="citySelect" class="form-control" required>
@@ -68,13 +74,13 @@
                        value="${spot.address}">
             </div>
 
-            <!-- タグ（複数チェックボックス） -->
+            <!-- タグ -->
             <div class="mb-3">
                 <label class="form-label">タグ（複数選択可）</label><br>
                 <c:forEach var="tag" items="${tagList}">
                     <label class="form-check-label me-3">
                         <input type="checkbox" name="tags" value="${tag.tagId}" class="form-check-input"
-                               <c:if test="${spotTags != null and spotTags.contains(tag)}">checked</c:if>>
+                               <c:if test="${spotTagsString != null and fn:contains(spotTagsString, tag.tagId)}">checked</c:if>>
                         ${tag.tagName}
                     </label>
                 </c:forEach>

@@ -44,6 +44,7 @@ public class AdminSpotUpdateExecuteAction extends Action {
         String city = null;
         String address = null;
         String photoFileName = null;
+        String oldPhoto = null;
         List<Tag> tagList = new ArrayList<>();
 
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -64,6 +65,7 @@ public class AdminSpotUpdateExecuteAction extends Action {
                     case "district": district = value; break;
                     case "city": city = value; break;
                     case "address": address = value; break;
+                    case "oldPhoto": oldPhoto = value; break;
                     case "tags":
                         if (value != null && !value.isEmpty()) {
                             Tag t = new Tag();
@@ -119,7 +121,12 @@ public class AdminSpotUpdateExecuteAction extends Action {
         spot.setDescription(description);
         spot.setArea(city);
         spot.setAddress(address);
-        if (photoFileName != null) spot.setSpotPhoto("/spotimages/" + photoFileName);
+
+        if (photoFileName != null) {
+            spot.setSpotPhoto("/spotimages/" + photoFileName);
+        } else {
+            spot.setSpotPhoto(oldPhoto); // ★元の写真パスを使う
+        }
 
         // 緯度経度取得
         double[] latlng = getLatLngFromCommunityGeocoder("山形県", city, address);
