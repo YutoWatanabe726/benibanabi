@@ -12,7 +12,7 @@
 			<h2>管理者観光スポット</h2>
 			<div>
 				<a href="AdminSpotCreate.action">観光スポット新規作成</a>
-				<a href=".action">観光スポット編集・削除</a>
+				<a href="AdminSpotList.action">観光スポット編集・削除</a>
 			</div>
 		</div>
 	</c:param>
