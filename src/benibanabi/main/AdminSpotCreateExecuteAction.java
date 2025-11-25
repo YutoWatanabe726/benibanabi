@@ -78,14 +78,32 @@ public class AdminSpotCreateExecuteAction extends Action {
                     req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
                     return;
                 }
-                // タイムスタンプ付けて重複回避
+
                 photoFileName = System.currentTimeMillis() + "_" + fileName;
                 File saveFile = new File(uploadDir, photoFileName);
                 item.write(saveFile);
+
+                /* ★★★ 追加：Eclipse プロジェクトにも保存 ★★★ */
+                try {
+                    String localSaveDirPath = "C:/pleiades/workspace/benibanabi/WebContent/spotimages";
+
+                    File localDir = new File(localSaveDirPath);
+                    if (!localDir.exists()) localDir.mkdirs();
+
+                    File localSaveFile = new File(localDir, photoFileName);
+
+                    java.nio.file.Files.copy(
+                        new File(uploadDir, photoFileName).toPath(),
+                        localSaveFile.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    );
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 
-        // バリデーション
         if (spotName == null || spotName.isEmpty()) {
             req.setAttribute("error", "観光スポット名は必須です。");
             req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
@@ -104,12 +122,10 @@ public class AdminSpotCreateExecuteAction extends Action {
         spot.setAddress(address);
         if (photoFileName != null) spot.setSpotPhoto("/spotimages/" + photoFileName);
 
-        // 緯度経度取得
         double[] latlng = getLatLngFromCommunityGeocoder("山形県", city, address);
         spot.setLatitude(latlng[0]);
         spot.setLongitude(latlng[1]);
 
-        // DB登録
         SpotAdminDAO dao = new SpotAdminDAO();
         dao.insertSpotWithTags(spot, tagList);
 
