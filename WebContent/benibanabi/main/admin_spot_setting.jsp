@@ -13,6 +13,7 @@
 			<div>
 				<a href="AdminSpotCreate.action">観光スポット新規作成</a>
 				<a href="AdminSpotList.action">観光スポット編集・削除</a>
+				<a href="AdminMenu.action" class="btn btn-secondary">戻る</a>
 			</div>
 		</div>
 	</c:param>

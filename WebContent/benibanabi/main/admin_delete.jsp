@@ -25,7 +25,7 @@
 
             <div class="d-flex gap-3 mt-4">
                 <button type="submit" class="btn btn-danger">削除する</button>
-                <a href="admin_menu.jsp" class="btn btn-secondary">戻る</a>
+                <a href="AdminMenu.action" class="btn btn-secondary">戻る</a>
             </div>
         </form>
     </div>

@@ -18,6 +18,11 @@
 
         <form action="AdminPasswordUpdateExecute.action" method="post" class="w-50">
 
+			<div class="alert alert-warning mb-3">
+				ログイン中のアカウント"<c:out value='${admin_id}'/>"
+            </div>
+
+
             <!-- 現在のパスワード -->
             <div class="mb-3">
                 <label for="currentPass" class="form-label">現在のパスワード</label>
@@ -37,7 +42,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary">変更する</button>
-            <a href="admin_menu.jsp" class="btn btn-secondary">戻る</a>
+            <a href="AdminMenu.action" class="btn btn-secondary">戻る</a>
 
         </form>
 

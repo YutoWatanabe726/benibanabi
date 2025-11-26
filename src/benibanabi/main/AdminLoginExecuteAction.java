@@ -30,7 +30,7 @@ public class AdminLoginExecuteAction extends Action {
             session.setAttribute("admin", admin);
 
             // メニュー画面へリダイレクト
-            res.sendRedirect("admin_menu.jsp");
+            res.sendRedirect("AdminMenu.action");
 
         } else {
             // ログイン失敗

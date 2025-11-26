@@ -12,13 +12,17 @@ public class AdminPasswordUpdateAction extends Action {
     @Override
     public void execute(HttpServletRequest req, HttpServletResponse res) throws Exception {
 
-        // ▼ セッション（ログイン中管理者）
         HttpSession session = req.getSession();
-        Admin admin = (Admin)session.getAttribute("user");
+        Admin admin = (Admin) session.getAttribute("admin");
 
+        if (admin == null) {
+            req.setAttribute("errorMessage", "ログインしていません。");
+            req.getRequestDispatcher("admin_login.jsp").forward(req, res);
+            return;
+        }
 
-        // 特にパラメータはなし
-
+        // 修正：Admin クラスの getter に合わせる
+        req.setAttribute("admin_id", admin.getId());;
         // ▼ JSP へフォワード
         req.getRequestDispatcher("admin_password_update.jsp").forward(req, res);
     }
