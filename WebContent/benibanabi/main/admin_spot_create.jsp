@@ -72,6 +72,7 @@
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary px-4">登録</button>
+                <a href="AdminSpotSetting.action">戻る</a>
             </div>
         </form>
     </div>

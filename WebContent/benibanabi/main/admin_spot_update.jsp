@@ -89,6 +89,7 @@
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary px-4">更新</button>
+                <a href="AdminSpotList.action">戻る</a>
             </div>
         </form>
     </div>

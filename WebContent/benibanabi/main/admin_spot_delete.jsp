@@ -20,7 +20,7 @@
             <input type="hidden" name="spotId" value="${spot.spotId}">
             <div class="d-flex gap-3 mt-4">
                 <button type="submit" class="btn btn-danger">削除する</button>
-                <a href="AdminSpotSetting.action" class="btn btn-secondary">戻る</a>
+                <a href="AdminSpotList.action">戻る</a>
             </div>
         </form>
     </div>

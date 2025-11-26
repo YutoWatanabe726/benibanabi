@@ -6,7 +6,7 @@
     <c:param name="content">
         <div class="container mt-4">
             <h2>管理者観光スポット一覧</h2>
-
+			<a href="AdminSpotSetting.action">戻る</a>
             <table class="table table-bordered mt-3">
                 <thead>
                     <tr>
@@ -22,7 +22,6 @@
                             <td>
                                 <a href="AdminSpotUpdate.action?id=${s.spotId}" class="btn btn-sm btn-primary">編集</a>
                                 <a href="AdminSpotDelete.action?spotId=${s.spotId}&spotName=${s.spotName}&area=${s.area}" class="btn btn-sm btn-danger">削除</a>
-
                             </td>
                         </tr>
                     </c:forEach>
