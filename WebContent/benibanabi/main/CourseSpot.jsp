@@ -12,16 +12,191 @@
 
 <!-- Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+/* ================================
+   全体レイアウト
+================================ */
+body {
+  font-family: Arial, sans-serif;
+  background: #f8f8f8;
+  margin: 0;
+  padding: 0;
+}
 
-<style> /* 基本レイアウト */ body { font-family: Arial, sans-serif; background:#f8f8f8; margin:0; padding:0px; } h3 { margin-bottom:16px; }
-.sidebar button { margin-bottom:6px; } .route-history { max-height:200px; overflow-y:auto; border-top:1px solid #ccc; padding-top:8px; } .modal-card { border:1px solid #ddd; padding:8px; margin:6px; cursor:pointer; position:relative; border-radius:6px; background:#fff; } .favorite { position:absolute; top:6px; right:6px; cursor:pointer; color:#ccc; user-select:none; } .favorite.active { color:gold; }
-#routesContainer .day-section { margin-bottom:20px; }
-.map-container { flex:1; height:400px; min-height:300px; }
-.route-item { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px dashed #eee; } .form-inline { display:flex; gap:8px; align-items:center; }
-.small-muted { color:#666; font-size:0.9rem; }
+h3 {
+  margin-bottom: 0px;
+}
+
+/* サイドバー */
+.sidebar button {
+  margin-bottom: 6px;
+}
+
+/* ================================
+   履歴表示エリア
+================================ */
+.route-history {
+  max-height: 450px;
+  overflow-y: auto;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+}
+
+/* ================================
+   カード（スポット）
+================================ */
+.route-card, .route-item {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* カードヘッダー */
+.route-card .card-header,
+.route-item .card-header {
+  font-weight: bold;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 削除ボタン */
+.removeBtn, .removeSpotBtn {
+  background: #ff5a5a;
+  border: none;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.removeBtn:hover, .removeSpotBtn:hover {
+  background: #ff2e2e;
+}
+
+/* 滞在時間・メモ部分 */
+.route-card .card-body,
+.route-item .info-area {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.stayTimeInput {
+  width: 60px;
+}
+.memoInput {
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* ラベル風 */
+.small-muted {
+  color: #666;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+/* ================================
+   ▼ 矢印カード（移動情報）
+================================ */
+.arrow-card {
+  display: inline-flex;       /* 横並びに */
+  align-items: center;
+  gap: 6px;                   /* 要素間の隙間 */
+  background: #f0f4ff;
+  border-left: 4px solid #4f7cff;
+  padding: 0px 12px;
+  margin: -4px 0 12px 0px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  white-space: nowrap;        /* 改行を防ぐ */
+  overflow: hidden;           /* はみ出した部分を隠す */
+}
+
+.arrow-card select,
+.arrow-card input {
+  font-size: 0.9rem;
+  margin-left: 4px;
+}
+
+.arrow-card::before {
+  content: "↓";
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #4f7cff;
+  margin-right: 5px;
+}
+
+
+
+/* ================================
+   モーダル内カード
+================================ */
+.modal-card {
+  border: 1px solid #ddd;
+  padding: 8px;
+  margin: 6px;
+  cursor: pointer;
+  position: relative;
+  border-radius: 6px;
+  background: #fff;
+  transition: box-shadow 0.2s;
+}
+
+.modal-card:hover {
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+/* お気に入り星 */
+.favorite {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  cursor: pointer;
+  color: #ccc;
+  user-select: none;
+}
+.favorite.active {
+  color: gold;
+}
+
+/* ================================
+   Day セクション
+================================ */
+#routesContainer .day-section {
+  margin-bottom: 30px;
+  background: #fff;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* ================================
+   マップ
+================================ */
+.map-container {
+  flex: 1;
+  height: 600px;
+  min-height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ================================
+   インラインフォーム
+================================ */
+.form-inline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+
 </style>
-
-
 </head>
 
 <body>
@@ -50,6 +225,7 @@
 <div id="routesContainer" class="container" style="margin-left: unset; margin-right: unset; padding-left: unset; padding-right: unset;"></div>
 
 <!-- スポット選択モーダル -->
+<!-- スポット選択モーダル -->
 <div id="spotModal" class="modal fade" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -57,19 +233,48 @@
         <h5 class="modal-title">スポット選択</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
       </div>
+
       <div class="modal-body">
+
+        <!-- キーワード -->
         <div class="mb-2">
           <input type="text" id="keyword" placeholder="キーワード検索" class="form-control"/>
         </div>
-        <div class="mb-2 d-flex gap-2">
-          <select id="areaSelect" multiple class="form-select"></select>
-          <select id="tagSelect" multiple class="form-select"></select>
+
+        <!-- エリア & タグ：ドロップダウン複数選択 -->
+        <div class="mb-3 d-flex gap-2">
+
+          <!-- ▼ エリア -->
+          <div class="dropdown w-50">
+            <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+              エリアを選択
+            </button>
+            <ul class="dropdown-menu p-2" id="areaDropdown" style="max-height: 250px; overflow-y: auto;">
+              <!-- JS で自動生成 -->
+            </ul>
+          </div>
+
+          <!-- ▼ タグ -->
+          <div class="dropdown w-50">
+            <button class="btn btn-outline-success dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+              タグを選択
+            </button>
+            <ul class="dropdown-menu p-2" id="tagDropdown" style="max-height: 250px; overflow-y: auto;">
+              <!-- JS で自動生成 -->
+            </ul>
+          </div>
+
         </div>
+
+        <!-- お気に入り -->
         <div class="mb-2">
           <label><input type="checkbox" id="favOnlyCheck"/> お気に入りのみ</label>
         </div>
+
+        <!-- カード一覧 -->
         <div class="row" id="spotCards"></div>
       </div>
+
       <div class="modal-footer">
         <button id="searchSpotBtn" class="btn btn-primary">検索</button>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
@@ -77,6 +282,8 @@
     </div>
   </div>
 </div>
+
+
 <!-- ゴール住所入力モーダル -->
 <div class="modal fade" id="goalModal" tabindex="-1">
   <div class="modal-dialog">
@@ -221,9 +428,9 @@ function createDaySection(day, startLat = 38.2404, startLng = 140.3633, startNam
 
   // HTML を構築して DOM に挿入（必ず先に DOM を追加）
   const html = `
-    <div class="day-section" id="\${sectionId}">
+    <div class="day-section" id="\${sectionId}" style="width:99vw">
       <h5>Day \${day}</h5>
-      <div style="display:flex; width:100vw;">
+      <div style="display:flex; width:97vw;">
         <div id="\${sidebarId}" class="sidebar card p-2" style="width:30%;">
           <div class="route-history mt-3" id="routeHistoryDay\${day}"></div>
           <button class="btn btn-primary w-100 mb-2 nextSpotBtn">次の地点へ</button>
@@ -340,23 +547,23 @@ function addRouteHistory(dayIndex, name, lat, lng, type = "normal", existingCirc
 
 function renderRouteHistory(dayIndex) {
 	  const list = routesByDay[dayIndex] || [];
-	  let html = "";
+	  const container = $(`#routeHistoryDay\${dayIndex+1}`);
+	  container.empty();
 
 	  for (let i = 0; i < list.length; i++) {
 	    const item = list[i];
 	    const prev = i > 0 ? list[i-1] : null;
 
-	    // 移動手段・距離・所要時間
-	    let transportInfo = "";
+	    // --- 矢印カード（prev がある場合のみ表示） ---
 	    if (prev) {
 	      const dist = calcDistance(prev.lat, prev.lng, item.lat, item.lng).toFixed(1);
 	      const transport = item.transport || "徒歩";
 	      const speed = speedMap[transport] || 5;
 	      const timeMin = Math.round(dist / speed * 60);
 
-	      transportInfo = `
-	        <div class="small-muted">
-	          ↓ 移動手段:
+	      const arrowHtml = $(`
+	        <div class="arrow-card small-muted" data-index="\${i}">
+	           移動手段:
 	          <select class="form-select form-select-sm transportSelect" data-index="\${i}" style="width:100px; display:inline-block;">
 	            <option \${transport==="徒歩"?"selected":""}>徒歩</option>
 	            <option \${transport==="車"?"selected":""}>車</option>
@@ -364,35 +571,77 @@ function renderRouteHistory(dayIndex) {
 	          </select>
 	          予測時間: <span class="estimatedTime">\${timeMin}</span>分 / 概算距離: \${dist}km
 	        </div>
-	      `;
+	      `);
+	      container.append(arrowHtml);
 	    }
 
-	    // 滞在時間・メモ
+	    // --- スポットカード ---
 	    const stayTime = item.stayTime != null ? item.stayTime : 30;
 	    const memo = item.memo || "";
-
-	    html += `
-	    	<div class="route-item" data-index="\${i}"> <div> <strong>\${escapeHtml(item.name)}</strong> \${item.type === "start" ? "(スタート地点)" : item.type === "goal" ? "(ゴール地点)" : ""} <button class="btn btn-sm btn-danger removeBtn">×</button> </div> \${transportInfo} <div class="small-muted"> 滞在時間: <input type="number" class="stayTimeInput" value="\${stayTime}" data-index="\${i}" style="width:60px"/> 分 </div> <div> メモ: <input type="text" class="memoInput form-control form-control-sm" value="\${escapeHtml(memo)}" data-index="\${i}" /> </div> </div>
-	    	</div>
-	    `;
+	    const cardHtml = $(`
+	      <div class="route-card route-item" data-index="\${i}">
+	        <div class="card-header">
+	          [\${escapeHtml(item.name)}] \${item.type === "start" ? "(スタート地点)" : item.type === "goal" ? "(ゴール地点)" : ""}
+	          <button class="btn btn-sm btn-danger removeBtn">×</button>
+	        </div>
+	        <div class="card-body">
+	          <div>滞在時間: <input type="number" class="stayTime" value="\${stayTime}" data-index="\${i}" style="width:60px"/> 分</div>
+	          <div>メモ: <input type="text" class="memoInput form-control form-control-sm" value="\${escapeHtml(memo)}" data-index="\${i}" /></div>
+	        </div>
+	      </div>
+	    `);
+	    container.append(cardHtml);
 	  }
 
-	  $(`#routeHistoryDay\${dayIndex+1}`).html(html);
-
-	  // 削除ボタンのイベント
-	  $(`#routeHistoryDay\${dayIndex+1} .removeBtn`).off("click").on("click", function() {
+	  // --- イベント設定 ---
+	  container.find(".removeBtn").off("click").on("click", function() {
 	    const index = $(this).closest(".route-item").data("index");
 	    removeRoute(dayIndex, index);
 	  });
 
-	  // 移動手段変更時の反映
-	  $(`#routeHistoryDay\${dayIndex+1} .transportSelect`).off("change").on("change", function() {
+	  container.find(".transportSelect").off("change").on("change", function() {
 	    const idx = $(this).data("index");
 	    const val = $(this).val();
 	    if (list[idx]) {
 	      list[idx].transport = val;
+	    }
+	    const prev = idx > 0 ? list[idx-1] : null;
+	    if (prev) {
+	      const dist = calcDistance(prev.lat, prev.lng, list[idx].lat, list[idx].lng);
+	      const speed = speedMap[val] || 5;
+	      const timeMin = Math.round(dist / speed * 60);
+	      container.find(`.arrow-card[data-index="\${idx}"] .estimatedTime`).text(timeMin);
+	    }
+	    updateEstimatedTime(dayIndex);
+	  });
+
+	  container.find(".stayTime").off("change").on("change", function() {
+	    const idx = $(this).data("index");
+	    const val = parseInt($(this).val());
+	    if (!isNaN(val) && list[idx]) {
+	      list[idx].stayTime = val;
 	      updateEstimatedTime(dayIndex);
 	    }
+	  });
+
+	  container.find(".memoInput").off("input").on("input", function() {
+	    const idx = $(this).data("index");
+	    if (list[idx]) {
+	      list[idx].memo = $(this).val();
+	    }
+	  });
+	  const arrowCards = container.find(".arrow-card");
+	  arrowCards.each(function() {
+	    const parentWidth = $(this).parent().width();
+	    const contentWidth = this.scrollWidth;
+	    let scale = 1;
+	    if (contentWidth > parentWidth) {
+	      scale = parentWidth / contentWidth;
+	    }
+	    $(this).css({
+	      "transform": `scale(${scale})`,
+	      "transform-origin": "left center"
+	    });
 	  });
 	}
 
@@ -425,42 +674,117 @@ function removeRoute(dayIndex, index) {
 /* ------------------------
    モーダル操作・Ajax 検索（SpotSearchAction を想定）
    ------------------------ */
-function populateAreaAndTagSelects() {
-  // 実際のアプリでは DAO から取得するが、ここでは簡易サンプルを入れておく
-  const areas = ["山形市", "蔵王", "天童", "米沢"];
-  const tags = ["観光", "食事", "温泉", "自然"];
-  $("#areaSelect").empty();
-  areas.forEach(a => $("#areaSelect").append(`<option value="${a}">${a}</option>`));
-  $("#tagSelect").empty();
-  tags.forEach(t => $("#tagSelect").append(`<option value="${t}">${t}</option>`));
-}
+   /* ------------------------
+   DB 連動エリア・タグ取得
+   - ページロード時に Ajax で最新値を取得
+   ------------------------ */
+   /* ------------------------
+   モーダル用セレクトを DB 連動で埋める
+   ------------------------ */
+   /**
+    * モーダルのエリア・タグプルダウンを初期化
+    */
+ // ------------------------
+ // エリア・タグプルダウンを埋める（ページ用／モーダル用共通）
+ // ------------------------
+// ------------------------------------------------------
+// チェックボックス版：エリア・タグ一覧取得＋生成（EL 回避済）
+// ------------------------------------------------------
+function populateAreaAndTagSelects(areaContainerId, tagContainerId) {
+	  $.ajax({
+		    url: "CourseSpotSearch.action",
+		    type: "POST",
+		    data: { listOnly: "true" },
+		    dataType: "json",
+		    success: function (data) {
+		      const areas = data.areas || [];
+		      const tags = data.tags || [];
 
-$("#searchSpotBtn").on("click", function () {
-  const keyword = $("#keyword").val() || "";
-  const areas = $("#areaSelect").val() || [];
-  const tags = $("#tagSelect").val() || [];
-  const favOnly = $("#favOnlyCheck").prop("checked");
+		      // ▼ エリア生成
+		      const $areaContainer = $("#" + areaContainerId);
+		      $areaContainer.empty();
+		      areas.forEach(function(a, index) {
+		        const areaName = (typeof a === "string") ? a : (a.areaName || a.name);
+		        const safeName = areaName.replace(/"/g, '\\"');
+		        const id = "areaChk_" + areaContainerId + "_" + index;
 
-  // Ajax で SpotSearchAction.action に問い合わせ（ユーザーが既に実装）
+		        $areaContainer.append(`
+		          <li>
+		            <label class="dropdown-item" for="\${id}">
+		              <input type="checkbox" id="\${id}" class="form-check-input me-2 area-check" value="\${safeName}">
+		              \${safeName}
+		            </label>
+		          </li>
+		        `);
+		      });
+
+		      // ▼ タグ生成
+		      const $tagContainer = $("#" + tagContainerId);
+		      $tagContainer.empty();
+		      tags.forEach(function(t, index) {
+		        const safeName = t.name.replace(/"/g, '\\"');
+		        const id = "tagChk_" + tagContainerId + "_" + index;
+
+		        $tagContainer.append(`
+		          <li>
+		            <label class="dropdown-item" for="\${id}">
+		              <input type="checkbox" id="\${id}" class="form-check-input me-2 tag-check" value="\${t.name}">
+		              \${safeName}
+		            </label>
+		          </li>
+		        `);
+		      });
+		    },
+		    error: function(xhr, status, err) {
+		      console.error("エリア・タグ一覧取得エラー", status, err);
+		      alert("エリア・タグの取得に失敗しました。");
+		    }
+		  });
+		}
+
+		// ------------------------------------------------------
+		// 検索処理（共通）
+function searchSpots(keyword, areas, tags, favOnly, targetSelector) {
   $.ajax({
     url: "CourseSpotSearch.action",
     type: "POST",
-    data: {
-      keyword: keyword,
-      areas: areas.join(","),
-      tags: tags.join(","),
-      favOnly: favOnly
-    },
+    data: { keyword, areaIds: areas, tagIds: tags, favOnly },
+    traditional: true,  // ← ここ追加
     dataType: "json",
-    success: function (data) {
-      renderSpotCards(data);
+    success: function(data) {
+      renderSpotCards(data.spots, targetSelector);
     },
-    error: function (xhr, status, err) {
-      console.error("スポット検索エラー", status, err);
-      alert("スポット検索でエラーが発生しました。コンソールを確認してください。");
+    error: function(xhr, status, err) {
+      console.error("検索エラー", status, err);
+      alert("検索中にエラーが発生しました");
     }
   });
-});
+}
+$(document).on("click", "#searchSpotBtn", function() {
+	  const keyword = $("#keyword").val() || "";
+	  const areas = $("#areaDropdown input:checked").map(function(){ return $(this).val(); }).get();
+	  const tags = $("#tagDropdown input:checked").map(function(){ return $(this).val(); }).get();
+	  console.log("keyword:", keyword, "areas:", areas, "tags:", tags);
+	  const favOnly = $("#favOnlyCheck").prop("checked");
+	  searchSpots(keyword, areas, tags, favOnly, "#spotCards");
+	});
+
+		// ------------------------------------------------------
+		// 初期化
+		$(document).ready(function () {
+		  populateAreaAndTagSelects("areaDropdown", "tagDropdown");
+
+		  // モーダル初期表示で全件
+		  $("#spotModal").on("shown.bs.modal", function () {
+		    const keyword = "";
+		    const areas = $("#areaDropdown input:checked").map(function(){ return $(this).val(); }).get();
+		    const tags = $("#tagDropdown input:checked").map(function(){ return $(this).val(); }).get();
+		    const favOnly = $("#favOnlyCheck").prop("checked");
+		    searchSpots(keyword, areas, tags, favOnly, "#spotCards");
+		  });
+		});
+
+
 
 function renderSpotCards(spots) {
 	  $("#spotCards").empty();
@@ -530,6 +854,15 @@ function toggleFavCookie(id, elem) {
 /* ------------------------
    イベントハンドラ（その他）
    ------------------------ */
+// モーダル内検索ボタン用
+$(document).on("click", "#searchSpotBtn", function() {
+     const keyword = $("#keyword").val() || "";
+     const areas = $("#areaDropdown input:checked").map(function(){ return $(this).val(); }).get();
+     const tags = $("#tagDropdown input:checked").map(function(){ return $(this).val(); }).get();
+     const favOnly = $("#favOnlyCheck").prop("checked");
+     searchSpots(keyword, areas, tags, favOnly, "#spotCards");
+   });
+
 $(document).on("click", ".nextSpotBtn", function () {
   // モーダルを表示してスポット選択
   const modalEl = document.getElementById('spotModal');
@@ -655,6 +988,11 @@ $(document).on("click", ".setGoalBtn", function () {
 	    if (dayCount < tripDays) {
 
 	      createDaySection(dayCount + 1, lat, lng, formattedAddress);
+
+	      const nextDaySection = document.getElementById("daySection" + (dayCount));
+	      if (nextDaySection) {
+	        nextDaySection.scrollIntoView({ behavior: "smooth", block: "start" });
+	      }
 
 	      alert("ゴールを設定しました。次の日のスタート地点として登録されました。");
 

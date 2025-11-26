@@ -11,7 +11,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import bean.Spot;
+import bean.Tag;
 import dao.SpotDAO;
+import dao.TagDAO;
 import tool.Action;
 
 public class CourseSpotSearchAction extends Action {
@@ -21,32 +23,61 @@ public class CourseSpotSearchAction extends Action {
     @Override
     public void execute(HttpServletRequest req, HttpServletResponse res) throws Exception {
 
-        // ★必須（print(XML/JSON) 時の文字化け防止）
         req.setCharacterEncoding("UTF-8");
         res.setContentType("application/json; charset=UTF-8");
         res.setCharacterEncoding("UTF-8");
 
+        String listOnlyParam = req.getParameter("listOnly");
+        boolean listOnly = "true".equalsIgnoreCase(listOnlyParam);
+
+        SpotDAO spotDao = new SpotDAO();
+        TagDAO tagDao = new TagDAO();
+
+        List<String> areas = spotDao.getAllAreas();
+        List<Tag> tags = tagDao.findAllTags();
+
+        if (listOnly) {
+            // JSON作成（エリア・タグ一覧だけ返す）
+            StringBuilder sb = new StringBuilder();
+            sb.append("{");
+
+            sb.append("\"areas\":[");
+            for(int i=0;i<areas.size();i++){
+                sb.append("\"").append(escapeJson(areas.get(i))).append("\"");
+                if(i < areas.size()-1) sb.append(",");
+            }
+            sb.append("],");
+
+            sb.append("\"tags\":[");
+            for(int i=0;i<tags.size();i++){
+                Tag t = tags.get(i);
+                sb.append("{\"id\":").append(t.getTagId())
+                  .append(",\"name\":\"").append(escapeJson(t.getTagName())).append("\"}");
+                if(i < tags.size()-1) sb.append(",");
+            }
+            sb.append("]");
+
+            sb.append("}");
+
+            try(PrintWriter out = res.getWriter()) {
+                out.print(sb.toString());
+            }
+            return;
+        }
+
+        // 通常の検索
         String keyword = req.getParameter("keyword");
-        String areasParam = req.getParameter("areas");
-        String tagsParam = req.getParameter("tags");
+        String[] areasParam = req.getParameterValues("areaIds"); // JS 側に合わせる
+        String[] tagsParam = req.getParameterValues("tagIds");   // JS 側に合わせる
         String favOnlyParam = req.getParameter("favOnly");
 
-        List<String> areaList = new ArrayList<>();
-        List<String> tagList = new ArrayList<>();
+        List<String> areaList = areasParam != null ? Arrays.asList(areasParam) : new ArrayList<>();
+        List<String> tagList = tagsParam != null ? Arrays.asList(tagsParam) : new ArrayList<>();
         boolean favOnly = "true".equalsIgnoreCase(favOnlyParam);
 
-        if (areasParam != null && !areasParam.isEmpty()) {
-            areaList = Arrays.asList(areasParam.split(","));
-        }
-        if (tagsParam != null && !tagsParam.isEmpty()) {
-            tagList = Arrays.asList(tagsParam.split(","));
-        }
+        List<Spot> spots = spotDao.searchSpots(keyword, areaList, tagList);
 
-        // DAOで検索
-        SpotDAO dao = new SpotDAO();
-        List<Spot> spots = dao.searchSpots(keyword, areaList, tagList);
-
-        // クッキーに保存されたお気に入り ID を取得
+        // クッキーからお気に入りID取得
         List<Integer> favIds = new ArrayList<>();
         if(req.getCookies() != null){
             for(Cookie c : req.getCookies()){
@@ -62,7 +93,7 @@ public class CourseSpotSearchAction extends Action {
             }
         }
 
-        // favOnly の場合、お気に入りだけに絞る
+        // favOnly の場合フィルター
         if(favOnly){
             spots = spots.stream()
                     .filter(s -> favIds.contains(s.getSpotId()))
@@ -71,7 +102,10 @@ public class CourseSpotSearchAction extends Action {
 
         // JSON作成
         StringBuilder sb = new StringBuilder();
-        sb.append("[");
+        sb.append("{");
+
+        // スポット
+        sb.append("\"spots\":[");
         for(int i=0;i<spots.size();i++){
             Spot s = spots.get(i);
             boolean isFav = favIds.contains(s.getSpotId());
@@ -82,23 +116,39 @@ public class CourseSpotSearchAction extends Action {
             sb.append("\"lat\":").append(s.getLatitude()).append(",");
             sb.append("\"lng\":").append(s.getLongitude()).append(",");
             sb.append("\"fav\":").append(isFav).append(",");
-            sb.append("\"spotPhoto\":\"").append(escapeJson(
-                    s.getSpotPhoto() != null ? s.getSpotPhoto() : ""
-            )).append("\"");
+            sb.append("\"spotPhoto\":\"").append(escapeJson(s.getSpotPhoto()!=null?s.getSpotPhoto():"")).append("\"");
             sb.append("}");
-            if(i < spots.size()-1) sb.append(",");
+            if(i<spots.size()-1) sb.append(",");
+        }
+        sb.append("],");
+
+        // エリア一覧
+        sb.append("\"areas\":[");
+        for(int i=0;i<areas.size();i++){
+            sb.append("\"").append(escapeJson(areas.get(i))).append("\"");
+            if(i<areas.size()-1) sb.append(",");
+        }
+        sb.append("],");
+
+        // タグ一覧
+        sb.append("\"tags\":[");
+        for(int i=0;i<tags.size();i++){
+            Tag t = tags.get(i);
+            sb.append("{\"id\":").append(t.getTagId())
+              .append(",\"name\":\"").append(escapeJson(t.getTagName())).append("\"}");
+            if(i<tags.size()-1) sb.append(",");
         }
         sb.append("]");
 
-        // ★ここが最重要：PrintWriter を必ず使う
+        sb.append("}");
+
         try(PrintWriter out = res.getWriter()) {
             out.print(sb.toString());
         }
     }
 
-    // JSONエスケープ
     private String escapeJson(String str){
-        if(str == null) return "";
+        if(str==null) return "";
         return str.replace("\\","\\\\")
                   .replace("\"","\\\"")
                   .replace("\b","\\b")
