@@ -21,6 +21,8 @@
                             <td>${s.area}</td>
                             <td>
                                 <a href="AdminSpotUpdate.action?id=${s.spotId}" class="btn btn-sm btn-primary">編集</a>
+                                <a href="AdminSpotDelete.action?spotId=${s.spotId}&spotName=${s.spotName}&area=${s.area}" class="btn btn-sm btn-danger">削除</a>
+
                             </td>
                         </tr>
                     </c:forEach>
