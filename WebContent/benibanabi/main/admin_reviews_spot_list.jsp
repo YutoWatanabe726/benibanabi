@@ -15,7 +15,7 @@
 
 <h1>観光スポット一覧</h1>
 
-<a href="${pageContext.request.contextPath}/benibanabi/main/admin_menu.jsp">← 管理メニューに戻る</a>
+<a href="AdminMenu.action" class="btn btn-secondary">戻る</a>
 
 <div class="search-box">
   <form action="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action" method="get">
