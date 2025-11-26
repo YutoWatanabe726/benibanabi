@@ -33,6 +33,7 @@
 			<div class="mb-3">
 			    <label class="form-label">観光スポット写真</label>
 			    <input type="file" name="spotPhoto" accept="image/*" class="form-control">
+			    <small>＊変更がない場合は現在の写真が適応されます</small>
 			</div>
 
 			<!-- 現在の写真表示-->
@@ -80,7 +81,7 @@
                 <c:forEach var="tag" items="${tagList}">
                     <label class="form-check-label me-3">
                         <input type="checkbox" name="tags" value="${tag.tagId}" class="form-check-input"
-                               <c:if test="${spotTagsString != null and fn:contains(spotTagsString, tag.tagId)}">checked</c:if>>
+                               <c:if test="${spotTagIds != null and spotTagIds.contains(tag.tagId)}">checked</c:if>>
                         ${tag.tagName}
                     </label>
                 </c:forEach>

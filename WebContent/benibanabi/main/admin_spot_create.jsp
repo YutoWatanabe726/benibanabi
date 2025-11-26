@@ -49,7 +49,7 @@
             <div class="mb-3">
                 <label class="form-label">市町村（必須）</label>
                 <select name="city" id="citySelect" class="form-control" required>
-                    <option value="">先にエリアを選択してください</option>
+                    <option value="">先に地区を選択してください</option>
                 </select>
             </div>
 
