@@ -1,0 +1,135 @@
+/* ===============================
+      SpotDetail 専用
+================================= */
+
+/* スポットヘッダー：タイトルを中央 */
+.spot-header {
+    position: relative;       /* ボタンを絶対配置するため */
+    text-align: center;       /* タイトル中央 */
+    margin-bottom: 15px;
+}
+
+.spot-header h1 {
+    margin-bottom: 10px;
+}
+
+/* お気に入りボタン：右上に固定 */
+.favorite-star {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-align: center;
+    background: #fff;
+    color: #D92929; /* 赤文字 */
+    border: 2px solid #D92929;
+}
+
+.favorite-star.active {
+    background: linear-gradient(90deg, #FFB35E, #D92929);
+    color: #fff;
+    border-color: transparent;
+}
+
+.favorite-star:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(217,41,41,0.25);
+}
+
+/* スポット写真 */
+.card.detail-box img.card-img {
+    display: block;
+    margin: 0 auto 15px auto; /* 中央寄せ */
+    max-width: 500px;
+    border-radius: 10px;
+}
+
+.detail-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.card-description {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-top: 10px;
+}
+
+.tag-container .tag {
+    display: inline-block;
+    background: #eee;
+    padding: 5px 10px;
+    margin: 3px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.section-title {
+    font-size: 2rem;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-left: 18px;
+    border-left: 8px solid #FF7A45;
+    font-weight: 800;
+    color: #333;
+}
+
+.review-box {
+    background: #fff;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border-left: 5px solid #FF7A45;
+}
+
+.review-user {
+    font-weight: bold;
+}
+
+/* ===============================
+      ボタン統一（赤～オレンジ系グラデーション）
+================================= */
+.more-btn,
+.back-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 14px 34px;
+    font-size: 1.2rem;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 50px;
+    background: linear-gradient(90deg, #FFB35E, #D92929);
+    box-shadow: 0 10px 22px rgba(217,41,41,0.35);
+    transition: 0.3s;
+}
+
+.more-btn:hover,
+.back-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(217,41,41,0.48);
+}
+
+/* textarea */
+textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    resize: vertical;
+}
+
+/* Google Maps iframe */
+.map-frame {
+    border-radius: 10px;
+    margin-top: 15px;
+}
