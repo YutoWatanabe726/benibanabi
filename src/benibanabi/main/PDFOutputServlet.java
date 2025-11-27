@@ -509,7 +509,6 @@ public class PDFOutputServlet extends HttpServlet {
 
                         y -= 25;
                         if (y < margin + 60) {
-                            // 1ページに収まらないケースは今回は想定しない
                             break;
                         }
                     }

@@ -475,7 +475,7 @@ function renderRouteListForDay(dayIndex) {
 }
 
 /* ============================
-   マップ描画（右） - Day ごと
+   マップ描画（右） -Day ごと
 ============================ */
 function getIconByType(type) {
   let iconUrl;
