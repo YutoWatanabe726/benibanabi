@@ -2,26 +2,38 @@
 <%@ page import="java.util.*" %>
 <%@ page import="bean.Spot" %>
 <%@ page import="bean.Tag" %>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<c:import url="/common/base.jsp">
+    <c:param name="title">
+        観光スポット一覧
+    </c:param>
 
-<%
-    List<Spot> spotList = (List<Spot>) request.getAttribute("spotList");
-    if (spotList == null) spotList = new ArrayList<>();
+    <c:param name="content">
+    <%
+        List<Spot> spotList = (List<Spot>) request.getAttribute("spotList");
+        if (spotList == null) spotList = new ArrayList<>();
 
-    List<Tag> tagAllList = (List<Tag>) request.getAttribute("tagAllList");
-    if (tagAllList == null) tagAllList = new ArrayList<>();
+        List<Tag> tagAllList = (List<Tag>) request.getAttribute("tagAllList");
+        if (tagAllList == null) tagAllList = new ArrayList<>();
 
-    String keyword = (String) request.getAttribute("keyword");
-    if (keyword == null) keyword = "";
+        String keyword = (String) request.getAttribute("keyword");
+        if (keyword == null) keyword = "";
 
-    List<String> selectedAreas = (List<String>) request.getAttribute("selectedAreas");
-    if (selectedAreas == null) selectedAreas = new ArrayList<>();
+        List<String> selectedAreas = (List<String>) request.getAttribute("selectedAreas");
+        if (selectedAreas == null) selectedAreas = new ArrayList<>();
 
-    List<String> selectedTags = (List<String>) request.getAttribute("selectedTags");
-    if (selectedTags == null) selectedTags = new ArrayList<>();
+        List<String> selectedTags = (List<String>) request.getAttribute("selectedTags");
+        if (selectedTags == null) selectedTags = new ArrayList<>();
 
-    String favoriteOnly = (String) request.getAttribute("favoriteOnly");
-    boolean favoriteFlag = "on".equals(favoriteOnly);
-%>
+        String favoriteOnly = (String) request.getAttribute("favoriteOnly");
+        boolean favoriteFlag = "on".equals(favoriteOnly);
+
+        // ページネーション用
+        Integer currentPage = (Integer) request.getAttribute("currentPage");
+        if (currentPage == null) currentPage = 1;
+        Integer totalPages = (Integer) request.getAttribute("totalPages");
+        if (totalPages == null) totalPages = 1;
+    %>
 
 <!DOCTYPE html>
 <html lang="ja">
@@ -60,6 +72,11 @@ body { font-family:"Noto Sans JP",sans-serif; margin:0; padding:0; background:#f
 .favorite-star.active { color:#3399ff; text-shadow:0 0 6px #66b3ff; }
 
 .result-count { width:100%; text-align:center; font-size:15px; color:#333; padding:10px 0; background:#fff; border-bottom:1px solid #ddd; }
+
+/* ページネーション */
+.pagination { text-align:center; margin:15px 0; }
+.pagination button { padding:5px 10px; margin:0 2px; font-size:14px; }
+.pagination button.active { background:#3399ff; color:#fff; border-radius:4px; }
 </style>
 
 <script>
@@ -113,14 +130,27 @@ function clearConditions() {
 function openModal(id) { document.getElementById(id).style.display="flex"; }
 function closeModal(id) { document.getElementById(id).style.display="none"; }
 
+// ページネーションジャンプ
+function goPage(page) {
+    const form = document.querySelector('#searchMenu form');
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "page";
+    input.value = page;
+    form.appendChild(input);
+    form.submit();
+}
+
 // DOM初期化
-window.addEventListener("DOMContentLoaded",()=>{
-    initFavorites();
-});
+window.addEventListener("DOMContentLoaded",()=>{ initFavorites(); });
 </script>
 </head>
 
 <body>
+
+<div style="text-align:center; margin:20px 0;">
+    <h1>観光スポット一覧</h1>
+</div>
 
 <div id="searchMenu">
     <form action="SpotSearch.action" method="post">
@@ -165,7 +195,14 @@ window.addEventListener("DOMContentLoaded",()=>{
 <% } %>
 </div>
 
-<!-- =================== モーダル: エリア選択 =================== -->
+<!-- ページネーション -->
+<div class="pagination">
+<% for(int i=1; i<=totalPages; i++){ %>
+    <button class="<%= (i==currentPage)?"active":"" %>" onclick="goPage(<%=i%>)"><%=i%></button>
+<% } %>
+</div>
+
+<!-- モーダル: エリア選択 -->
 <div id="areaModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeModal('areaModal')">×</span>
@@ -217,7 +254,7 @@ window.addEventListener("DOMContentLoaded",()=>{
     </div>
 </div>
 
-<!-- =================== モーダル: タグ選択 =================== -->
+<!-- モーダル: タグ選択 -->
 <div id="tagModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeModal('tagModal')">×</span>
@@ -236,3 +273,5 @@ window.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
+    </c:param>
+</c:import>
