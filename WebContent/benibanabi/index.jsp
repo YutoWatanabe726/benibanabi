@@ -123,7 +123,7 @@
   <div class="hero-content fade-left">
     <h1>紅花が彩る、山形の旅。</h1>
     <p>伝統 × 自然 × 食 × 温泉 —— もう一歩ふかく。</p>
-    <a href="<c:url value='/benibanabi/start.jsp'/>" class="hero-btn">コースを作成する</a>
+    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="hero-btn">コースを作成する</a>
   </div>
 
   <!-- 花びら -->
