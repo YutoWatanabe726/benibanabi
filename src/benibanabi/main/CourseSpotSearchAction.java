@@ -75,8 +75,6 @@ public class CourseSpotSearchAction extends Action {
         List<String> tagList = tagsParam != null ? Arrays.asList(tagsParam) : new ArrayList<>();
         boolean favOnly = "true".equalsIgnoreCase(favOnlyParam);
 
-        List<Spot> spots = spotDao.searchSpots(keyword, areaList, tagList);
-
         // クッキーからお気に入りID取得
         List<Integer> favIds = new ArrayList<>();
         if(req.getCookies() != null){
@@ -93,11 +91,28 @@ public class CourseSpotSearchAction extends Action {
             }
         }
 
-        // favOnly の場合フィルター
-        if(favOnly){
-            spots = spots.stream()
-                    .filter(s -> favIds.contains(s.getSpotId()))
-                    .collect(Collectors.toList());
+        List<Spot> spots;
+        boolean noSearchConditions = (keyword == null || keyword.isEmpty()) &&
+                                     areaList.isEmpty() &&
+                                     tagList.isEmpty();
+
+        if(favOnly && noSearchConditions){
+            // 条件なし＆お気に入りのみ → Cookie の ID で取得
+            spots = new ArrayList<>();
+            for(Integer id : favIds){
+                Spot s = spotDao.findById(id); // DAO に findById が必要
+                if(s != null) spots.add(s);
+            }
+        } else {
+            // 通常検索
+            spots = spotDao.searchSpots(keyword, areaList, tagList);
+
+            // favOnly の場合は絞り込み
+            if(favOnly){
+                spots = spots.stream()
+                             .filter(s -> favIds.contains(s.getSpotId()))
+                             .collect(Collectors.toList());
+            }
         }
 
         // JSON作成
