@@ -450,9 +450,9 @@ function createDaySection(day, startLat, startLng, startName) {
   const sidebarId = "sidebarDay" + day;
 
   const html = `
-    <div class="day-section" id="${sectionId}" style="width:99vw">
+    <div class="day-section" id="${sectionId}" style="width:100%">
       <h5>Day ${day}</h5>
-      <div style="display:flex; width:97vw;">
+      <div style="display:flex; width:100%;">
         <div id="${sidebarId}" class="sidebar card p-2" style="width:30%;">
           <div class="route-history mt-3" id="routeHistoryDay${day}"></div>
           <button class="btn btn-primary w-100 mb-2 nextSpotBtn">次の地点へ</button>
