@@ -16,10 +16,23 @@
 
         <form action="AdminTopicsCreateExecute.action" method="post" class="form">
 
-            <!-- ▼ 日付 -->
+            <!-- ▼ 掲載開始日 -->
             <div class="mb-3">
-                <label class="form-label">日付（必須）</label>
-                <input type="date" name="topicsDate" class="form-control" required>
+                <label class="form-label">掲載開始日（必須）</label>
+                <input type="date" name="publicationDate" class="form-control" required>
+            </div>
+
+            <!-- ▼ イベント開始日 -->
+            <div class="mb-3">
+                <label class="form-label">イベント開始日（必須）</label>
+                <input type="date" name="startDate" class="form-control" required>
+            </div>
+
+            <!-- ▼ イベント終了日 -->
+            <div class="mb-3">
+                <label class="form-label">イベント終了日（必須）</label>
+                <input type="date" name="endDate" class="form-control" required>
+                <small>＊イベント終了日が掲載の終了日にもなります。</small>
             </div>
 
             <!-- ▼ トピックス内容 -->

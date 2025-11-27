@@ -14,48 +14,50 @@ public class AdminTopicsCreateExecuteAction extends Action {
     @Override
     public void execute(HttpServletRequest req, HttpServletResponse res) throws Exception {
 
-        req.setCharacterEncoding("UTF-8");
+        // ▼ リクエストパラメータ取得
+        String publicationDateStr = req.getParameter("publicationDate");
+        String startDateStr       = req.getParameter("startDate");
+        String endDateStr         = req.getParameter("endDate");
+        String topicsContent      = req.getParameter("topicsContent");
+        String city               = req.getParameter("city");
 
-        // ▼ フォーム値取得
-        String topicsDateStr   = req.getParameter("topicsDate");
-        String topicsContent   = req.getParameter("topicsContent");
-        String city            = req.getParameter("city");
+        // ▼ 日付変換
+        Date publicationDate = Date.valueOf(publicationDateStr);
+        Date startDate       = Date.valueOf(startDateStr);
+        Date endDate         = Date.valueOf(endDateStr);
 
-        // ▼ 日付処理（空なら今日）
-        Date topicsDate;
-        try {
-            if (topicsDateStr != null && !topicsDateStr.isEmpty()) {
-                topicsDate = Date.valueOf(topicsDateStr);
-            } else {
-                topicsDate = new Date(System.currentTimeMillis());
-            }
-        } catch (IllegalArgumentException e) {
-            topicsDate = new Date(System.currentTimeMillis());
-        }
 
-        // ▼ 内容チェック
-        if (topicsContent == null || topicsContent.trim().isEmpty()) {
-            req.setAttribute("error", "トピックス内容を入力してください");
+     // ▼ バリデーション: 終了日が掲載開始日より前の場合
+        if (endDate.before(publicationDate)) {
+            // エラー内容をリクエスト属性にセット
+            req.setAttribute("error", "掲載開始日より前の日付に設定はできません");
+            // 再表示（作成画面に戻す）
             req.getRequestDispatcher("admin_topics_create.jsp").forward(req, res);
-            return;
+            return; // 以降処理は中断
         }
 
-        // ▼ Beanにセット
-        Topics topics = new Topics();
-        topics.setTopicsDate(topicsDate);
-        topics.setTopicsContent(topicsContent);
-        topics.setTopicsArea(city);
+        // ▼ バリデーション: 終了日が開始日より前の場合
+        if (endDate.before(startDate)) {
+            // エラー内容をリクエスト属性にセット
+            req.setAttribute("error", "イベント開始日より前の日付に設定はできません");
+            // 再表示（作成画面に戻す）
+            req.getRequestDispatcher("admin_topics_create.jsp").forward(req, res);
+            return; // 以降処理は中断
+        }
 
-        // ▼ DAOで登録
+        // ▼ Topics Bean 作成
+        Topics t = new Topics();
+        t.setTopicsPublicationDate(publicationDate);
+        t.setTopicsStartDate(startDate);
+        t.setTopicsEndDate(endDate);
+        t.setTopicsContent(topicsContent);
+        t.setTopicsArea(city);
+
+        // ▼ DAO で登録
         TopicsDAO dao = new TopicsDAO();
-        int result = dao.insert(topics);
+        dao.insert(t);
 
-        // ▼ 成功/失敗処理
-        if(result == 1) {
-            req.getRequestDispatcher("admin_topics_create_done.jsp").forward(req, res);
-        } else {
-            req.setAttribute("error", "登録に失敗しました");
-            req.getRequestDispatcher("admin_topics_create.jsp").forward(req, res);
-        }
+        // ▼ 登録完了画面へ
+        req.getRequestDispatcher("admin_topics_create_done.jsp").forward(req, res);
     }
 }

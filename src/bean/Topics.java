@@ -1,41 +1,30 @@
 package bean;
 
-import java.io.Serializable;
 import java.sql.Date;
 
-public class Topics implements Serializable {
+public class Topics {
+    private int topicsId;
+    private Date topicsPublicationDate;
+    private Date topicsStartDate;
+    private Date topicsEndDate;
+    private String topicsContent;
+    private String topicsArea;
 
-    private int topicsId;          // 主キー
-    private Date topicsDate;       // 日付
-    private String topicsContent;  // 内容
-    private String topicsArea;     // 市区町村名
+    public int getTopicsId() { return topicsId; }
+    public void setTopicsId(int topicsId) { this.topicsId = topicsId; }
 
-    public int getTopicsId() {
-        return topicsId;
-    }
-    public void setTopicsId(int topicsId) {
-        this.topicsId = topicsId;
-    }
+    public Date getTopicsPublicationDate() { return topicsPublicationDate; }
+    public void setTopicsPublicationDate(Date topicsPublicationDate) { this.topicsPublicationDate = topicsPublicationDate; }
 
-    public Date getTopicsDate() {
-        return topicsDate;
-    }
-    public void setTopicsDate(Date topicsDate) {
-        this.topicsDate = topicsDate;
-    }
+    public Date getTopicsStartDate() { return topicsStartDate; }
+    public void setTopicsStartDate(Date topicsStartDate) { this.topicsStartDate = topicsStartDate; }
 
-    public String getTopicsContent() {
-        return topicsContent;
-    }
-    public void setTopicsContent(String topicsContent) {
-        this.topicsContent = topicsContent;
-    }
+    public Date getTopicsEndDate() { return topicsEndDate; }
+    public void setTopicsEndDate(Date topicsEndDate) { this.topicsEndDate = topicsEndDate; }
 
-    public String getTopicsArea() {
-        return topicsArea;
-    }
-    public void setTopicsArea(String topicsArea) {
-        this.topicsArea = topicsArea;
-    }
+    public String getTopicsContent() { return topicsContent; }
+    public void setTopicsContent(String topicsContent) { this.topicsContent = topicsContent; }
 
+    public String getTopicsArea() { return topicsArea; }
+    public void setTopicsArea(String topicsArea) { this.topicsArea = topicsArea; }
 }

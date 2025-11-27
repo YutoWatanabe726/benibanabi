@@ -12,7 +12,7 @@
 			<h2>トピックス新規作成登録完了</h2>
 			<div>
 				<p>登録が完了しました</p>
-				<a href="AdminTopicsSetting.action">管理者観光スポットへ</a>
+				<a href="AdminTopicsSetting.action">管理者トピックスへ</a>
 				<a href="AdminMenu.action">管理者機能一覧へ</a>
 			</div>
 		</div>

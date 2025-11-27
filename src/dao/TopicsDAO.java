@@ -20,13 +20,18 @@ public class TopicsDAO extends Dao {
         ResultSet rs = null;
 
         try {
-            st = con.prepareStatement("SELECT TOPICS_ID, TOPICS_DATE, TOPICS_CONTENT, TOPICS_AREA FROM TOPICS ORDER BY TOPICS_DATE DESC");
+            st = con.prepareStatement(
+                "SELECT TOPICS_ID, TOPICS_PUBLICATION_DATE, TOPICS_STARTDATE, TOPICS_ENDDATE, TOPICS_CONTENT, TOPICS_AREA " +
+                "FROM TOPICS ORDER BY TOPICS_PUBLICATION_DATE DESC"
+            );
             rs = st.executeQuery();
 
             while (rs.next()) {
                 Topics t = new Topics();
                 t.setTopicsId(rs.getInt("TOPICS_ID"));
-                t.setTopicsDate(rs.getDate("TOPICS_DATE"));
+                t.setTopicsPublicationDate(rs.getDate("TOPICS_PUBLICATION_DATE"));
+                t.setTopicsStartDate(rs.getDate("TOPICS_STARTDATE"));
+                t.setTopicsEndDate(rs.getDate("TOPICS_ENDDATE"));
                 t.setTopicsContent(rs.getString("TOPICS_CONTENT"));
                 t.setTopicsArea(rs.getString("TOPICS_AREA"));
                 list.add(t);
@@ -50,11 +55,14 @@ public class TopicsDAO extends Dao {
 
         try {
             st = con.prepareStatement(
-                "INSERT INTO TOPICS (TOPICS_DATE, TOPICS_CONTENT, TOPICS_AREA) VALUES (?, ?, ?)"
+                "INSERT INTO TOPICS (TOPICS_PUBLICATION_DATE, TOPICS_STARTDATE, TOPICS_ENDDATE, TOPICS_CONTENT, TOPICS_AREA) " +
+                "VALUES (?, ?, ?, ?, ?)"
             );
-            st.setDate(1, t.getTopicsDate());
-            st.setString(2, t.getTopicsContent());
-            st.setString(3, t.getTopicsArea());
+            st.setDate(1, t.getTopicsPublicationDate());
+            st.setDate(2, t.getTopicsStartDate());
+            st.setDate(3, t.getTopicsEndDate());
+            st.setString(4, t.getTopicsContent());
+            st.setString(5, t.getTopicsArea());
 
             result = st.executeUpdate();
 
@@ -76,12 +84,15 @@ public class TopicsDAO extends Dao {
 
         try {
             st = con.prepareStatement(
-                "UPDATE TOPICS SET TOPICS_DATE = ?, TOPICS_CONTENT = ?, TOPICS_AREA = ? WHERE TOPICS_ID = ?"
+                "UPDATE TOPICS SET TOPICS_PUBLICATION_DATE = ?, TOPICS_STARTDATE = ?, TOPICS_ENDDATE = ?, " +
+                "TOPICS_CONTENT = ?, TOPICS_AREA = ? WHERE TOPICS_ID = ?"
             );
-            st.setDate(1, t.getTopicsDate());
-            st.setString(2, t.getTopicsContent());
-            st.setString(3, t.getTopicsArea());
-            st.setInt(4, t.getTopicsId());
+            st.setDate(1, t.getTopicsPublicationDate());
+            st.setDate(2, t.getTopicsStartDate());
+            st.setDate(3, t.getTopicsEndDate());
+            st.setString(4, t.getTopicsContent());
+            st.setString(5, t.getTopicsArea());
+            st.setInt(6, t.getTopicsId());
 
             result = st.executeUpdate();
 
@@ -92,5 +103,4 @@ public class TopicsDAO extends Dao {
 
         return result; // 1なら成功
     }
-
 }
