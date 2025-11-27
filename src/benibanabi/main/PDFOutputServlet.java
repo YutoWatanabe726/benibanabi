@@ -1,9 +1,11 @@
 package benibanabi.main;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -50,8 +52,8 @@ public class PDFOutputServlet extends HttpServlet {
         public Integer stayTime; // 分
         public String memo;
         public String transport; // 徒歩/車/電車
-        public String photoUrl;  // /images/xxx.jpg
-        public String mapImage;  // Base64 (今は未使用でもOK)
+        public String photoUrl;  // DB に保存されている写真URL（http… または /images/...）
+        public String mapImage;  // Base64 (data:image/png;base64,... を含んでいてもOK)
     }
 
     public static class PdfRoutePayload {
@@ -107,31 +109,99 @@ public class PDFOutputServlet extends HttpServlet {
         return s.substring(0, maxLen - 1) + "…";
     }
 
-    // 画像読み込み（/images/xxx.jpg → PDF画像）
-    private PDImageXObject loadImageFromWebPath(PDDocument doc, String webPath) {
+    /* =====================================
+       画像読み込み系ユーティリティ
+       ===================================== */
+
+    /**
+     * WebパスまたはURLから画像を読み込んで PDImageXObject にする。
+     * - "http://", "https://" で始まる場合 → URLから取得
+     * - それ以外 → Webアプリ内の相対パスとして getRealPath でファイル参照
+     */
+    private PDImageXObject loadImageFromAny(PDDocument doc, String pathOrUrl) {
+        if (pathOrUrl == null || pathOrUrl.trim().isEmpty()) {
+            return null;
+        }
         try {
-            if (webPath == null || webPath.isEmpty()) return null;
-            String realPath = getServletContext().getRealPath(webPath);
-            if (realPath == null) return null;
-            File f = new File(realPath);
-            if (!f.exists()) return null;
-            return PDImageXObject.createFromFileByContent(f, doc);
+            String p = pathOrUrl.trim();
+            // 絶対URLの場合
+            if (p.startsWith("http://") || p.startsWith("https://")) {
+                try (InputStream in = new URL(p).openStream();
+                     ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                    byte[] buf = new byte[8192];
+                    int len;
+                    while ((len = in.read(buf)) != -1) {
+                        baos.write(buf, 0, len);
+                    }
+                    byte[] bytes = baos.toByteArray();
+                    return PDImageXObject.createFromByteArray(doc, bytes, "web-image");
+                }
+            } else {
+                // Webアプリ内の相対パス（例：/images/xxx.jpg）
+                String realPath = getServletContext().getRealPath(p);
+                if (realPath == null) return null;
+                File f = new File(realPath);
+                if (!f.exists()) return null;
+                return PDImageXObject.createFromFileByContent(f, doc);
+            }
         } catch (Exception e) {
+            // 失敗してもPDF生成は続行する
             return null;
         }
     }
 
-    // Base64（地図）→ PDF画像（※今は mapImage が空でもOK）
+    /**
+     * RoutePoint に応じて写真画像を取得する。
+     * - normal：rp.photoUrl（DBのURL or /images/xxx）
+     * - start：/images/pdf_default_start.png
+     * - meal ：/images/pdf_default_meal.png
+     * - goal ：/images/pdf_default_goal.png
+     *
+     * ※ 上記パスはプロジェクト内に配置する前提。
+     *   ファイル名を変える場合はここを書き換えてください。
+     */
+    private PDImageXObject loadPhotoImage(PDDocument doc, RoutePoint rp) {
+        String path = null;
+
+        if ("start".equals(rp.type)) {
+            path = "/images/pdf_default_start.png";
+        } else if ("meal".equals(rp.type)) {
+            path = "/images/pdf_default_meal.png";
+        } else if ("goal".equals(rp.type)) {
+            path = "/images/pdf_default_goal.png";
+        } else {
+            // 通常スポットは DB の photoUrl を使用
+            path = rp.photoUrl;
+            if (path == null || path.trim().isEmpty()) {
+                // 写真が無い場合は共通のプレースホルダにしてもOK
+                // 例）path = "/images/placeholder.jpg";
+            }
+        }
+
+        return loadImageFromAny(doc, path);
+    }
+
+    /**
+     * Base64（dataURL形式でもOK）から画像を読み込む。
+     * routeData.routes[].mapImage をここでPDF画像に変換。
+     */
     private PDImageXObject loadImageFromBase64(PDDocument doc, String base64) {
         try {
-            if (base64 == null || base64.isEmpty()) return null;
-            byte[] bytes = Base64.getDecoder().decode(base64);
+            if (base64 == null || base64.trim().isEmpty()) return null;
+            String b64 = base64.trim();
+            // "data:image/png;base64,......" の場合は ',' 以降だけデコード
+            int comma = b64.indexOf(',');
+            if (comma >= 0) {
+                b64 = b64.substring(comma + 1);
+            }
+            byte[] bytes = Base64.getDecoder().decode(b64);
             return PDImageXObject.createFromByteArray(doc, bytes, "map-image");
         } catch (Exception e) {
             return null;
         }
     }
 
+    // ===================================================
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
@@ -464,7 +534,9 @@ public class PDFOutputServlet extends HttpServlet {
                         moveMin = (dist / speed) * 60.0;
                     }
 
-                    PDImageXObject photoImage = loadImageFromWebPath(doc, rp.photoUrl);
+                    // ★ 写真（typeに応じて default or DB URL）
+                    PDImageXObject photoImage = loadPhotoImage(doc, rp);
+                    // ★ マップ画像（各地点用 Base64）
                     PDImageXObject mapImage = loadImageFromBase64(doc, rp.mapImage);
 
                     try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
