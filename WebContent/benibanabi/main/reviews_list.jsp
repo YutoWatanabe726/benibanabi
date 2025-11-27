@@ -3,6 +3,12 @@
 <%@ page import="bean.Spot" %>
 <%@ page import="bean.Reviews" %>
 
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
+<c:import url="/common/base.jsp">
+<c:param name="title">口コミ一覧</c:param>
+<c:param name="content">
+
 <%
     Spot spot = (Spot) request.getAttribute("spot");
     List<Reviews> reviewList = (List<Reviews>) request.getAttribute("reviewList");
@@ -30,79 +36,11 @@
 <meta charset="UTF-8">
 <title><%= spot.getSpotName() %> の口コミ一覧</title>
 
-<style>
-body {
-    font-family: "メイリオ", sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #fafafa;
-}
+<!-- 共通 CSS -->
+<link rel="stylesheet" href="<%= request.getContextPath() %>/css/style.css">
+<!-- 口コミ一覧専用 CSS -->
+<link rel="stylesheet" href="<%= request.getContextPath() %>/css/spot_reviews.css">
 
-.container {
-    width: 90%;
-    margin: 20px auto;
-}
-
-h1 {
-    font-size: 26px;
-    border-left: 8px solid #4dabf7;
-    padding-left: 10px;
-}
-
-.spot-info {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 25px;
-}
-
-.spot-photo {
-    width: 220px;
-    height: auto;
-    border-radius: 10px;
-}
-
-.review-box {
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    border-left: 5px solid #ffb74d;
-    margin-bottom: 15px;
-}
-
-.back-btn {
-    display: inline-block;
-    margin-top: 25px;
-    background: #4dabf7;
-    color: white;
-    padding: 10px 18px;
-    text-decoration: none;
-    border-radius: 6px;
-}
-
-.back-btn:hover {
-    background: #339af0;
-}
-
-/* ページネーション */
-.pagination {
-    text-align: center;
-    margin: 20px 0;
-}
-.pagination button {
-    padding: 6px 12px;
-    margin: 2px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.pagination button.active {
-    background: #4dabf7;
-    color: white;
-}
-.pagination button:hover:not(.active) {
-    background: #8ecae6;
-}
-</style>
 <script>
 function goPage(page) {
     const form = document.getElementById('pageForm');
@@ -119,17 +57,16 @@ function goPage(page) {
     <!-- 上部戻るボタン -->
     <a href="SpotDetail.action?spot_id=<%= spot.getSpotId() %>" class="back-btn">スポット詳細へ戻る</a>
 
+    <!-- タイトル -->
     <h1><%= spot.getSpotName() %> の口コミ一覧</h1>
 
+    <!-- スポット情報（写真左・説明文右） -->
     <div class="spot-info">
         <img src="<%= request.getContextPath() + spot.getSpotPhoto() %>" class="spot-photo">
-        <div>
-            <p style="font-size: 16px; line-height: 1.6;">
-                <%= spot.getDescription() %>
-            </p>
-        </div>
+        <p><%= spot.getDescription() %></p>
     </div>
 
+    <!-- 口コミ表示 -->
     <% if (displayReviews.isEmpty()) { %>
         <p>口コミはまだありません。</p>
     <% } else { %>
@@ -163,3 +100,5 @@ function goPage(page) {
 
 </body>
 </html>
+</c:param>
+</c:import>
