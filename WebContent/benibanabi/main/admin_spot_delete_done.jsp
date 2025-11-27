@@ -10,7 +10,7 @@
 			<div>
 				<p>削除が完了しました</p>
 				<a href="AdminSpotSetting.action">管理者観光スポット一覧へ</a>
-				<a href="admin_menu.jsp">管理者メニューへ</a>
+				<a href="AdminMenu.action">管理者メニューへ</a>
 			</div>
 		</div>
 	</c:param>

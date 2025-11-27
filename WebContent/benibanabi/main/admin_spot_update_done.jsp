@@ -9,7 +9,7 @@
             <h2>観光スポット更新完了</h2>
             <p>更新が完了しました。</p>
             <a href="AdminSpotSetting.action" class="btn btn-primary">管理者観光スポット一覧へ</a>
-            <a href="admin_menu.jsp" class="btn btn-secondary">管理者メニューへ</a>
+            <a href="AdminMenu.action" class="btn btn-secondary">管理者メニューへ</a>
         </div>
     </c:param>
 </c:import>
