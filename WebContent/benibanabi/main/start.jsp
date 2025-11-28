@@ -224,6 +224,67 @@ otherValue.addEventListener("input", () => {
   tripInput.value = otherValue.value;
   box.textContent = "日数：" + otherValue.value + "日";
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    const dataStr = localStorage.getItem("routesData");
+    if(!dataStr) return;
+
+    try {
+        const data = JSON.parse(dataStr);
+
+        // コースタイトル復元
+        if(data.courseTitle) {
+            document.getElementById("courseTitle").value = data.courseTitle;
+        }
+
+        // 日数復元
+        if(data.tripDays) {
+            const val = data.tripDays;
+            const days = document.querySelectorAll(".day-option");
+            days.forEach(d => {
+                if(d.dataset.value === val) {
+                    d.classList.add("active");
+                    document.getElementById("daySelectBox").textContent = "日数：" + (val === "other" ? "その他" : val + "日");
+                } else {
+                    d.classList.remove("active");
+                }
+            });
+
+            if(Number(val) >= 10) {
+                document.getElementById("otherDayInput").style.display = "block";
+                document.getElementById("otherDayValue").value = val;
+            } else {
+                document.getElementById("otherDayInput").style.display = "none";
+            }
+            document.getElementById("tripDays").value = val;
+        }
+
+        // スタート地点復元
+        if(data.startPoint) {
+            const radios = document.querySelectorAll('input[name="startPoint"]');
+            radios.forEach(r => {
+                r.checked = (r.value === data.startPoint);
+                if(r.value === "任意の地点") {
+                    document.getElementById("address-field").style.display = (r.checked) ? "block" : "none";
+                }
+            });
+        }
+
+        // 任意住所復元
+        if(data.address) {
+            document.getElementById("address").value = data.address;
+        }
+
+        // 観光開始時間復元
+        if(data.startTime) {
+            document.getElementById("startTime").value = data.startTime;
+        }
+
+    } catch(e) {
+        console.error("LocalStorage 復元エラー", e);
+    }
+});
+
 </script>
 
 </body>

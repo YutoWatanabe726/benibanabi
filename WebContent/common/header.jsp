@@ -130,7 +130,7 @@
   <!-- メニュー -->
   <nav id="navMenu">
     <a href="<c:url value='/benibanabi/index.jsp'/>">トップ</a>
-    <a href="<c:url value='/benibanabi/main/start.jsp'/>">コース</a>
+    <a href="<c:url value='/benibanabi/main/start.jsp'/>" id="courseLink">コース</a>
     <a href="<c:url value='/benibanabi/main/SpotList.action'/>">スポット</a>
     <a href="<c:url value='/benibanabi/main/souvenir.jsp'/>">お土産紹介</a>
     <a href="<c:url value='/benibanabi/main/yamagata.jsp'/>">アクセス情報</a>
@@ -160,4 +160,15 @@ window.addEventListener("scroll", function () {
     header.classList.remove("shrink");
   }
 });
+
+document.getElementById("courseLink").addEventListener("click", function(e){
+    const data = localStorage.getItem("routesData");
+    if(data) {
+        const proceed = confirm("前回作成途中のコースがあります。続きから開きますか？");
+        if(!proceed) {
+            // LocalStorage をクリアして新規作成
+            localStorage.removeItem("routesData");
+        }
+    }
+ });
 </script>

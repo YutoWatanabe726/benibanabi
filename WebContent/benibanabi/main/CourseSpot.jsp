@@ -19,191 +19,288 @@
 
 <!-- Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
 <style>
+
 /* ================================
    全体レイアウト
 ================================ */
 body {
   font-family: Arial, sans-serif;
-  background:#f8f8f8;
-  margin:0;
-  padding:0;
+  background: #f8f8f8;
+  margin: 0;
+  padding: 0;
+  color: #333;
 }
 
 h3 {
-  margin-bottom:0px;
+  margin-bottom: 0;
 }
 
-/* サイドバー */
+/* ================================
+   サイドバー
+================================ */
 .sidebar button {
-  margin-bottom:6px;
+  margin-bottom: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #ffb35e;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.sidebar button:hover {
+  background: #d92929;
 }
 
 /* ================================
    履歴表示エリア
 ================================ */
 .route-history {
-  max-height:450px;
-  overflow-y:auto;
-  border-top:1px solid #ccc;
-  padding-top:10px;
+  max-height: 450px;
+  overflow-y: auto;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
 }
 
 /* ================================
-   カード（スポット）
+   カード（スポット / ルート）
 ================================ */
 .route-card, .route-item {
-  background:#ffffff;
-  border-radius:10px;
-  padding:10px 12px;
-  margin-bottom:12px;
-  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: 0.2s;
+}
+
+.route-card:hover, .route-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* カードヘッダー */
 .route-card .card-header,
 .route-item .card-header {
-  font-weight:bold;
-  font-size:1rem;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+  font-weight: bold;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* 削除ボタン */
 .removeBtn {
-  background:#ff5a5a;
-  border:none;
-  color:white;
-  padding:2px 8px;
-  border-radius:5px;
-  cursor:pointer;
-}
-.removeBtn:hover {
-  background:#ff2e2e;
+  background: #ff5a5a;
+  border: none;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-/* 滞在時間・メモ部分 */
+.removeBtn:hover {
+  background: #ff2e2e;
+}
+
+/* 滞在時間・メモ */
 .route-card .card-body {
-  margin-top:6px;
-  font-size:0.9rem;
-  color:#444;
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #444;
 }
 
 .stayTimeInput, .stayTime {
-  width:60px;
-}
-.memoInput {
-  width:100%;
-  margin-top:4px;
+  width: 60px;
 }
 
-/* ラベル風 */
+.memoInput {
+  width: 100%;
+  margin-top: 4px;
+}
+
 .small-muted {
-  color:#666;
-  font-size:0.85rem;
-  margin-bottom:4px;
+  color: #666;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
 }
 
 /* ================================
-   ▼ 矢印カード（移動情報）
+   矢印カード（移動情報）
 ================================ */
 .arrow-card {
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  background:#f0f4ff;
-  border-left:4px solid #4f7cff;
-  padding:0px 12px;
-  margin:-4px 0 12px 0px;
-  border-radius:8px;
-  font-size:0.9rem;
-  box-shadow:0 1px 3px rgba(0,0,0,0.08);
-  white-space:nowrap;
-  overflow:hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f4ff;
+  border-left: 4px solid #4f7cff;
+  padding: 0 12px;
+  margin: -4px 0 12px 0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.arrow-card::before {
+  content: "↓";
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #4f7cff;
+  margin-right: 5px;
 }
 
 .arrow-card select,
 .arrow-card input {
-  font-size:0.9rem;
-  margin-left:4px;
-}
-
-.arrow-card::before {
-  content:"↓";
-  font-weight:bold;
-  font-size:1.2rem;
-  color:#4f7cff;
-  margin-right:5px;
+  font-size: 0.9rem;
+  margin-left: 4px;
 }
 
 /* ================================
    モーダル内カード
 ================================ */
 .modal-card {
-  border:1px solid #ddd;
-  padding:8px;
-  margin:6px;
-  cursor:pointer;
-  position:relative;
-  border-radius:6px;
-  background:#fff;
-  transition:box-shadow 0.2s;
+  border: 1px solid #ddd;
+  padding: 8px;
+  margin: 6px;
+  cursor: pointer;
+  position: relative;
+  border-radius: 8px;
+  background: #fff;
+  transition: box-shadow 0.2s;
 }
+
 .modal-card:hover {
-  box-shadow:0 3px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
 /* お気に入り星 */
 .favorite {
-  position:absolute;
-  top:6px;
-  right:6px;
-  cursor:pointer;
-  color:#ccc;
-  user-select:none;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  cursor: pointer;
+  color: #ccc;
+  user-select: none;
+  transition: 0.2s;
 }
+
 .favorite.active {
-  color:gold;
+  color: gold;
 }
 
 /* ================================
    Day セクション
 ================================ */
 #routesContainer .day-section {
-  margin-bottom:30px;
-  background:#fff;
-  padding:14px;
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+  background: #fff;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 /* ================================
    マップ
 ================================ */
 .map-container {
-  flex:1;
-  height:600px;
-  min-height:300px;
-  border-radius:10px;
-  overflow:hidden;
+  flex: 1;
+  height: 600px;
+  min-height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 /* ================================
    インラインフォーム
 ================================ */
 .form-inline {
-  display:flex;
-  gap:8px;
-  align-items:center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
+
+/* ================================
+   汎用ボタン
+================================ */
+.btn {
+  display: inline-block;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+  border-radius: 50px;
+  background: linear-gradient(90deg, #FFB35E, #D92929);
+  box-shadow: 0 10px 22px rgba(217,41,41,0.35);
+  transition: 0.3s;
+  cursor: pointer;
+  text-align: center;
+  border: none;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(217,41,41,0.48);
+}
+/* コンテナ全体 */
+.container.mb-3 {
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
+}
+
+/* 行全体 */
+.container.mb-3 .row > .col-md-8 > div {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+/* ラベル部分 */
+.container.mb-3 strong {
+  width: 80px; /* ラベル幅を揃える */
+  display: inline-block;
+  color: #333;
+}
+
+/* 値部分 */
+.container.mb-3 span {
+  color: #555;
+}
+
+/* 小さめ文字の補足 */
+.container.mb-3 .small-muted {
+  font-size: 0.85em;
+  color: #888;
+  margin-left: 4px;
+}
+
+/* 日数表示を目立たせる */
+#tripDaysDisplay {
+  font-weight: bold;
+  color: #2a7ae2;
+}
+
+/* コースタイトルを強調 */
+#courseTitle {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #1a4b7a;
+}
+
 </style>
 </head>
 
 <body>
 
-<h3 class="text-center">旅のルート作成</h3>
+<h3 class="text-center">日別ルート作成</h3>
 
 <!-- コース情報表示（start.jspから渡された属性） -->
 <div class="container mb-3">
@@ -410,20 +507,15 @@ const FAV_COOKIE = "benibanabi_favs_v1";
 お気に入り（Cookie）
 ------------------------ */
 function loadFavsFromCookie() {
-const str = $.cookie("favSpots");
-if (!str) return [];
-try {
- return JSON.parse(str);
-} catch (e) {
- return [];
-}
+    const match = document.cookie.match(/favoriteIds=([^;]+)/);
+    if(!match) return [];
+    return decodeURIComponent(match[1]).split(",").map(v => v.trim()).filter(v=>v);
 }
 
-function saveFavsToCookie(favs) {
-$.cookie("favSpots", JSON.stringify(favs), {
- expires: 365,
- path: "/"
-});
+// Cookieに保存
+function saveFavsToCookie(list) {
+    const unique = Array.from(new Set(list.map(String)));
+    document.cookie = "favoriteIds=" + encodeURIComponent(unique.join(",")) + "; path=/; max-age=" + (60*60*24*365);
 }
 
 /* ------------------------
@@ -620,6 +712,7 @@ function addRouteHistory(dayIndex, name, lat, lng, type, existingCircle, photoUr
 
   renderRouteHistory(dayIndex);
   addMarker(dayIndex, name, lat, lng, type);
+  saveRoutesToLocal();
 }
 
 function renderRouteHistory(dayIndex) {
@@ -678,10 +771,44 @@ function renderRouteHistory(dayIndex) {
   }
 
   // イベント設定
-  container.find(".removeBtn").off("click").on("click", function(){
-    const index = $(this).closest(".route-item").data("index");
+container.find(".removeBtn").off("click").on("click", function(){
+    const $item = $(this).closest(".route-item");
+    const index = $item.data("index");
+    const target = routesByDay[dayIndex][index];
+
+    // Day1のスタート地点
+    if (dayIndex === 0 && target.type === "start") {
+        if (confirm("スタート地点を変更しますか？\n「OK」でスタート地点選択画面に戻ります。")) {
+            window.location.href = "start.jsp";
+        }
+        return;
+    }
+
+    // Day2以降のスタート地点
+    if (target.type === "start") {
+        if (confirm("この日のスタート地点を削除すると、前日のゴールとこの日以降のルートも削除されます。よろしいですか？")) {
+            // 前日のゴールを削除
+            const prevDayIndex = dayIndex - 1;
+            const prevRoutes = routesByDay[prevDayIndex] || [];
+            const goalIndex = prevRoutes.findIndex(r => r.type === "goal");
+            if (goalIndex >= 0) removeRoute(prevDayIndex, goalIndex);
+
+            // この日以降のセクション削除
+            for (let d = dayCount - 1; d >= dayIndex; d--) {
+                const sectionId = "#daySection" + (d + 1);
+                $(sectionId).remove();
+                routesByDay[d] = [];
+                mapsByDay[d] = null;
+            }
+            dayCount = dayIndex;
+        }
+        return;
+    }
+
+    // 通常の削除
     removeRoute(dayIndex, index);
-  });
+});
+
 
   container.find(".transportSelect").off("change").on("change", function(){
     const idx = $(this).data("index");
@@ -751,6 +878,7 @@ function removeRoute(dayIndex, index) {
     addRouteHistory(dayIndex, r.name, r.lat, r.lng, r.type, r.circle || null, r.photoUrl || null);
   });
   renderRouteHistory(dayIndex);
+  saveRoutesToLocal();
 }
 
 /* ------------------------
@@ -888,17 +1016,11 @@ function searchSpots(keyword, areas, tags, favOnly, targetSelector) {
 		    card.find(".favorite").on("click", function(e){
 		      e.stopPropagation();
 		      toggleFavCookie($(this).data("id"), this);
-
-		      // お気に入りのみ表示の場合は再描画
-		      if ($("#favOnlyCheck").prop("checked")) {
-		        updateSpotCards(true);
-		      }
 		    });
 
 		    $("#spotCards").append(card);
 		  });
 		}
-
 
 /* スポット選択 */
 function selectSpot(id, name, lat, lng, photoUrl) {
@@ -911,18 +1033,24 @@ function selectSpot(id, name, lat, lng, photoUrl) {
 }
 
 /* お気に入り切替 */
-function toggleFavCookie(id, elem) {
-  const favs = loadFavsFromCookie().map(String);
-  const strId = String(id);
-  const idx = favs.indexOf(strId);
-  if (idx === -1) {
-    favs.push(strId);
-    $(elem).addClass("active");
+function toggleFavCookie(spotId, elem) {
+  let favs = loadFavsFromCookie().map(String);
+  const idStr = String(spotId);
+
+  if (favs.includes(idStr)) {
+    favs = favs.filter(x => x !== idStr);
+    elem.classList.remove("active");
   } else {
-    favs.splice(idx, 1);
-    $(elem).removeClass("active");
+    favs.push(idStr);
+    elem.classList.add("active");
   }
+
   saveFavsToCookie(favs);
+
+  // お気に入りのみ表示の場合は即再描画
+  if ($("#favOnlyCheck").prop("checked")) {
+    updateSpotCards(true);
+  }
 }
 
 function updateSpotCards(favOnly) {
@@ -937,6 +1065,25 @@ function updateSpotCards(favOnly) {
 
 	  renderSpotCards(filtered);
 	}
+function updateFavStars() {
+    const favs = loadFavsFromCookie().map(String);
+    $(".card").each(function(){
+        const id = $(this).data("id").toString();
+        const star = $(this).find(".favorite-star");
+        const isActive = favs.includes(id);
+        star.text(isActive ? "★" : "☆").toggleClass("active", isActive);
+
+        // クリックイベント
+        star.off("click").on("click", function(e){
+            e.stopPropagation();
+            let updatedFavs = loadFavsFromCookie().map(String);
+            if(updatedFavs.includes(id)) updatedFavs = updatedFavs.filter(x=>x!==id);
+            else updatedFavs.push(id);
+            saveFavsToCookie(updatedFavs);
+            updateFavStars(); // 再描画
+        });
+    });
+}
 
 
 /* ------------------------
@@ -1097,6 +1244,7 @@ function syncRoutesFromDOM() {
   });
 }
 
+
 function buildPdfPayload() {
   const payload = {
     courseTitle: courseTitle || "未設定",
@@ -1156,23 +1304,6 @@ $("#confirmRouteBtn").on("click", function(){
 	  form.submit();
 	});
 
-function toggleFavCookie(spotId, elem) {
-	  let favs = loadFavsFromCookie().map(String); // Cookieから取得
-	  const idStr = String(spotId);
-
-	  if (favs.includes(idStr)) {
-	    // 既にお気に入りなら削除
-	    favs = favs.filter(x => x !== idStr);
-	    elem.classList.remove("active");
-	  } else {
-	    // お気に入り追加
-	    favs.push(idStr);
-	    elem.classList.add("active");
-	  }
-
-	  saveFavsToCookie(favs); // Cookieに保存
-	}
-
 /* ------------------------
    住所整形（表示用）
    ------------------------ */
@@ -1202,92 +1333,172 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-/* ------------------------
-   初期化（ページロード時）
-   ------------------------ */
-   $(document).ready(function(){
-	   // エリア・タグ一覧を DB から取得
-	   populateAreaAndTagSelects("areaDropdown", "tagDropdown");
+//------------------------
+//LocalStorage 保存・復元
+//------------------------
+function saveRoutesToLocal() {
+ const payload = buildPdfPayload(); // 既存の JSON 生成関数を利用
+ localStorage.setItem("routesData", JSON.stringify(payload));
+}
 
-	   // お気に入り（ログ用）
-	   const initialFavs = loadFavsFromCookie().map(String);
-	   console.log("初期お気に入り:", initialFavs);
+function loadRoutesFromLocal() {
+ const dataStr = localStorage.getItem("routesData");
+ if (!dataStr) return null;
+ try {
+     return JSON.parse(dataStr);
+ } catch(e) {
+     console.error("LocalStorage 読み込みエラー", e);
+     return null;
+ }
+}
 
-	   // スタート地点決定
-	   if (startPointRaw === "任意の地点") {
-	     if (startAddressRaw && startAddressRaw.trim().length > 0) {
-	       geocodeAddressNominatim(startAddressRaw)
-	         .then(function(res){
-	           $("#startAddress").text("（" + res.display_name + "）");
-	           createDaySection(1, res.lat, res.lng, startAddressRaw);
-	           mapsByDay.forEach(function(m){
-	             try { m.map.invalidateSize(); } catch(e){}
-	           });
-	         })
-	         .catch(function(err){
-	           console.warn("ジオコーディング失敗:", err);
-	           createDaySection(
-	             1,
-	             FIXED_STARTS["山形駅"].lat,
-	             FIXED_STARTS["山形駅"].lng,
-	             "山形駅（ジオコ失敗）"
-	           );
-	           mapsByDay.forEach(function(m){
-	             try { m.map.invalidateSize(); } catch(e){}
-	           });
-	         });
-	     } else {
-	       createDaySection(
-	         1,
-	         FIXED_STARTS["山形駅"].lat,
-	         FIXED_STARTS["山形駅"].lng,
-	         "山形駅"
-	       );
-	     }
-	   } else if (FIXED_STARTS[startPointRaw]) {
-	     const s = FIXED_STARTS[startPointRaw];
-	     createDaySection(1, s.lat, s.lng, startPointRaw);
-	   } else {
-	     createDaySection(
-	       1,
-	       FIXED_STARTS["山形駅"].lat,
-	       FIXED_STARTS["山形駅"].lng,
-	       startPointRaw || "山形駅"
-	     );
-	   }
+$(document).ready(function(){
+ // --------------------------
+ // エリア・タグ一覧を DB から取得
+ // --------------------------
+ populateAreaAndTagSelects("areaDropdown", "tagDropdown");
 
-	   // ===========================
-	   // 初期スポットロード（allSpots 保持対応）
-	   // ===========================
-	   const spotModalEl = document.getElementById("spotModal");
-	   spotModalEl.addEventListener("show.bs.modal", function () {
-	     // すでに allSpots にデータがある場合は再描画
-	     if(allSpots && allSpots.length > 0){
-	       updateSpotCards($("#favOnlyCheck").prop("checked"));
-	     } else {
-	       // サーバーから初期スポット取得
-	       $.ajax({
-	         url:"CourseSpotSearch.action",
-	         type:"POST",
-	         dataType:"json",
-	         success:function(data){
-	           allSpots = data.spots || [];  // グローバルに保持
-	           updateSpotCards($("#favOnlyCheck").prop("checked"));
-	         },
-	         error:function(xhr, status, err){
-	           console.error("初期スポット取得エラー", status, err);
-	         }
-	       });
-	     }
-	   });
+ // --------------------------
+ // Cookie操作：お気に入り取得・保存
+ // --------------------------
+ function loadFavsFromCookie() {
+     const match = document.cookie.match(/favoriteIds=([^;]+)/);
+     if(!match) return [];
+     return decodeURIComponent(match[1]).split(",").map(v => v.trim()).filter(v=>v);
+ }
+ function saveFavsToCookie(list) {
+     const unique = Array.from(new Set(list.map(String)));
+     document.cookie = "favoriteIds=" + encodeURIComponent(unique.join(",")) + "; path=/; max-age=" + (60*60*24*365);
+ }
 
-	   // ===========================
-	   // お気に入りチェックボックス変更時
-	   // ===========================
-	   $(document).on("change", "#favOnlyCheck", function(){
-	     updateSpotCards($(this).prop("checked"));
-	   });
-	 });
+ // --------------------------
+ // カードにお気に入り反映
+ // --------------------------
+ function updateFavStars() {
+     const favs = loadFavsFromCookie().map(String);
+     $(".card").each(function(){
+         const id = $(this).data("id").toString();
+         const star = $(this).find(".favorite-star");
+         const isActive = favs.includes(id);
+         star.text(isActive ? "★" : "☆").toggleClass("active", isActive);
+
+         // 星クリックで切替
+         star.off("click").on("click", function(e){
+             e.stopPropagation();
+             let updatedFavs = loadFavsFromCookie().map(String);
+             if(updatedFavs.includes(id)) updatedFavs = updatedFavs.filter(x=>x!==id);
+             else updatedFavs.push(id);
+             saveFavsToCookie(updatedFavs);
+             updateFavStars(); // 再描画
+         });
+
+         // カードクリックで詳細ページ
+         $(this).off("click").on("click", function(){
+             location.href = "SpotDetail.action?spot_id=" + id;
+         });
+     });
+ }
+
+ updateFavStars(); // 初期お気に入り反映
+
+ // --------------------------
+ // スタート地点決定
+ // --------------------------
+ function initStartSection(lat, lng, name, day=1) {
+     createDaySection(day, lat, lng, name);
+     mapsByDay.forEach(m => { try { m.map.invalidateSize(); } catch(e){} });
+ }
+
+ // --------------------------
+ // LocalStorage から復元
+ // --------------------------
+ const savedData = loadRoutesFromLocal();
+ if (savedData && savedData.routes) {
+     routesByDay = savedData.routes.map(day => day.map(r => ({
+         ...r
+     })));
+     dayCount = routesByDay.length;
+
+     // DOM に反映
+     routesByDay.forEach((dayRoute, d) => {
+         dayRoute.forEach((r, i) => {
+             if (i === 0) {
+                 // 各日のスタート地点
+                 initStartSection(r.lat, r.lng, r.name, d+1);
+             } else {
+                 addRouteHistory(d, r.name, r.lat, r.lng, r.type || "normal");
+             }
+         });
+     });
+ } else {
+     // 保存データがない場合は従来通りスタート地点
+     if (startPointRaw === "任意の地点") {
+         if (startAddressRaw && startAddressRaw.trim().length > 0) {
+             geocodeAddressNominatim(startAddressRaw)
+                 .then(res => {
+                     $("#startAddress").text("（" + res.display_name + "）");
+                     initStartSection(res.lat, res.lng, startAddressRaw);
+                 })
+                 .catch(err => {
+                     console.warn("ジオコーディング失敗:", err);
+                     initStartSection(FIXED_STARTS["山形駅"].lat, FIXED_STARTS["山形駅"].lng, "山形駅（ジオコ失敗）");
+                 });
+         } else {
+             initStartSection(FIXED_STARTS["山形駅"].lat, FIXED_STARTS["山形駅"].lng, "山形駅");
+         }
+     } else if (FIXED_STARTS[startPointRaw]) {
+         const s = FIXED_STARTS[startPointRaw];
+         initStartSection(s.lat, s.lng, startPointRaw);
+     } else {
+         initStartSection(FIXED_STARTS["山形駅"].lat, FIXED_STARTS["山形駅"].lng, startPointRaw || "山形駅");
+     }
+ }
+
+ // --------------------------
+ // 初期スポットロード（allSpots 保持対応）
+ // --------------------------
+ const spotModalEl = document.getElementById("spotModal");
+ spotModalEl.addEventListener("show.bs.modal", function () {
+     if(allSpots && allSpots.length > 0) {
+         updateSpotCards($("#favOnlyCheck").prop("checked"));
+         updateFavStars();
+     } else {
+         $.ajax({
+             url: "CourseSpotSearch.action",
+             type: "POST",
+             dataType: "json",
+             success: function(data){
+                 allSpots = data.spots || [];
+                 updateSpotCards($("#favOnlyCheck").prop("checked"));
+                 updateFavStars();
+             },
+             error: function(xhr, status, err){
+                 console.error("初期スポット取得エラー", status, err);
+             }
+         });
+     }
+ });
+
+ // --------------------------
+ // お気に入りのみ表示切替
+ // --------------------------
+ $(document).on("change", "#favOnlyCheck", function(){
+     updateSpotCards($(this).prop("checked"));
+     setTimeout(updateFavStars, 50);
+ });
+
+ // --------------------------
+ // DOM 変更時に LocalStorage に保存
+ // --------------------------
+ $(".day-section").on("change", ".stayTime, .transportSelect", function(){
+     syncRoutesFromDOM();
+     saveRoutesToLocal();
+ });
+ $(".day-section").on("input", ".memoInput", function(){
+     syncRoutesFromDOM();
+     saveRoutesToLocal();
+ });
+});
 
 </script>
 
