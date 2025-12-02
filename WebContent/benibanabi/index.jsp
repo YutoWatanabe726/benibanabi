@@ -1,6 +1,15 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
+<%@ page import="dao.TopicsDAO, java.util.List, bean.Topics" %>
+
+<%
+    // ▼ DB からトピックスを取得して JSP に渡す（index.jsp 単独で動く）
+    TopicsDAO dao = new TopicsDAO();
+    List<Topics> topTopics = dao.findAll();   // 必要ならフィルタリング可
+    request.setAttribute("topTopics", topTopics);
+%>
+
 <c:import url="../common/base.jsp">
   <c:param name="title" value="べにばナビ TOP" />
   <c:param name="content">
@@ -160,38 +169,35 @@ setInterval(showSlide, 4500);
 </script>
 
 
-<!-- ================= イベント ================= -->
+<!-- ================= 最新トピックス（DBから取得） ================= -->
+<h2 class="section-title fade-left">最新トピックス</h2>
+
+<c:if test="${not empty topTopics}">
+  <c:forEach var="t" items="${topTopics}">
+    <div class="topic-item fade-right">
+      <div class="topic-meta">
+        ${t.topicsPublicationDate} — ${t.topicsArea}
+      </div>
+      <div class="topic-title">${t.topicsContent}</div>
+    </div>
+  </c:forEach>
+</c:if>
+
+<c:if test="${empty topTopics}">
+  <p>最新トピックスはありません。</p>
+</c:if>
+
+
+<!-- ================= イベント（暫定：トピックス再利用） ================= -->
 <h2 class="section-title fade-left">直近のイベント</h2>
 
 <div class="event-list">
-  <div class="event-item fade-up" style="transition-delay:0s">
-    <h3>世界はとなりやまがたフェス</h3>
-    <p>10/25（土）＠やまぎん県民ホール広場</p>
-  </div>
-
-  <div class="event-item fade-up" style="transition-delay:0.1s">
-    <h3>全国ぐっと！！餃子まつり</h3>
-    <p>10/24〜27＠道の駅やまがた蔵王</p>
-  </div>
-
-  <div class="event-item fade-up" style="transition-delay:0.2s">
-    <h3>やまがた秋の芸術祭</h3>
-    <p>9/1〜11/30＠山形市ほか</p>
-  </div>
-</div>
-
-
-<!-- ================= トピックス ================= -->
-<h2 class="section-title fade-left">最新トピックス</h2>
-
-<div class="topic-item fade-right" style="transition-delay:0s">
-  <div class="topic-meta">2025.11.12 — 大蔵村</div>
-  <div class="topic-title">【イベント】高円寺で「やまがた村祭り」を開催</div>
-</div>
-
-<div class="topic-item fade-right" style="transition-delay:0.12s">
-  <div class="topic-meta">2025.05.19 — 山形県観光文化協会</div>
-  <div class="topic-title">【動画公開】山形旅番組を YouTube にて配信中</div>
+  <c:forEach var="t" items="${topTopics}">
+    <div class="event-item fade-up">
+      <h3>${t.topicsContent}</h3>
+      <p>${t.topicsStartDate} 〜 ${t.topicsEndDate} ／ ${t.topicsArea}</p>
+    </div>
+  </c:forEach>
 </div>
 
 
