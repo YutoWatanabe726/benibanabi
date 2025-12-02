@@ -161,14 +161,33 @@ window.addEventListener("scroll", function () {
   }
 });
 
-document.getElementById("courseLink").addEventListener("click", function(e){
-    const data = localStorage.getItem("routesData");
-    if(data) {
-        const proceed = confirm("前回作成途中のコースがあります。続きから開きますか？");
-        if(!proceed) {
-            // LocalStorage をクリアして新規作成
-            localStorage.removeItem("routesData");
-        }
+/* ---- コースリンククリック時の LocalStorage 復元確認 ---- */
+document.addEventListener("DOMContentLoaded", function() {
+  const courseLink = document.getElementById("courseLink");
+  if (!courseLink) return;
+
+  courseLink.addEventListener("click", function(e) {
+    e.preventDefault();
+
+    const stored = localStorage.getItem("routesData");
+    if (!stored) {
+      // 保存データなし → 新規作成ページへ
+      window.location.href = "<c:url value='/benibanabi/main/start.jsp'/>";
+      return;
     }
- });
+
+    // 保存データあり → 確認
+    const proceed = confirm("前回作成途中のコースがあります。続きから開きますか？");
+
+    if (!proceed) {
+      // 復元せず削除 → 新規作成ページ
+      localStorage.removeItem("routesData");
+      window.location.href = "<c:url value='/benibanabi/main/start.jsp'/>";
+      return;
+    }
+
+    // 「はい」 → course.jsp に遷移（復元処理は course.jsp 側で実施）
+    window.location.href = "<c:url value='/benibanabi/main/CourseSpot.jsp'/>";
+  });
+});
 </script>

@@ -1,11 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <c:import url="/common/base.jsp">
-	<c:param name="title">
-	コース作成
-	</c:param>
+    <c:param name="title">コース作成</c:param>
 
-	<c:param name="content">
+    <c:param name="content">
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -13,6 +11,7 @@
 <title>スタート地点設定</title>
 
 <style>
+/* ===== 全体 ===== */
 body {
   font-family: Arial, sans-serif;
   background:#f5f7fa;
@@ -20,7 +19,7 @@ body {
   padding:0;
 }
 header {
-  background:#ff7043;
+  background: linear-gradient(90deg, #FFAA47, #E6483E);
   color:#fff;
   text-align:center;
   padding:16px;
@@ -36,7 +35,7 @@ main {
 }
 label { display:block; margin-top:1rem; font-weight:bold; }
 
-/* 入力欄（コースタイトル等と同じデザイン） */
+/* ===== 入力欄 ===== */
 .input-like {
   width:100%;
   padding:10px;
@@ -46,13 +45,13 @@ label { display:block; margin-top:1rem; font-weight:bold; }
   cursor:pointer;
 }
 
-/* ▼ 日数選択モーダル（折りたたみ） */
+/* ===== 日数モーダル ===== */
 #daySelectArea {
   margin-top:8px;
   display:none;
   padding:10px;
-  background:#fff7f0;
-  border:1px solid #ffb38a;
+  background:#FFF5F3;
+  border:1px solid #FFB0A0;
   border-radius:8px;
 }
 
@@ -65,44 +64,49 @@ label { display:block; margin-top:1rem; font-weight:bold; }
 .day-option {
   padding:10px 0;
   text-align:center;
-  background:#ffe8d9;
-  border:1px solid #ffb38a;
+  background:#FFE4DD;
+  border:1px solid #FFB0A0;
   border-radius:8px;
   cursor:pointer;
   font-weight:bold;
-  color:#d35400;
+  color:#D44A3A;
+  transition:0.2s;
 }
 .day-option:hover {
-  background:#ffd5bd;
+  background:#FFD3CC;
 }
 .day-option.active {
-  background:#ff7043;
-  border-color:#ff7043;
+  background: linear-gradient(90deg, #FFAA47, #E6483E);
+  border-color:#E6483E;
   color:#fff;
 }
 
-/* その他の入力 */
+/* その他日数 */
 #otherDayInput {
   margin-top:12px;
   display:none;
 }
+
+/* 任意の住所欄 */
 #address-field { display:none; }
 
-/* ボタン */
+/* ===== ボタン ===== */
 button {
   margin-top:20px;
   width:100%;
   padding:10px;
   font-size:1.1rem;
   font-weight:bold;
-  background:#ff7043;
+  background: linear-gradient(90deg, #FFAA47, #E6483E);
   color:#fff;
   border:none;
   border-radius:8px;
   cursor:pointer;
+  transition:0.2s;
 }
-button:hover { background:#e85d2c; }
-
+button:hover {
+  opacity:0.85;
+}
 </style>
 </head>
 <body>
@@ -117,15 +121,11 @@ button:hover { background:#e85d2c; }
   <input type="text" id="courseTitle" name="courseTitle"
          class="input-like" placeholder="例：山形名所巡りコース" required />
 
-  <!-- 旅行期間（日数） -->
+  <!-- 旅行期間 -->
   <label>旅行期間（日数）</label>
+  <div id="daySelectBox" class="input-like">日数を選択してください</div>
 
-  <!-- ▼ 折りたたみ風の入力欄 -->
-  <div id="daySelectBox" class="input-like">
-    日数を選択してください
-  </div>
-
-  <!-- ▼ タブ（最大化時のみ表示） -->
+  <!-- 日数選択エリア -->
   <div id="daySelectArea">
     <div class="day-grid">
       <% for(int i=1; i<=9; i++){ %>
@@ -134,14 +134,14 @@ button:hover { background:#e85d2c; }
       <div class="day-option" data-value="other">その他</div>
     </div>
 
-    <!-- その他日数入力 -->
+    <!-- その他 -->
     <div id="otherDayInput">
       <input type="number" id="otherDayValue" min="10" max="30"
              class="input-like" placeholder="10〜30 を入力">
     </div>
   </div>
 
-  <!-- 実際にサーバへ送る値 -->
+  <!-- サーバに送る値 -->
   <input type="hidden" id="tripDays" name="tripDays" value="">
 
   <!-- スタート地点 -->
@@ -152,7 +152,7 @@ button:hover { background:#e85d2c; }
     <label><input type="radio" name="startPoint" value="任意の地点"> 任意の地点</label>
   </div>
 
-  <!-- 任意の住所 -->
+  <!-- 任意住所 -->
   <div id="address-field">
     <label for="address">任意の住所を入力</label>
     <input type="text" id="address" name="address"
@@ -171,7 +171,7 @@ button:hover { background:#e85d2c; }
 </main>
 
 <script>
-// ▼ 任意住所の開閉
+/* 任意の住所の開閉 */
 document.querySelectorAll('input[name="startPoint"]').forEach(radio => {
   radio.addEventListener('change', () => {
     document.getElementById('address-field').style.display =
@@ -179,9 +179,7 @@ document.querySelectorAll('input[name="startPoint"]').forEach(radio => {
   });
 });
 
-/* ===============================
-   日数 選択欄（最大化・最小化）
-=============================== */
+/* 日数選択 */
 const box = document.getElementById("daySelectBox");
 const area = document.getElementById("daySelectArea");
 const days = document.querySelectorAll(".day-option");
@@ -189,19 +187,14 @@ const tripInput = document.getElementById("tripDays");
 const otherBox = document.getElementById("otherDayInput");
 const otherValue = document.getElementById("otherDayValue");
 
-// ▼ 初期は閉じてる
 area.style.display = "none";
 
-// ▼ クリックで展開・閉じる
 box.addEventListener("click", () => {
   area.style.display = (area.style.display === "none") ? "block" : "none";
 });
 
-/* ▼ 日数クリック処理 */
 days.forEach(d => {
   d.addEventListener("click", () => {
-
-    // 一旦全部解除
     days.forEach(x => x.classList.remove("active"));
 
     d.classList.add("active");
@@ -219,75 +212,23 @@ days.forEach(d => {
   });
 });
 
-// その他 → 入力反映
+/* その他 → 入力反映 */
 otherValue.addEventListener("input", () => {
   tripInput.value = otherValue.value;
   box.textContent = "日数：" + otherValue.value + "日";
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-    const dataStr = localStorage.getItem("routesData");
-    if(!dataStr) return;
-
-    try {
-        const data = JSON.parse(dataStr);
-
-        // コースタイトル復元
-        if(data.courseTitle) {
-            document.getElementById("courseTitle").value = data.courseTitle;
-        }
-
-        // 日数復元
-        if(data.tripDays) {
-            const val = data.tripDays;
-            const days = document.querySelectorAll(".day-option");
-            days.forEach(d => {
-                if(d.dataset.value === val) {
-                    d.classList.add("active");
-                    document.getElementById("daySelectBox").textContent = "日数：" + (val === "other" ? "その他" : val + "日");
-                } else {
-                    d.classList.remove("active");
-                }
-            });
-
-            if(Number(val) >= 10) {
-                document.getElementById("otherDayInput").style.display = "block";
-                document.getElementById("otherDayValue").value = val;
-            } else {
-                document.getElementById("otherDayInput").style.display = "none";
-            }
-            document.getElementById("tripDays").value = val;
-        }
-
-        // スタート地点復元
-        if(data.startPoint) {
-            const radios = document.querySelectorAll('input[name="startPoint"]');
-            radios.forEach(r => {
-                r.checked = (r.value === data.startPoint);
-                if(r.value === "任意の地点") {
-                    document.getElementById("address-field").style.display = (r.checked) ? "block" : "none";
-                }
-            });
-        }
-
-        // 任意住所復元
-        if(data.address) {
-            document.getElementById("address").value = data.address;
-        }
-
-        // 観光開始時間復元
-        if(data.startTime) {
-            document.getElementById("startTime").value = data.startTime;
-        }
-
-    } catch(e) {
-        console.error("LocalStorage 復元エラー", e);
+/* ▼ スタート地点設定ボタン押下時のバリデーション */
+document.getElementById("startForm").addEventListener("submit", function(event){
+    if(!tripInput.value){
+        alert("旅行期間（日数）を選択してください。");
+        event.preventDefault();
+        return false;
     }
 });
-
 </script>
 
 </body>
 </html>
-	</c:param>
+    </c:param>
 </c:import>
