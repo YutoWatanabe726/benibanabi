@@ -10,9 +10,9 @@ public class AdminSouvenirCreateAction extends Action {
     @Override
     public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-        // 名産品追加画面へ
+        // 追加画面へ遷移
         request.getRequestDispatcher(
-            "/benibanabi/benibanabi/main/souvenir_add.jsp"
+            "/benibanabi/main/souvenir_add.jsp"
         ).forward(request, response);
     }
 }

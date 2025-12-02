@@ -7,8 +7,7 @@ public class SouvenirDAO {
 
     public void insert(String name, String description, String price, String image) {
 
-        String sql =
-            "INSERT INTO SOUVENIR(name, description, price, image) VALUES(?,?,?,?)";
+        String sql = "INSERT INTO SOUVENIR(name, description, price, image) VALUES (?, ?, ?, ?)";
 
         try (Connection con = DBManager.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -24,5 +23,4 @@ public class SouvenirDAO {
             e.printStackTrace();
         }
     }
-
 }

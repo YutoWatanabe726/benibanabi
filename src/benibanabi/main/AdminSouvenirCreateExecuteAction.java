@@ -17,32 +17,34 @@ public class AdminSouvenirCreateExecuteAction extends Action {
 
         request.setCharacterEncoding("UTF-8");
 
-        // 入力値
         String name = request.getParameter("name");
         String description = request.getParameter("description");
         String price = request.getParameter("price");
 
-        // 画像処理
+        // 画像の Part を取得
         Part part = request.getPart("image");
-        String fileName =
-                Paths.get(part.getSubmittedFileName()).getFileName().toString();
+        String fileName = "";
 
+        if (part != null && part.getSubmittedFileName() != null) {
+            fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString();
+        }
+
+        // 保存先フォルダ
         String dir = request.getServletContext().getRealPath("/images/souvenir");
-
         File folder = new File(dir);
         if (!folder.exists()) folder.mkdirs();
 
+        // ファイル保存
         if (!fileName.isEmpty()) {
             part.write(dir + File.separator + fileName);
         }
 
-        // DB登録
+        // DBへ登録
         SouvenirDAO dao = new SouvenirDAO();
         dao.insert(name, description, price, "/images/souvenir/" + fileName);
 
-        // 登録後、一覧へ
-        request.getRequestDispatcher(
-            "/benibanabi/benibanabi/main/souvenir.jsp"
-        ).forward(request, response);
+        // 登録後の遷移
+        request.getRequestDispatcher("/benibanabi/main/souvenir.jsp")
+               .forward(request, response);
     }
 }
