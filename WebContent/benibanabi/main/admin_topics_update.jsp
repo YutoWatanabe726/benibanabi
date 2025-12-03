@@ -5,7 +5,6 @@
 <c:import url="/common/admin_base.jsp">
     <c:param name="title">トピックス更新</c:param>
     <c:param name="content">
-
 <div class="container mt-4">
     <h2 class="mb-4">トピックス更新</h2>
 
