@@ -7,7 +7,7 @@
     <c:param name="title">管理者パスワード変更</c:param>
 
     <c:param name="content">
-
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_login_logout_password_delete.css" />
     <div class="container mt-4">
         <h2 class="mb-4">管理者パスワード変更</h2>
 
@@ -40,10 +40,10 @@
                 <label for="newPass2" class="form-label">新しいパスワード（確認）</label>
                 <input type="password" id="newPass2" name="newPass2" class="form-control" required>
             </div>
-
-            <button type="submit" class="btn btn-primary">変更する</button>
-            <a href="AdminMenu.action" class="btn btn-secondary">戻る</a>
-
+ 			<div class="button-group">
+	            <button type="submit" class="btn btn-primary">変更する</button>
+	            <a href="AdminMenu.action" class="btn btn-secondary">戻る</a>
+			</div>
         </form>
 
     </div>

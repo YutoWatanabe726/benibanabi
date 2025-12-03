@@ -7,29 +7,11 @@
 		管理者ログイン
 	</c:param>
 
-	<c:param name="scripts">
-		<script type="text/javascript">
-			$(function() {
-				// 「パスワードを表示」が変更された時の処理
-				$('#password-display').change(function() {
-					if ($(this).prop('checked')) {
-						// チェックが入っている場合
-						// パスワード入力欄をテキストにする
-						$('#password-input').attr('type', 'text');
-					} else {
-						// チェックが外れている場合
-						// パスワード入力欄をパスワードにする
-						$('#password-input').attr('type', 'password');
-					}
-				});
-			});
-		</script>
-	</c:param>
-
 	<c:param name="content">
+    	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_login_logout_password_delete.css" />
 		<section class="w-75 text-center m-auto border pb-3">
 			<form action = "AdminLoginExecute.action" method="post">
-				<div id="wrap_box">
+
 					<h2 class="h3 mb-3 fw-norma bg-secondary bg-opacity-10 py-2">ログイン</h2>
 					<c:if test="${errors.size()>0}">
 						<div>
@@ -43,18 +25,19 @@
 					<div>
 						<!-- ＩＤ -->
 						<div class="form-floating mx-5">
+							<label>ＩＤ</label>
 							<input class="form-control px-5 fs-5" autocomplete="off"
 								id="id-input" maxlength="20" name="id" placeholder="半角でご入力下さい"
 								style="ime-mode: disabled" type="text" value="${id}" required />
-							<label>ＩＤ</label>
+
 						</div>
 						<!-- パスワード -->
 						<div class="form-floating mx-5 mt-3">
+							<label>パスワード</label>
 							<input class="form-control px-5 fs-5" autocomplete="off"
 								id="password-input" maxlength="20" name="password"
 								placeholder="20文字以内の半角英数字でご入力下さい" style="ime-mode: disabled"
 								type="password" required />
-							<label>パスワード</label>
 						</div>
 						<div class="form-check mt-3">
 							<label class="form-check-label" for="password-display">
@@ -64,11 +47,28 @@
 						</div>
 					</div>
 
-					<div class="mt-4">
-						<input class="w-25 btn btn-lg btn-primary" type="submit" name="login" value="ログイン"/>
+					<script type="text/javascript">
+						$(function() {
+							// 「パスワードを表示」が変更された時の処理
+							$('#password-display').change(function() {
+								if ($(this).prop('checked')) {
+									// チェックが入っている場合
+									// パスワード入力欄をテキストにする
+									$('#password-input').attr('type', 'text');
+								} else {
+									// チェックが外れている場合
+									// パスワード入力欄をパスワードにする
+									$('#password-input').attr('type', 'password');
+								}
+							});
+						});
+					</script>
+
+					<div class="button-group">
+					    <a href="AdminCreate.action" class="btn-secondary">新規作成</a>
+					     <input type="submit" value="ログイン" />
 					</div>
-					<a href="AdminCreate.action" class="menu-item">新規作成</a>
-				</div>
+
 			</form>
 		</section>
 	</c:param>

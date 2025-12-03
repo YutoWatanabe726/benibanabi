@@ -8,12 +8,12 @@
 	</c:param>
 
 	<c:param name="content">
+    	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_login_logout_password_delete.css" />
+
 		<div id="wrap_box">
 			<h2>管理者ログアウト</h2>
-			<div id="wrap_box">
 				<p>ログアウトしました</p>
 				<a href="AdminLogin.action">ログイン</a>
 			</div>
-		</div>
 	</c:param>
 </c:import>

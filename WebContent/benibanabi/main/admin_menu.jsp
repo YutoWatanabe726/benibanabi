@@ -7,7 +7,7 @@
 </c:param>
 
   <c:param name="content">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_menu.css" />
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_menu.css" />
 <div class="menu-wrapper">
 <div class="container">
 <div>ログイン中のアカウント"<c:out value='${admin_id}'/>"</div>

@@ -6,6 +6,7 @@
     <c:param name="title">新規作成</c:param>
 
     <c:param name="content">
+    	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_login_logout_password_delete.css" />
     <div class="container mt-4">
         <h2 class="mb-4">新規作成</h2>
 

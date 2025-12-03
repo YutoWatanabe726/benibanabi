@@ -1,4 +1,4 @@
-<%-- 管理者削除完了JSP --%>
+<%-- 管理者削除完了（パスワード変更完了）JSP --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
@@ -8,13 +8,14 @@
 	</c:param>
 
 	<c:param name="content">
-    <div class="container mt-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_login_logout_password_delete.css" />
+    <div id="wrap_box">
 			<h2>管理者パスワード変更完了</h2>
-			<div>
-				<p>パスワードの変更が完了しました</p>
+			<p>パスワードの変更が完了しました</p>
+			<div class="button-group">
 				<a href="AdminMenu.action">管理者機能一覧へ</a>
 				<a href="AdminLogin.action">管理者ログインへ</a>
 			</div>
-		</div>
+	</div>
 	</c:param>
 </c:import>

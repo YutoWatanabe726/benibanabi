@@ -8,13 +8,14 @@
 	</c:param>
 
 	<c:param name="content">
-    <div class="container mt-4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_login_logout_password_delete.css" />
+    <div id="wrap_box">
 			<h2>管理者アカウント削除</h2>
-			<div>
-				<p>削除が完了しました</p>
+			<p>削除が完了しました</p>
+			<div class="button-group">
 				<a href="AdminCreate.action">管理者新規作成へ</a>
 				<a href="AdminLogin.action">管理者ログインへ</a>
 			</div>
-		</div>
+	</div>
 	</c:param>
 </c:import>

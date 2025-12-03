@@ -8,26 +8,22 @@
     </c:param>
 
     <c:param name="content">
-
-    <div class="container mt-4">
-        <h2 class="mb-4">管理者アカウント削除</h2>
-
-        <c:if test="${not empty errorMessage}">
-            <div class="alert alert-danger">${errorMessage}</div>
-        </c:if>
-
-        <form action="AdminDeleteExecute.action" method="post" class="border p-4 rounded">
-
-            <div class="alert alert-warning mt-3">
-                ※ この操作は取り消すことができません。<br>
-                あなたのアカウント "<c:out value='${admin_id}'/>" を削除します。本当に削除しますか？
-            </div>
-
-            <div class="d-flex gap-3 mt-4">
-                <button type="submit" class="btn btn-danger">削除する</button>
-                <a href="AdminMenu.action" class="btn btn-secondary">戻る</a>
-            </div>
-        </form>
-    </div>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_login_logout_password_delete.css" />
+	<form action="AdminDeleteExecute.action" method="post" style="flex:1;">
+	    <div id="wrap_box">
+	    <h2>管理者アカウント削除</h2>
+	        <c:if test="${not empty errorMessage}">
+	            <div class="alert alert-danger">${errorMessage}</div>
+	        </c:if>
+	        <div class="alert alert-warning mt-3">
+	            ※ この操作は取り消すことができません。<br>
+	            あなたのアカウント "<c:out value='${admin_id}'/>" を削除します。本当に削除しますか？
+	        </div>
+	        <div class="button-group">
+	            <input type="submit" value="削除する" class="btn-danger" />
+				<a href="AdminMenu.action">戻る</a>
+	        </div>
+	    </div>
+	</form>
     </c:param>
 </c:import>
