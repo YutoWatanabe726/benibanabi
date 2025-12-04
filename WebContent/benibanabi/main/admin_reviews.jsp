@@ -2,87 +2,77 @@
 <%@ page import="java.util.List" %>
 <%@ page import="bean.Reviews" %>
 <%@ page import="bean.Spot" %>
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<title>管理者用口コミ一覧</title>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_reviews.css">
+<c:import url="/common/admin_base.jsp">
+    <c:param name="title">管理者用口コミ一覧</c:param>
 
-</head>
-<body>
+    <c:param name="content">
 
-<%
-    String error = (String) request.getAttribute("error");
-    Spot spot = (Spot) request.getAttribute("spot");
-    List<Reviews> reviews = (List<Reviews>) request.getAttribute("reviews");
+        <!-- 共通CSS -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_spot_topics_souvenir_list.css">
 
-    if (error != null) {
-%>
-    <p><%= error %></p>
-<%
-        return;
-    }
+        <div class="container mt-4">
+            <%
+                String error = (String) request.getAttribute("error");
+                Spot spot = (Spot) request.getAttribute("spot");
+                List<Reviews> reviews = (List<Reviews>) request.getAttribute("reviews");
 
-    if (spot == null) {
-%>
-    <p>スポットが見つかりません。</p>
-<%
-        return;
-    }
-%>
+                if (error != null) {
+            %>
+                <p><%= error %></p>
+            <%
+                    return;
+                }
 
-<h1>「<%= spot.getSpotName() %>」の口コミ一覧</h1>
+                if (spot == null) {
+            %>
+                <p>スポットが見つかりません。</p>
+            <%
+                    return;
+                }
+            %>
 
-<a class="back" href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action">
-    ← スポット一覧に戻る
-</a>
+            <h2>「<%= spot.getSpotName() %>」の口コミ一覧</h2>
 
+            <!-- 右上戻るボタン -->
+            <a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action">← スポット一覧に戻る</a>
 
-<%
-    if (reviews == null || reviews.isEmpty()) {
-%>
-<p>このスポットにはまだ口コミがありません。</p>
-<%
-    } else {
-%>
+            <c:choose>
+                <c:when test="${reviews == null || reviews.isEmpty()}">
+                    <p class="mt-3">このスポットにはまだ口コミがありません。</p>
+                </c:when>
 
-<table>
-    <thead>
-        <tr>
-            <th>口コミID</th>
-            <th>内容</th>
-            <th>投稿日</th>
-            <th>操作</th>
-        </tr>
-    </thead>
-    <tbody>
-<%
-        for (Reviews rv : reviews) {
-%>
-        <tr>
-            <td><%= rv.getReviewId() %></td>
-            <td><%= rv.getReviewText() %></td>
-            <td><%= rv.getReviewDate() %></td>
-            <td>
-                <form method="post" action="<%= request.getContextPath() %>/benibanabi/main/AdminDeleteReview.action"
-                      onsubmit="return confirm('本当に削除しますか？');">
-                    <input type="hidden" name="reviewId" value="<%= rv.getReviewId() %>">
-                    <input type="hidden" name="spotId" value="<%= spot.getSpotId() %>">
-                    <button type="submit" class="delete-btn">削除</button>
-                </form>
-            </td>
-        </tr>
-<%
-        }
-%>
-    </tbody>
-</table>
+                <c:otherwise>
+                    <table class="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>内容</th>
+                                <th>投稿日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="rv" items="${reviews}">
+                                <tr>
+                                    <td>${rv.reviewText}</td>
+                                    <td>${rv.reviewDate}</td>
+                                    <td>
+                                        <form method="post" action="${pageContext.request.contextPath}/benibanabi/main/AdminDeleteReview.action"
+                                              onsubmit="return confirm('本当に削除しますか？');">
+                                            <input type="hidden" name="reviewId" value="${rv.reviewId}">
+                                            <input type="hidden" name="spotId" value="${spot.spotId}">
+                                            <button type="submit" class="btn btn-sm btn-danger">削除</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
+                </c:otherwise>
+            </c:choose>
 
-<%
-    }
-%>
+        </div>
 
-</body>
-</html>
+    </c:param>
+</c:import>

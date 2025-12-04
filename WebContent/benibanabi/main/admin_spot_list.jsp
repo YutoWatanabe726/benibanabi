@@ -4,14 +4,24 @@
     <c:param name="title">管理者観光スポット一覧</c:param>
 
     <c:param name="content">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_spot_topics_souvenir_list.css">
         <div class="container mt-4">
             <h2>管理者観光スポット一覧</h2>
 			<a href="AdminSpotSetting.action">戻る</a>
+
+			<div class="search-box">
+			  <form action="${pageContext.request.contextPath}/benibanabi/main/AdminSpotList.action" method="get">
+			      <input type="text" name="keyword" placeholder="スポット名で検索" value="${param.keyword}">
+			      <button type="submit">検索</button>
+			  </form>
+			</div>
+
             <table class="table table-bordered mt-3">
                 <thead>
                     <tr>
                         <th>スポット名</th>
                         <th>エリア</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
