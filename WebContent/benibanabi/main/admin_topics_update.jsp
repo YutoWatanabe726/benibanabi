@@ -5,6 +5,7 @@
 <c:import url="/common/admin_base.jsp">
     <c:param name="title">トピックス更新</c:param>
     <c:param name="content">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_spot_topics_souvenir_all.css">
 <div class="container mt-4">
     <h2 class="mb-4">トピックス更新</h2>
 

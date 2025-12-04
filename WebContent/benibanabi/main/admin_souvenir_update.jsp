@@ -6,6 +6,7 @@
     <c:param name="title">名産品編集</c:param>
 
     <c:param name="content">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_spot_topics_souvenir_all.css">
     <div class="container mt-4">
         <h2 class="mb-4">名産品編集</h2>
 

@@ -8,6 +8,7 @@
 	</c:param>
 
 	<c:param name="content">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_spot_topics_souvenir_setting.css">
     <div class="container mt-4">
 			<h2>管理者トピックス</h2>
 			<div>
