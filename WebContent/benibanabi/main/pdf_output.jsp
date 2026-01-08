@@ -484,33 +484,39 @@ async function captureMapBase64() {
  async function drawOsrmRouteForDay(dayRoute) {
 	  if (!dayRoute || dayRoute.length < 2) return;
 
-	  const coords = dayRoute
-	    .filter(r => r.lat != null && r.lng != null)
-	    .map(r => r.lng + "," + r.lat); // ★ JSP安全
+	  for (let i = 0; i < dayRoute.length - 1; i++) {
+	    const from = dayRoute[i];
+	    const to   = dayRoute[i + 1];
 
-	  if (coords.length < 2) return;
+	    if (
+	      from.lat == null || from.lng == null ||
+	      to.lat == null || to.lng == null
+	    ) continue;
 
-	  const url =
-	    "https://router.project-osrm.org/route/v1/driving/" +
-	    coords.join(";") +
-	    "?overview=full&geometries=geojson";
+	    const url =
+	      "https://router.project-osrm.org/route/v1/driving/" +
+	      from.lng + "," + from.lat + ";" +
+	      to.lng + "," + to.lat +
+	      "?overview=full&geometries=geojson";
 
-	  try {
-	    const res = await fetch(url);
-	    const data = await res.json();
-	    if (!data.routes || !data.routes[0]) return;
+	    try {
+	      const res = await fetch(url);
+	      const data = await res.json();
+	      if (!data.routes || !data.routes[0]) continue;
 
-	    const geo = L.geoJSON(data.routes[0].geometry, {
-	      style: {
-	        weight: 4,
-	        color: "#2563eb"
-	      }
-	    }).addTo(routeLayerGroup);
-
-	    previewMap.fitBounds(geo.getBounds(), { padding:[30,30] });
-	  } catch (e) {
-	    console.error("OSRM error:", e);
+	      L.geoJSON(data.routes[0].geometry, {
+	        style: {
+	          weight: 4,
+	          color: "#2563eb"
+	        }
+	      }).addTo(routeLayerGroup);
+	    } catch (e) {
+	      console.error("OSRM error:", e);
+	    }
 	  }
+
+	  // 全区間描画後にフィット
+	  previewMap.fitBounds(routeLayerGroup.getBounds(), { padding:[30,30] });
 	}
 
 
