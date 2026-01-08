@@ -1207,6 +1207,9 @@ $(document).on("click", ".addMealBtn", function(){
     }).addTo(map);
 
     addRouteHistory(dayIndex, "食事スポット", lat, lng, "meal", circle, null);
+    if (routesByDay[dayIndex].length >= 2) {
+        redrawRouteLine(dayIndex);
+    }
 
     map.off("click", onMapClick);
   }
