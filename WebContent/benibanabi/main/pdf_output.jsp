@@ -392,7 +392,7 @@ function initMapIfNeeded() {
   }
 }
 
-function renderMapForDay(dayIndex) {
+async function renderMapForDay(dayIndex) {
   initMapIfNeeded();
   if (!previewMap) return;
 
@@ -427,13 +427,13 @@ function renderMapForDay(dayIndex) {
       "緯度: " + lat + " / 経度: " + lng;
     marker.bindPopup(popupHtml);
   });
-
-  if (latlngs.length > 0) {
-    const line = L.polyline(latlngs, { color:"blue", weight:4 }).addTo(routeLayerGroup);
-    previewMap.fitBounds(line.getBounds(), { padding:[30,30] });
-  } else {
-    previewMap.setView([38.2485, 140.3276], 8);
-  }
+  if (latlngs.length >= 2) {
+	  await drawOsrmRouteForDay(dayRoute);
+	} else if (latlngs.length === 1) {
+	  previewMap.setView(latlngs[0], 14);
+	} else {
+	  previewMap.setView([38.2485, 140.3276], 8);
+	}
 
   // レイアウト崩れ防止
   setTimeout(function() {
@@ -481,6 +481,39 @@ async function captureMapBase64() {
  * - mapImage（各地点）は送らない
  * - dayMapImages[] を追加して送る（Dayごとに1枚）
  */
+ async function drawOsrmRouteForDay(dayRoute) {
+	  if (!dayRoute || dayRoute.length < 2) return;
+
+	  const coords = dayRoute
+	    .filter(r => r.lat != null && r.lng != null)
+	    .map(r => r.lng + "," + r.lat); // ★ JSP安全
+
+	  if (coords.length < 2) return;
+
+	  const url =
+	    "https://router.project-osrm.org/route/v1/driving/" +
+	    coords.join(";") +
+	    "?overview=full&geometries=geojson";
+
+	  try {
+	    const res = await fetch(url);
+	    const data = await res.json();
+	    if (!data.routes || !data.routes[0]) return;
+
+	    const geo = L.geoJSON(data.routes[0].geometry, {
+	      style: {
+	        weight: 4,
+	        color: "#2563eb"
+	      }
+	    }).addTo(routeLayerGroup);
+
+	    previewMap.fitBounds(geo.getBounds(), { padding:[30,30] });
+	  } catch (e) {
+	    console.error("OSRM error:", e);
+	  }
+	}
+
+
 function buildSendPayloadBase(original, dayMapImages) {
   const cloned = JSON.parse(JSON.stringify(original || {}));
 
