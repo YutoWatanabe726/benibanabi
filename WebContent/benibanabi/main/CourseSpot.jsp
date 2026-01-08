@@ -1283,6 +1283,10 @@ $("#goalAddressSubmitBtn").on("click", async function(){
 
     addRouteHistory(dayIndex, formattedAddress, lat, lng, "goal", null, null);
 
+    if (routesByDay[dayIndex].length >= 2) {
+    	  redrawRouteLine(dayIndex);
+    	}
+
     if (mapsByDay[dayIndex] && mapsByDay[dayIndex].map) {
       mapsByDay[dayIndex].map.setView([lat, lng], 14);
     }
@@ -1528,6 +1532,11 @@ $(document).ready(function(){
              }
          });
      });
+     routesByDay.forEach((dayRoute, d) => {
+    	    if (dayRoute.length >= 2) {
+    	        redrawRouteLine(d);
+    	    }
+    	});
  } else {
      // 保存データがない場合は従来通りスタート地点
      if (startPointRaw === "任意の地点") {
