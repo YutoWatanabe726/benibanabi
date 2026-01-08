@@ -743,7 +743,7 @@ function addRouteHistory(dayIndex, name, lat, lng, type, existingCircle, photoUr
 
   renderRouteHistory(dayIndex);
   addMarker(dayIndex, name, lat, lng, type);
-  redrawRouteLine(dayIndex);
+ // redrawRouteLine(dayIndex);
   saveRoutesToLocal();
 }
 
@@ -909,27 +909,55 @@ container.find(".transportSelect").off("change").on("change", function () {
 }
 
 function removeRoute(dayIndex, index) {
-  if (!routesByDay[dayIndex]) return;
+	  const mapObj = mapsByDay[dayIndex];
+	  if (!mapObj || !routesByDay[dayIndex]) return;
 
-  const target = routesByDay[dayIndex][index];
-  if (target.circle) {
-    mapsByDay[dayIndex].map.removeLayer(target.circle);
-  }
+	  // 対象取得
+	  const target = routesByDay[dayIndex][index];
 
-  routesByDay[dayIndex].splice(index, 1);
+	  // circle 削除
+	  if (target && target.circle) {
+	    mapObj.map.removeLayer(target.circle);
+	  }
 
-  mapsByDay[dayIndex].markers.clearLayers();
-  const snapshot = [...routesByDay[dayIndex]];
-  routesByDay[dayIndex] = [];
-  snapshot.forEach(r => {
-    addRouteHistory(dayIndex, r.name, r.lat, r.lng, r.type, r.circle || null, r.photoUrl || null);
-  });
-  renderRouteHistory(dayIndex);
-  redrawRouteLine(dayIndex);
-  saveRoutesToLocal();
+	  // 配列から削除
+	  routesByDay[dayIndex].splice(index, 1);
 
+	  // ★ 既存の OSRM 線を必ず消す
+	  if (osrmLinesByDay[dayIndex]) {
+	    mapObj.map.removeLayer(osrmLinesByDay[dayIndex]);
+	    osrmLinesByDay[dayIndex] = null;
+	  }
 
-}
+	  // markers 再生成
+	  mapObj.markers.clearLayers();
+
+	  // 再構築（addRouteHistory で redraw させない）
+	  const snapshot = [...routesByDay[dayIndex]];
+	  routesByDay[dayIndex] = [];
+
+	  snapshot.forEach(r => {
+	    addRouteHistory(
+	      dayIndex,
+	      r.name,
+	      r.lat,
+	      r.lng,
+	      r.type,
+	      r.circle || null,
+	      r.photoUrl || null
+	    );
+	  });
+
+	  renderRouteHistory(dayIndex);
+
+	  // ★ 2点以上のときだけ線を引く
+	  if (routesByDay[dayIndex].length >= 2) {
+	    redrawRouteLine(dayIndex);
+	  }
+
+	  saveRoutesToLocal();
+	}
+
 
 /* ------------------------
    エリア・タグ（DB連動）＋スポット検索
