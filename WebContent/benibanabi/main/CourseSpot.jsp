@@ -471,7 +471,7 @@ const FIXED_STARTS = {
 let dayCount = 0;
 let routesByDay = [];   // 日ごと: [{name,lat,lng,type,circle,stayTime,memo,transport,photoUrl}, ...]
 let mapsByDay = [];     // 日ごと: { map, markers, routeLine }
-
+let osrmLinesByDay = [];
 /* 移動手段速度（km/h） */
 const speedMap = { "徒歩":5, "車":40, "電車":60 };
 
@@ -582,12 +582,12 @@ function createDaySection(day, startLat, startLng, startName) {
   }).addTo(map);
 
   const markers = L.markerClusterGroup();
-  const routeLine = L.polyline([], { color:"blue", weight:4 });
-  routeLine.addTo(map);
+
   markers.addTo(map);
 
-  mapsByDay[day - 1] = { map, markers, routeLine };
+  mapsByDay[day - 1] = { map, markers, routeLine: null };
   routesByDay[day - 1] = [];
+  osrmLinesByDay[day - 1] = null;
 
   setTimeout(() => {
     try { map.invalidateSize(); } catch(e) { console.error(e); }
@@ -618,18 +618,49 @@ function addMarker(dayIndex, name, lat, lng, type) {
   const marker = L.marker([lat, lng], { icon })
     .bindPopup("<strong>" + escapeHtml(name) + "</strong>");
   mapsByDay[dayIndex].markers.addLayer(marker);
-  updateRouteLine(dayIndex);
+  //redrawRouteLine(dayIndex);
   updateEstimatedTime(dayIndex);
 }
+async function redrawRouteLine(dayIndex) {
+	  const mapObj = mapsByDay[dayIndex];
+	  if (!mapObj || !mapObj.map) return;
 
-function updateRouteLine(dayIndex) {
-  if (!mapsByDay[dayIndex]) return;
-  const latlngs = (routesByDay[dayIndex] || []).map(r => [r.lat, r.lng]);
-  mapsByDay[dayIndex].routeLine.setLatLngs(latlngs);
-  if (latlngs.length > 0) {
-    mapsByDay[dayIndex].map.fitBounds(latlngs, { padding:[50,50] });
-  }
-}
+	  const route = routesByDay[dayIndex];
+	  if (!Array.isArray(route) || route.length < 2) return;
+
+	  // 既存削除
+	  if (osrmLinesByDay[dayIndex]) {
+	    mapObj.map.removeLayer(osrmLinesByDay[dayIndex]);
+	    osrmLinesByDay[dayIndex] = null;
+	  }
+
+	  const coords = route.map(r => r.lng + "," + r.lat).join(";");
+
+	  const url =
+	    "https://router.project-osrm.org/route/v1/driving/" +
+	    coords +
+	    "?overview=full&geometries=geojson";
+
+	  const res = await fetch(url);
+	  const data = await res.json();
+	  if (!data.routes || !data.routes.length) return;
+
+	  osrmLinesByDay[dayIndex] = L.geoJSON(
+	    data.routes[0].geometry,
+	    { style: { weight: 4 } }
+	  ).addTo(mapObj.map);
+	}
+
+
+
+//function updateRouteLine(dayIndex) {
+ // if (!mapsByDay[dayIndex]) return;
+  //const latlngs = (routesByDay[dayIndex] || []).map(r => [r.lat, r.lng]);
+  //mapsByDay[dayIndex].routeLine.setLatLngs(latlngs);
+  //if (latlngs.length > 0) {
+    //mapsByDay[dayIndex].map.fitBounds(latlngs, { padding:[50,50] });
+  //}
+//}
 
 function calcDistance(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -712,6 +743,7 @@ function addRouteHistory(dayIndex, name, lat, lng, type, existingCircle, photoUr
 
   renderRouteHistory(dayIndex);
   addMarker(dayIndex, name, lat, lng, type);
+  redrawRouteLine(dayIndex);
   saveRoutesToLocal();
 }
 
@@ -810,22 +842,37 @@ container.find(".removeBtn").off("click").on("click", function(){
 });
 
 
-  container.find(".transportSelect").off("change").on("change", function(){
-    const idx = $(this).data("index");
-    const val = $(this).val();
-    const list = routesByDay[dayIndex] || [];
-    if (list[idx]) {
-      list[idx].transport = val;
-    }
-    const prev = idx > 0 ? list[idx-1] : null;
-    if (prev) {
-      const dist = calcDistance(prev.lat, prev.lng, list[idx].lat, list[idx].lng);
-      const speed = speedMap[val] || 5;
-      const timeMin = Math.round(dist / speed * 60);
-      container.find(`.arrow-card[data-index="${idx}"] .estimatedTime`).text(timeMin);
-    }
-    updateEstimatedTime(dayIndex);
-  });
+container.find(".transportSelect").off("change").on("change", function () {
+	  const idx = $(this).data("index");
+	  const val = $(this).val();
+	  const list = routesByDay[dayIndex] || [];
+
+	  if (list[idx]) {
+	    list[idx].transport = val;
+	  }
+
+	  // ▼ 矢印カードの時間再計算（直線距離）
+	  const prev = idx > 0 ? list[idx - 1] : null;
+	  if (prev && list[idx]) {
+	    const dist = calcDistance(prev.lat, prev.lng, list[idx].lat, list[idx].lng);
+	    const speed = speedMap[val] || 5;
+	    const timeMin = Math.round(dist / speed * 60);
+
+	    container
+	      .find('.arrow-card[data-index="' + idx + '"] .estimatedTime')
+	      .text(timeMin);
+	  }
+
+	  // 合計時間更新
+	  updateEstimatedTime(dayIndex);
+
+	  // ★ 道のりルートを再描画
+	  redrawRouteLine(dayIndex);
+
+	  // LocalStorage 保存
+	  saveRoutesToLocal();
+	});
+
 
   container.find(".stayTime").off("change").on("change", function(){
     const idx = $(this).data("index");
@@ -878,7 +925,10 @@ function removeRoute(dayIndex, index) {
     addRouteHistory(dayIndex, r.name, r.lat, r.lng, r.type, r.circle || null, r.photoUrl || null);
   });
   renderRouteHistory(dayIndex);
+  redrawRouteLine(dayIndex);
   saveRoutesToLocal();
+
+
 }
 
 /* ------------------------
@@ -1026,7 +1076,7 @@ function searchSpots(keyword, areas, tags, favOnly, targetSelector) {
 function selectSpot(id, name, lat, lng, photoUrl) {
   const dayIndex = dayCount - 1;
   addRouteHistory(dayIndex, name, lat, lng, "normal", null, photoUrl);
-
+  redrawRouteLine(dayIndex);
   const modalEl = document.getElementById("spotModal");
   const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
   modal.hide();
@@ -1067,23 +1117,36 @@ function updateSpotCards(favOnly) {
 	}
 function updateFavStars() {
     const favs = loadFavsFromCookie().map(String);
-    $(".card").each(function(){
-        const id = $(this).data("id").toString();
-        const star = $(this).find(".favorite-star");
-        const isActive = favs.includes(id);
-        star.text(isActive ? "★" : "☆").toggleClass("active", isActive);
 
-        // クリックイベント
-        star.off("click").on("click", function(e){
+    $(".card[data-id]").each(function () {
+        const id = String($(this).data("id"));
+
+        const star = $(this).find(".favorite-star");
+        if (star.length === 0) return;
+
+        const isActive = favs.includes(id);
+
+        star
+          .text(isActive ? "★" : "☆")
+          .toggleClass("active", isActive);
+
+        star.off("click").on("click", function (e) {
             e.stopPropagation();
+
             let updatedFavs = loadFavsFromCookie().map(String);
-            if(updatedFavs.includes(id)) updatedFavs = updatedFavs.filter(x=>x!==id);
-            else updatedFavs.push(id);
+            if (updatedFavs.includes(id)) {
+                updatedFavs = updatedFavs.filter(x => x !== id);
+            } else {
+                updatedFavs.push(id);
+            }
+
             saveFavsToCookie(updatedFavs);
-            updateFavStars(); // 再描画
+            updateFavStars();
         });
     });
 }
+
+
 
 
 /* ------------------------
@@ -1320,6 +1383,43 @@ function formatAddress(addr) {
   return parts.join("");
 }
 
+async function fetchRoutePath(latlngs, profile) {
+	  const allCoords = [];
+
+	  for (let i = 0; i < latlngs.length - 1; i++) {
+	    const lat1 = latlngs[i][0];
+	    const lng1 = latlngs[i][1];
+	    const lat2 = latlngs[i + 1][0];
+	    const lng2 = latlngs[i + 1][1];
+
+	    const url =
+	      "https://router.project-osrm.org/route/v1/" + profile + "/" +
+	      lng1 + "," + lat1 + ";" + lng2 + "," + lat2 +
+	      "?overview=full&geometries=geojson";
+
+	    const res = await fetch(url);
+	    const data = await res.json();
+
+	    if (data.routes && data.routes.length > 0) {
+	      const coords = data.routes[0].geometry.coordinates;
+	      coords.forEach(function(c){
+	        allCoords.push([c[1], c[0]]); // lat,lng
+	      });
+	    }
+	  }
+
+	  return allCoords;
+	}
+
+function transportToProfile(transport) {
+	  if (transport === "車") return "driving";
+	  if (transport === "自転車") return "bike";
+	  return "foot"; // 徒歩・電車は徒歩扱い
+	}
+
+
+
+
 /* ------------------------
    ユーティリティ
    ------------------------ */
@@ -1370,36 +1470,6 @@ $(document).ready(function(){
      const unique = Array.from(new Set(list.map(String)));
      document.cookie = "favoriteIds=" + encodeURIComponent(unique.join(",")) + "; path=/; max-age=" + (60*60*24*365);
  }
-
- // --------------------------
- // カードにお気に入り反映
- // --------------------------
- function updateFavStars() {
-     const favs = loadFavsFromCookie().map(String);
-     $(".card").each(function(){
-         const id = $(this).data("id").toString();
-         const star = $(this).find(".favorite-star");
-         const isActive = favs.includes(id);
-         star.text(isActive ? "★" : "☆").toggleClass("active", isActive);
-
-         // 星クリックで切替
-         star.off("click").on("click", function(e){
-             e.stopPropagation();
-             let updatedFavs = loadFavsFromCookie().map(String);
-             if(updatedFavs.includes(id)) updatedFavs = updatedFavs.filter(x=>x!==id);
-             else updatedFavs.push(id);
-             saveFavsToCookie(updatedFavs);
-             updateFavStars(); // 再描画
-         });
-
-         // カードクリックで詳細ページ
-         $(this).off("click").on("click", function(){
-             location.href = "SpotDetail.action?spot_id=" + id;
-         });
-     });
- }
-
- updateFavStars(); // 初期お気に入り反映
 
  // --------------------------
  // スタート地点決定
