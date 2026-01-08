@@ -20,7 +20,6 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-/* 全体レイアウト */
 body {
   font-family: Arial, sans-serif;
   margin:0;
@@ -29,18 +28,6 @@ body {
   position:relative;
   min-height:100vh;
 }
-
-/* 背景の山画像（薄く） */
-body::before {
-  content:"";
-  position:fixed;
-  inset:0;
-  background:url('<%= request.getContextPath() %>/images/mountain_bg.jpg') center/cover no-repeat;
-  opacity:0.15;
-  z-index:-1;
-}
-
-/* メインコンテナ */
 #pdf-preview-container {
   max-width:1200px;
   margin:20px auto;
@@ -49,22 +36,16 @@ body::before {
   border-radius:12px;
   box-shadow:0 2px 10px rgba(0,0,0,0.12);
 }
-
-/* ルート情報ヘッダ */
 .route-header {
   border-bottom:1px solid #ddd;
   padding-bottom:10px;
   margin-bottom:12px;
 }
-
-/* 左側ルート一覧 */
 #routeList {
   max-height:650px;
   overflow-y:auto;
   padding-right:8px;
 }
-
-/* Dayごとの箱 */
 .day-block {
   margin-bottom:16px;
   padding:10px;
@@ -72,8 +53,6 @@ body::before {
   background:#fff7f0;
   border:1px solid #ffd2a3;
 }
-
-/* 地点カード */
 .spot-card {
   border-radius:8px;
   border:1px solid #eee;
@@ -81,12 +60,10 @@ body::before {
   margin-bottom:8px;
   background:#ffffff;
 }
-
 .spot-title {
   font-weight:bold;
   font-size:0.95rem;
 }
-
 .spot-badge {
   display:inline-block;
   padding:2px 8px;
@@ -94,25 +71,11 @@ body::before {
   font-size:0.75rem;
   margin-left:4px;
 }
+.badge-start { background:#2563eb; color:#fff; }
+.badge-goal  { background:#e11d48; color:#fff; }
+.badge-meal  { background:#f97316; color:#fff; }
+.badge-normal{ background:#6b7280; color:#fff; }
 
-.badge-start {
-  background:#2563eb;
-  color:#fff;
-}
-.badge-goal {
-  background:#e11d48;
-  color:#fff;
-}
-.badge-meal {
-  background:#f97316;
-  color:#fff;
-}
-.badge-normal {
-  background:#6b7280;
-  color:#fff;
-}
-
-/* サムネイル画像 */
 .spot-thumb {
   width:100%;
   max-height:120px;
@@ -120,14 +83,10 @@ body::before {
   border-radius:6px;
   margin-top:4px;
 }
-
-/* 小さなテキスト */
 .spot-meta {
   font-size:0.8rem;
   color:#555;
 }
-
-/* マップ側 */
 #previewMap {
   width:100%;
   height:650px;
@@ -135,8 +94,6 @@ body::before {
   overflow:hidden;
   border:1px solid #ddd;
 }
-
-/* ボタン周り */
 .button-area {
   margin-top:10px;
   display:flex;
@@ -151,17 +108,9 @@ body::before {
   font-weight:bold;
 }
 @media (max-width: 768px) {
-  .button-area {
-    justify-content:center;
-  }
+  .button-area { justify-content:center; }
 }
-
-/* PDFステータス */
-#pdfStatus {
-  margin-top:10px;
-}
-
-/* タイトル */
+#pdfStatus { margin-top:10px; }
 .page-title {
   font-size:1.3rem;
   font-weight:bold;
@@ -171,15 +120,12 @@ body::before {
   font-size:0.9rem;
   color:#555;
 }
-
-/* Day タブ（ボタン型） */
 .day-tabs {
   display:flex;
   flex-wrap:wrap;
   gap:8px;
   margin-bottom:8px;
 }
-
 .day-tab-btn {
   border-radius:999px;
   padding:6px 18px;
@@ -191,11 +137,7 @@ body::before {
   cursor:pointer;
   transition:background-color 0.15s, color 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
-
-.day-tab-btn:hover {
-  background:#ffd5bd;
-}
-
+.day-tab-btn:hover { background:#ffd5bd; }
 .day-tab-btn.active {
   background:#ff7043;
   border-color:#ff7043;
@@ -207,7 +149,6 @@ body::before {
 
 <body>
 <div id="pdf-preview-container">
-  <!-- 画面タイトル -->
   <div class="mb-3">
     <div class="page-title">PDF出力前のルート確認</div>
     <div class="page-subtitle">
@@ -216,7 +157,6 @@ body::before {
     </div>
   </div>
 
-  <!-- コース情報 -->
   <div class="route-header row">
     <div class="col-md-8">
       <div><strong>コースタイトル：</strong><span id="courseTitleText">-</span></div>
@@ -229,65 +169,47 @@ body::before {
     </div>
     <div class="col-md-4 text-md-end">
       <div class="button-area">
-        <!-- PDF生成ボタン -->
-        <button id="generatePdfBtn" class="btn btn-danger">
-          PDFを生成
-        </button>
-        <!-- CourseSpot.jsp に戻る -->
-        <a href="CourseSpot.jsp" class="btn btn-outline-secondary">
-          ルート編集画面に戻る
-        </a>
+        <button id="generatePdfBtn" class="btn btn-danger">PDFを生成</button>
+        <a href="CourseSpot.jsp" class="btn btn-outline-secondary">ルート編集画面に戻る</a>
       </div>
     </div>
   </div>
 
-  <!-- 左右2カラム：左ルート一覧 / 右マップ -->
   <div class="row">
-    <!-- 左：ルート一覧 -->
     <div class="col-md-4">
       <div class="d-flex align-items-center justify-content-between mb-1">
         <h5 class="mb-0">ルート一覧</h5>
       </div>
-      <!-- Day タブ -->
       <div id="dayTabs" class="day-tabs"></div>
-
-      <div id="routeList">
-        <!-- JS で Day ごとの地点カードを描画（アクティブな Day のみ） -->
-      </div>
+      <div id="routeList"></div>
     </div>
 
-    <!-- 右：マップ -->
     <div class="col-md-8">
       <h5 class="mb-2">ルートマップ</h5>
       <div id="previewMap"></div>
     </div>
   </div>
 
-  <!-- PDF生成ステータス表示 -->
   <div id="pdfStatus" class="alert alert-info" style="display:none;"></div>
 </div>
 
-<!-- routeData (JSON) をそのまま埋め込む -->
 <textarea id="routeDataJson" style="display:none;"><c:out value="${param.routeData}" /></textarea>
 
-<!-- PDFOutput 用のフォーム（PDFOutputServlet に POST） -->
 <form id="pdfForm" method="post" action="<%= request.getContextPath() %>/PDFOutput" target="_blank">
   <input type="hidden" name="json" id="pdfJsonInput">
 </form>
 
-<!-- ライブラリ -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
-/* ============================
-   routeData の読み込み
-============================ */
 let routeData = {};
-let activeDayIndex = 0;      // 現在表示中の Day（0 始まり）
-let previewMap = null;       // Leaflet マップ
-let routeLayerGroup = null;  // Day ごとのレイヤー（マーカー＋ポリライン）
+let activeDayIndex = 0;
+let previewMap = null;
+let routeLayerGroup = null;
+let tileLayerRef = null;
 
 function loadRouteData() {
   const textarea = document.getElementById("routeDataJson");
@@ -301,41 +223,25 @@ function loadRouteData() {
   try {
     routeData = JSON.parse(raw);
     console.log("routeData:", routeData);
-
-    // Day が存在しない / 空配列だけの場合のケア
-    if (!routeData.routes || !Array.isArray(routeData.routes) || routeData.routes.length === 0) {
-      activeDayIndex = 0;
-    } else {
-      activeDayIndex = 0;
-    }
+    activeDayIndex = 0;
   } catch (e) {
     console.error("JSON 解析エラー:", e);
     alert("ルート情報の読み込みに失敗しました。もう一度ルートを作成してください。");
   }
 }
 
-/* ============================
-   コース情報の表示
-============================ */
 function renderCourseHeader() {
   if (!routeData) return;
-  document.getElementById("courseTitleText").textContent =
-    routeData.courseTitle || "未設定";
+  document.getElementById("courseTitleText").textContent = routeData.courseTitle || "未設定";
   document.getElementById("tripDaysText").textContent =
     routeData.tripDays || (routeData.routes ? routeData.routes.length : 1);
-  document.getElementById("startPointText").textContent =
-    routeData.startPoint || "";
+  document.getElementById("startPointText").textContent = routeData.startPoint || "";
   if (routeData.startAddress) {
-    document.getElementById("startAddressText").textContent =
-      "（" + routeData.startAddress + "）";
+    document.getElementById("startAddressText").textContent = "（" + routeData.startAddress + "）";
   }
-  document.getElementById("startTimeText").textContent =
-    routeData.startTime || "";
+  document.getElementById("startTimeText").textContent = routeData.startTime || "";
 }
 
-/* ============================
-   Day タブの描画
-============================ */
 function renderDayTabs() {
   const tabsContainer = document.getElementById("dayTabs");
   tabsContainer.innerHTML = "";
@@ -351,10 +257,7 @@ function renderDayTabs() {
     btn.className = "day-tab-btn";
     btn.dataset.dayIndex = idx;
     btn.textContent = "Day " + (idx + 1);
-
-    if (idx === activeDayIndex) {
-      btn.classList.add("active");
-    }
+    if (idx === activeDayIndex) btn.classList.add("active");
 
     btn.addEventListener("click", function() {
       const newIndex = parseInt(this.dataset.dayIndex, 10);
@@ -362,14 +265,12 @@ function renderDayTabs() {
       if (newIndex === activeDayIndex) return;
 
       activeDayIndex = newIndex;
-      // タブの見た目更新
       Array.prototype.forEach.call(
         tabsContainer.querySelectorAll(".day-tab-btn"),
         function(b) {
           b.classList.toggle("active", parseInt(b.dataset.dayIndex, 10) === activeDayIndex);
         }
       );
-      // ルート一覧・マップを切り替え
       renderRouteListForDay(activeDayIndex);
       renderMapForDay(activeDayIndex);
     });
@@ -378,25 +279,13 @@ function renderDayTabs() {
   });
 }
 
-/* ============================
-   ルート一覧の描画（左） - Day ごと
-============================ */
 function createBadge(type) {
   let label = "";
   let cls = "badge-normal";
-  if (type === "start") {
-    label = "スタート";
-    cls = "badge-start";
-  } else if (type === "goal") {
-    label = "ゴール";
-    cls = "badge-goal";
-  } else if (type === "meal") {
-    label = "食事";
-    cls = "badge-meal";
-  } else {
-    label = "スポット";
-    cls = "badge-normal";
-  }
+  if (type === "start") { label = "スタート"; cls = "badge-start"; }
+  else if (type === "goal") { label = "ゴール"; cls = "badge-goal"; }
+  else if (type === "meal") { label = "食事"; cls = "badge-meal"; }
+  else { label = "スポット"; cls = "badge-normal"; }
   return '<span class="spot-badge ' + cls + '">' + label + '</span>';
 }
 
@@ -474,20 +363,13 @@ function renderRouteListForDay(dayIndex) {
   container.appendChild(dayDiv);
 }
 
-/* ============================
-   マップ描画（右） -Day ごと
-============================ */
 function getIconByType(type) {
   let iconUrl;
-  if (type === "start") {
-    iconUrl = "https://cdn-icons-png.flaticon.com/512/25/25694.png";
-  } else if (type === "goal") {
-    iconUrl = "https://cdn-icons-png.flaticon.com/512/60/60993.png";
-  } else if (type === "meal") {
-    iconUrl = "https://cdn-icons-png.flaticon.com/512/3075/3075977.png";
-  } else {
-    iconUrl = "https://cdn-icons-png.flaticon.com/512/252/252025.png";
-  }
+  if (type === "start") iconUrl = "https://cdn-icons-png.flaticon.com/512/25/25694.png";
+  else if (type === "goal") iconUrl = "https://cdn-icons-png.flaticon.com/512/60/60993.png";
+  else if (type === "meal") iconUrl = "https://cdn-icons-png.flaticon.com/512/3075/3075977.png";
+  else iconUrl = "https://cdn-icons-png.flaticon.com/512/252/252025.png";
+
   return L.icon({
     iconUrl: iconUrl,
     iconSize: [32, 32],
@@ -501,8 +383,11 @@ function initMapIfNeeded() {
 
   if (!previewMap) {
     previewMap = L.map("previewMap").setView([38.2485, 140.3276], 8);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:"&copy; OpenStreetMap contributors"
+
+    // ★重要：CORS対応（html2canvasでタイルを写すため）
+    tileLayerRef = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:"&copy; OpenStreetMap contributors",
+      crossOrigin: true
     }).addTo(previewMap);
   }
 }
@@ -511,17 +396,13 @@ function renderMapForDay(dayIndex) {
   initMapIfNeeded();
   if (!previewMap) return;
 
-  // 以前の Day のマーカー＋ポリラインを削除
-  if (routeLayerGroup) {
-    previewMap.removeLayer(routeLayerGroup);
-  }
+  if (routeLayerGroup) previewMap.removeLayer(routeLayerGroup);
   routeLayerGroup = L.layerGroup().addTo(previewMap);
 
   if (!routeData || !Array.isArray(routeData.routes)) return;
 
   const dayRoute = routeData.routes[dayIndex];
   if (!dayRoute || dayRoute.length === 0) {
-    // Day にルートが無い場合は、山形駅あたりを表示
     previewMap.setView([38.2485, 140.3276], 8);
     return;
   }
@@ -551,46 +432,128 @@ function renderMapForDay(dayIndex) {
     const line = L.polyline(latlngs, { color:"blue", weight:4 }).addTo(routeLayerGroup);
     previewMap.fitBounds(line.getBounds(), { padding:[30,30] });
   } else {
-    // 座標が 1 つもない場合も念のためリセット
     previewMap.setView([38.2485, 140.3276], 8);
+  }
+
+  // レイアウト崩れ防止
+  setTimeout(function() {
+    previewMap.invalidateSize();
+  }, 50);
+}
+
+function sleep(ms) {
+  return new Promise(function(resolve){ setTimeout(resolve, ms); });
+}
+
+/**
+ * Leaflet地図を画像化（Base64）
+ * - useCORS:true が重要
+ * - できるだけ軽くするため scale:1
+ */
+async function captureMapBase64() {
+  const mapEl = document.getElementById("previewMap");
+  if (!mapEl) return "";
+
+  // タイル読み込み待ち（環境差があるので複数回待つ）
+  await sleep(600);
+  if (previewMap) previewMap.invalidateSize();
+  await sleep(400);
+
+  try {
+    const canvas = await html2canvas(mapEl, {
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: "#ffffff",
+      scale: 1
+    });
+
+    // JPEGにして軽量化
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+    return dataUrl;
+  } catch (e) {
+    console.error("captureMapBase64 失敗:", e);
+    return "";
   }
 }
 
-/* ============================
-   PDF生成ボタン処理
-============================ */
-function setupPdfButton() {
+/**
+ * 送信用payload生成：
+ * - mapImage（各地点）は送らない
+ * - dayMapImages[] を追加して送る（Dayごとに1枚）
+ */
+function buildSendPayloadBase(original, dayMapImages) {
+  const cloned = JSON.parse(JSON.stringify(original || {}));
+
+  // 互換用：tripDays が無い場合に補完
+  if (!cloned.tripDays) {
+    cloned.tripDays = (cloned.routes && Array.isArray(cloned.routes)) ? cloned.routes.length : 1;
+  }
+
+  // 各地点の mapImage は送らない（重複で巨大化するため）
+  if (cloned.routes && Array.isArray(cloned.routes)) {
+    cloned.routes.forEach(function(dayRoute) {
+      if (!dayRoute || !Array.isArray(dayRoute)) return;
+      dayRoute.forEach(function(rp) {
+        if (!rp) return;
+        delete rp.mapImage;
+      });
+    });
+  }
+
+  cloned.dayMapImages = dayMapImages || [];
+  return cloned;
+}
+
+async function setupPdfButton() {
   const btn = document.getElementById("generatePdfBtn");
   const status = document.getElementById("pdfStatus");
   if (!btn) return;
 
-  btn.addEventListener("click", function() {
+  btn.addEventListener("click", async function() {
     if (!routeData || !Array.isArray(routeData.routes) || routeData.routes.length === 0) {
       alert("ルート情報がありません。先にルートを作成してください。");
       return;
     }
 
-    const ok = confirm("現在のルート情報で PDF を生成しますか？");
+    const ok = confirm("現在のルート情報で PDF を生成しますか？（Dayごとの地図画像も作成します）");
     if (!ok) return;
+
+    btn.disabled = true;
+    status.style.display = "block";
+    status.className = "alert alert-info";
+    status.textContent = "地図画像を作成中です…（少し待ってください）";
+
+    const dayMapImages = [];
+
+    for (let day = 0; day < routeData.routes.length; day++) {
+      status.textContent = "地図画像を作成中… Day " + (day + 1);
+
+      // そのDayを表示してからキャプチャ
+      activeDayIndex = day;
+      renderRouteListForDay(activeDayIndex);
+      renderMapForDay(activeDayIndex);
+
+      const b64 = await captureMapBase64();
+      dayMapImages.push(b64 || "");
+    }
+
+    status.className = "alert alert-info";
+    status.textContent = "PDF送信準備中です…";
+
+    const sendData = buildSendPayloadBase(routeData, dayMapImages);
 
     const form = document.getElementById("pdfForm");
     const jsonInput = document.getElementById("pdfJsonInput");
-    jsonInput.value = JSON.stringify(routeData);
+    jsonInput.value = JSON.stringify(sendData);
 
-    // PDFOutputServlet に POST → 新しいタブで PDF 表示
     form.submit();
 
-    // 完了メッセージ表示
-    status.style.display = "block";
     status.className = "alert alert-success";
-    status.textContent =
-      "PDF生成を開始しました。ブラウザの新しいタブ（またはウィンドウ）に PDF が表示されます。表示されない場合は、ポップアップブロックを確認してください。";
+    status.textContent = "PDF生成を開始しました。新しいタブにPDFが表示されます。";
+    btn.disabled = false;
   });
 }
 
-/* ============================
-   初期化
-============================ */
 document.addEventListener("DOMContentLoaded", function() {
   loadRouteData();
   renderCourseHeader();

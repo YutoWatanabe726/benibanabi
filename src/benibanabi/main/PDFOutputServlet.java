@@ -1,6 +1,6 @@
 package benibanabi.main;
 
-import java.io.ByteArrayOutputStream;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -24,6 +25,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
@@ -32,18 +34,11 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPa
 
 import com.google.gson.Gson;
 
-/**
- * PDFOutputServlet
- * ルート情報(JSON)を受け取り、旅行しおりPDFを生成する。
- *
- * URL: /PDFOutput
- */
 @WebServlet("/PDFOutput")
 public class PDFOutputServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    // JSON 受け取り用の内部クラス ---------------------------
     public static class RoutePoint {
         public String name;
         public double lat;
@@ -52,8 +47,8 @@ public class PDFOutputServlet extends HttpServlet {
         public Integer stayTime; // 分
         public String memo;
         public String transport; // 徒歩/車/電車
-        public String photoUrl;  // DB に保存されている写真URL（http… または /images/...）
-        public String mapImage;  // Base64 (data:image/png;base64,... を含んでいてもOK)
+        public String photoUrl;  // ここに入ってくる想定
+        public String mapImage;  // 互換のため残す
     }
 
     public static class PdfRoutePayload {
@@ -63,11 +58,13 @@ public class PDFOutputServlet extends HttpServlet {
         public String startAddress;
         public String startTime;
         public List<List<RoutePoint>> routes;
+
+        // Dayごとの地図画像（data:image/jpeg;base64,...）
+        public List<String> dayMapImages;
     }
 
-    // 距離計算用（km）
     private double calcDistanceKm(double lat1, double lng1, double lat2, double lng2) {
-        final double R = 6371.0; // 地球の半径 km
+        final double R = 6371.0;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);
         double a =
@@ -79,23 +76,15 @@ public class PDFOutputServlet extends HttpServlet {
         return R * c;
     }
 
-    // 速度 km/h
     private double getSpeedKmh(String transport) {
         if ("車".equals(transport)) return 40.0;
         if ("電車".equals(transport)) return 60.0;
-        // デフォルト徒歩
         return 5.0;
     }
 
     private LocalTime parseStartTime(String s) {
-        if (s == null || s.isEmpty()) {
-            return LocalTime.of(9, 0);
-        }
-        try {
-            return LocalTime.parse(s);
-        } catch (Exception e) {
-            return LocalTime.of(9, 0);
-        }
+        if (s == null || s.isEmpty()) return LocalTime.of(9, 0);
+        try { return LocalTime.parse(s); } catch (Exception e) { return LocalTime.of(9, 0); }
     }
 
     private String formatTime(LocalTime t) {
@@ -109,99 +98,94 @@ public class PDFOutputServlet extends HttpServlet {
         return s.substring(0, maxLen - 1) + "…";
     }
 
-    /* =====================================
-       画像読み込み系ユーティリティ
-       ===================================== */
-
     /**
-     * WebパスまたはURLから画像を読み込んで PDImageXObject にする。
-     * - "http://", "https://" で始まる場合 → URLから取得
-     * - それ以外 → Webアプリ内の相対パスとして getRealPath でファイル参照
-     */
-    private PDImageXObject loadImageFromAny(PDDocument doc, String pathOrUrl) {
-        if (pathOrUrl == null || pathOrUrl.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            String p = pathOrUrl.trim();
-            // 絶対URLの場合
-            if (p.startsWith("http://") || p.startsWith("https://")) {
-                try (InputStream in = new URL(p).openStream();
-                     ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                    byte[] buf = new byte[8192];
-                    int len;
-                    while ((len = in.read(buf)) != -1) {
-                        baos.write(buf, 0, len);
-                    }
-                    byte[] bytes = baos.toByteArray();
-                    return PDImageXObject.createFromByteArray(doc, bytes, "web-image");
-                }
-            } else {
-                // Webアプリ内の相対パス（例：/images/xxx.jpg）
-                String realPath = getServletContext().getRealPath(p);
-                if (realPath == null) return null;
-                File f = new File(realPath);
-                if (!f.exists()) return null;
-                return PDImageXObject.createFromFileByContent(f, doc);
-            }
-        } catch (Exception e) {
-            // 失敗してもPDF生成は続行する
-            return null;
-        }
-    }
-
-    /**
-     * RoutePoint に応じて写真画像を取得する。
-     * - normal：rp.photoUrl（DBのURL or /images/xxx）
-     * - start：/images/pdf_default_start.png
-     * - meal ：/images/pdf_default_meal.png
-     * - goal ：/images/pdf_default_goal.png
-     *
-     * ※ 上記パスはプロジェクト内に配置する前提。
-     *   ファイル名を変える場合はここを書き換えてください。
-     */
-    private PDImageXObject loadPhotoImage(PDDocument doc, RoutePoint rp) {
-        String path = null;
-
-        if ("start".equals(rp.type)) {
-            path = "/images/pdf_default_start.png";
-        } else if ("meal".equals(rp.type)) {
-            path = "/images/pdf_default_meal.png";
-        } else if ("goal".equals(rp.type)) {
-            path = "/images/pdf_default_goal.png";
-        } else {
-            // 通常スポットは DB の photoUrl を使用
-            path = rp.photoUrl;
-            if (path == null || path.trim().isEmpty()) {
-                // 写真が無い場合は共通のプレースホルダにしてもOK
-                // 例）path = "/images/placeholder.jpg";
-            }
-        }
-
-        return loadImageFromAny(doc, path);
-    }
-
-    /**
-     * Base64（dataURL形式でもOK）から画像を読み込む。
-     * routeData.routes[].mapImage をここでPDF画像に変換。
+     * Base64(dataURL形式もOK) → PDImageXObject
      */
     private PDImageXObject loadImageFromBase64(PDDocument doc, String base64) {
         try {
             if (base64 == null || base64.trim().isEmpty()) return null;
             String b64 = base64.trim();
-            // "data:image/png;base64,......" の場合は ',' 以降だけデコード
             int comma = b64.indexOf(',');
-            if (comma >= 0) {
-                b64 = b64.substring(comma + 1);
-            }
+            if (comma >= 0) b64 = b64.substring(comma + 1);
             byte[] bytes = Base64.getDecoder().decode(b64);
-            return PDImageXObject.createFromByteArray(doc, bytes, "map-image");
+            return PDImageXObject.createFromByteArray(doc, bytes, "image-b64");
         } catch (Exception e) {
             return null;
         }
     }
 
-    // ===================================================
+    /**
+     * どんな形式の photoUrl でも読めるようにする：
+     * - data:image/... (Base64)
+     * - http/https URL
+     * - /images/... などWebアプリ内パス
+     * - /benibanabi/images/... のように contextPath 付きでもOK
+     */
+    private PDImageXObject loadPhotoImage(PDDocument doc, HttpServletRequest req, RoutePoint rp) {
+        try {
+            if (rp == null) return null;
+            String urlStr = rp.photoUrl;
+            if (urlStr == null || urlStr.trim().isEmpty()) return null;
+
+            String p = urlStr.trim();
+
+            // 1) dataURL (Base64)
+            if (p.startsWith("data:image/")) {
+                PDImageXObject x = loadImageFromBase64(doc, p);
+                if (x != null) return x;
+            }
+
+            // 2) http/https URL
+            if (p.startsWith("http://") || p.startsWith("https://")) {
+                try (InputStream in = new URL(p).openStream()) {
+                    BufferedImage image = ImageIO.read(in);
+                    if (image == null) return null;
+                    return LosslessFactory.createFromImage(doc, image);
+                }
+            }
+
+            // 3) contextPath 付きのURLっぽいパスを除去（例: /benibanabi/images/a.jpg）
+            String ctx = (req != null) ? req.getContextPath() : "";
+            if (ctx != null && !ctx.isEmpty() && p.startsWith(ctx + "/")) {
+                p = p.substring(ctx.length()); // /images/a.jpg にする
+            }
+
+            // 4) Webアプリ内パスとして読む（/images/...）
+            if (!p.startsWith("/")) {
+                p = "/" + p;
+            }
+
+            // 4-A) getResourceAsStream（WAR内でも読める）
+            try (InputStream in = getServletContext().getResourceAsStream(p)) {
+                if (in != null) {
+                    BufferedImage image = ImageIO.read(in);
+                    if (image != null) {
+                        return LosslessFactory.createFromImage(doc, image);
+                    }
+                }
+            } catch (Exception ignore) {
+                // 次の手段へ
+            }
+
+            // 4-B) getRealPath（展開されてる場合）
+            String realPath = getServletContext().getRealPath(p);
+            if (realPath != null) {
+                File f = new File(realPath);
+                if (f.exists()) {
+                    BufferedImage image = ImageIO.read(f);
+                    if (image != null) {
+                        return LosslessFactory.createFromImage(doc, image);
+                    }
+                }
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
@@ -217,7 +201,6 @@ public class PDFOutputServlet extends HttpServlet {
             return;
         }
 
-        // JSON → Javaオブジェクト
         Gson gson = new Gson();
         PdfRoutePayload payload;
         try {
@@ -230,17 +213,15 @@ public class PDFOutputServlet extends HttpServlet {
             return;
         }
 
-        // PDF生成
         try (PDDocument doc = new PDDocument()) {
 
-            // 日本語フォント読み込み（WEB-INF/fonts/NotoSansJP-Regular.ttf）
             PDType0Font font;
             try (InputStream fontStream =
                      getServletContext().getResourceAsStream("/WEB-INF/fonts/NotoSansJP-Regular.ttf")) {
                 if (fontStream == null) {
                     res.setContentType("text/plain; charset=UTF-8");
                     try (PrintWriter out = res.getWriter()) {
-                        out.println("日本語フォントが読み込めませんでした。WEB-INF/fonts にフォントを配置してください。: null");
+                        out.println("日本語フォントが読み込めませんでした。WEB-INF/fonts に配置してください。");
                     }
                     return;
                 }
@@ -248,12 +229,12 @@ public class PDFOutputServlet extends HttpServlet {
             } catch (Exception ex) {
                 res.setContentType("text/plain; charset=UTF-8");
                 try (PrintWriter out = res.getWriter()) {
-                    out.println("日本語フォントが読み込めませんでした。WEB-INF/fonts にフォントを配置してください。: " + ex.getMessage());
+                    out.println("日本語フォントが読み込めませんでした。: " + ex.getMessage());
                 }
                 return;
             }
 
-            // ====== 1. 表紙ページ ======
+            // ====== 表紙 ======
             PDPage coverPage = new PDPage(PDRectangle.A4);
             doc.addPage(coverPage);
             float coverMargin = 60;
@@ -263,12 +244,10 @@ public class PDFOutputServlet extends HttpServlet {
                 float w = mb.getWidth();
                 float h = mb.getHeight();
 
-                // 背景の薄いオレンジ帯
                 cs.setNonStrokingColor(255, 242, 230);
                 cs.addRect(0, h - 200, w, 200);
                 cs.fill();
 
-                // タイトル
                 cs.setNonStrokingColor(0, 0, 0);
                 String mainTitle = "旅行しおり";
                 float titleFontSize = 30f;
@@ -282,24 +261,20 @@ public class PDFOutputServlet extends HttpServlet {
                 cs.showText(mainTitle);
                 cs.endText();
 
-                // コースタイトル
                 cs.beginText();
                 cs.setFont(font, 20);
                 cs.newLineAtOffset(coverMargin, h - coverMargin - 120);
                 String title = (payload.courseTitle != null && !payload.courseTitle.isEmpty())
-                        ? payload.courseTitle
-                        : "タイトル未設定";
+                        ? payload.courseTitle : "タイトル未設定";
                 cs.showText("コースタイトル： " + title);
                 cs.endText();
 
-                // 日数
                 cs.beginText();
                 cs.setFont(font, 16);
                 cs.newLineAtOffset(coverMargin, h - coverMargin - 160);
                 cs.showText("旅行日数： " + payload.tripDays + " 日");
                 cs.endText();
 
-                // 開始地点・時間
                 String startPoint = payload.startPoint != null ? payload.startPoint : "";
                 String startAddr  = payload.startAddress != null ? payload.startAddress : "";
                 String startTime  = payload.startTime != null ? payload.startTime : "";
@@ -316,16 +291,13 @@ public class PDFOutputServlet extends HttpServlet {
                 cs.showText("開始時間： " + startTime);
                 cs.endText();
 
-                // 作成日時
                 cs.beginText();
                 cs.setFont(font, 12);
                 cs.newLineAtOffset(coverMargin, h - coverMargin - 270);
-                String nowStr = LocalDateTime.now()
-                        .format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
+                String nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
                 cs.showText("作成日時： " + nowStr);
                 cs.endText();
 
-                // フッター
                 cs.beginText();
                 cs.setFont(font, 12);
                 cs.newLineAtOffset(coverMargin, coverMargin + 30);
@@ -333,23 +305,20 @@ public class PDFOutputServlet extends HttpServlet {
                 cs.endText();
             }
 
-            // ====== 2. Dayごとのページ構成 ======
+            // ====== Dayページ作成 ======
             List<PDPage> overviewPages = new ArrayList<>();
             List<List<PDPage>> detailPagesByDay = new ArrayList<>();
 
             int dayCount = (payload.routes != null) ? payload.routes.size() : 0;
 
-            // 2-1. 先に「Dayスケジュール」ページをすべて作成
             for (int day = 0; day < dayCount; day++) {
                 PDPage overview = new PDPage(PDRectangle.A4);
                 doc.addPage(overview);
                 overviewPages.add(overview);
             }
 
-            // 2-2. そのあとにスポット詳細ページをすべて作成
             for (int day = 0; day < dayCount; day++) {
                 List<RoutePoint> dayRoute = payload.routes.get(day);
-
                 List<PDPage> detailPages = new ArrayList<>();
                 if (dayRoute != null) {
                     for (int i = 0; i < dayRoute.size(); i++) {
@@ -361,7 +330,7 @@ public class PDFOutputServlet extends HttpServlet {
                 detailPagesByDay.add(detailPages);
             }
 
-            // ====== 3. 中身の描画（Day概要・スポット詳細） ======
+            // ====== 中身描画 ======
             LocalTime baseStartTime = parseStartTime(payload.startTime);
 
             for (int day = 0; day < dayCount; day++) {
@@ -369,11 +338,8 @@ public class PDFOutputServlet extends HttpServlet {
                 PDPage overview = overviewPages.get(day);
                 List<PDPage> detailPages = detailPagesByDay.get(day);
 
-                if (dayRoute == null || dayRoute.isEmpty()) {
-                    continue;
-                }
+                if (dayRoute == null || dayRoute.isEmpty()) continue;
 
-                // ---- 3-1. この日の到着時刻を計算 ----
                 LocalTime current = baseStartTime;
                 LocalTime[] arriveTimes = new LocalTime[dayRoute.size()];
 
@@ -393,21 +359,19 @@ public class PDFOutputServlet extends HttpServlet {
                     current = current.plusMinutes(stay);
                 }
 
-                // ---- 3-2. Day概要ページ（タイムライン＋スポットリンク） ----
+                // ---- Day概要 ----
                 try (PDPageContentStream cs = new PDPageContentStream(doc, overview)) {
                     PDRectangle mb = overview.getMediaBox();
                     float margin = 50;
                     float y = mb.getHeight() - margin;
 
-                    // 見出し用オレンジ帯
                     float headerHeight = 50;
                     float headerWidth = mb.getWidth() - margin * 2;
 
-                    cs.setNonStrokingColor(230, 126, 34); // オレンジ
+                    cs.setNonStrokingColor(230, 126, 34);
                     cs.addRect(margin, y - headerHeight, headerWidth, headerHeight);
                     cs.fill();
 
-                    // 見出しテキスト（白文字・中央）
                     String headerTitle = "Day " + (day + 1) + " スケジュール";
                     float headerFontSize = 22f;
                     float headerTextWidth = font.getStringWidth(headerTitle) / 1000f * headerFontSize;
@@ -423,7 +387,6 @@ public class PDFOutputServlet extends HttpServlet {
 
                     y -= (headerHeight + 40);
 
-                    // ヘッダ行
                     cs.setNonStrokingColor(0, 0, 0);
                     cs.beginText();
                     cs.setFont(font, 14);
@@ -432,7 +395,6 @@ public class PDFOutputServlet extends HttpServlet {
                     cs.endText();
                     y -= 25;
 
-                    // 下線
                     cs.setNonStrokingColor(230, 126, 34);
                     cs.setLineWidth(1.5f);
                     cs.moveTo(margin, y);
@@ -440,7 +402,6 @@ public class PDFOutputServlet extends HttpServlet {
                     cs.stroke();
                     y -= 20;
 
-                    // 各行：時刻＋スポット名（リンク付き）
                     float timeFontSize = 14f;
                     String sampleTime = "00:00";
                     float timeWidth = font.getStringWidth(sampleTime) / 1000f * timeFontSize;
@@ -454,7 +415,6 @@ public class PDFOutputServlet extends HttpServlet {
                         float textX = margin;
                         float textY = y;
 
-                        // 時刻（黒）
                         cs.setNonStrokingColor(0, 0, 0);
                         cs.beginText();
                         cs.setFont(font, timeFontSize);
@@ -462,7 +422,6 @@ public class PDFOutputServlet extends HttpServlet {
                         cs.showText(timeStr);
                         cs.endText();
 
-                        // 区切り "  |  "
                         String delim = "   |  ";
                         float delimWidth = font.getStringWidth(delim) / 1000f * timeFontSize;
                         float delimX = textX + timeWidth + 8;
@@ -473,18 +432,16 @@ public class PDFOutputServlet extends HttpServlet {
                         cs.showText(delim);
                         cs.endText();
 
-                        // スポット名（青色＆リンク）
                         float linkX = delimX + delimWidth;
-                        cs.setNonStrokingColor(0, 102, 204); // 青
+                        cs.setNonStrokingColor(0, 102, 204);
                         cs.beginText();
                         cs.setFont(font, timeFontSize);
                         cs.newLineAtOffset(linkX, textY);
                         cs.showText(nameStr);
                         cs.endText();
-                        cs.setNonStrokingColor(0, 0, 0); // 色を戻す
+                        cs.setNonStrokingColor(0, 0, 0);
 
-                        // リンク先（詳細ページ）設定
-                        PDPage targetPage = detailPages.get(i);  // 同じインデックスの詳細ページへ
+                        PDPage targetPage = detailPages.get(i);
                         PDPageXYZDestination dest = new PDPageXYZDestination();
                         dest.setPage(targetPage);
                         dest.setTop((int) (targetPage.getMediaBox().getHeight() - margin));
@@ -495,26 +452,28 @@ public class PDFOutputServlet extends HttpServlet {
                         PDAnnotationLink link = new PDAnnotationLink();
                         link.setAction(action);
                         PDBorderStyleDictionary border = new PDBorderStyleDictionary();
-                        border.setWidth(0); // 枠線なし
+                        border.setWidth(0);
                         link.setBorderStyle(border);
 
                         float nameWidth = font.getStringWidth(nameStr) / 1000f * timeFontSize;
-                        PDRectangle rect = new PDRectangle(linkX,
-                                textY - 2,
-                                nameWidth + 2,
-                                timeFontSize + 4);
+                        PDRectangle rect = new PDRectangle(linkX, textY - 2, nameWidth + 2, timeFontSize + 4);
                         link.setRectangle(rect);
 
                         overview.getAnnotations().add(link);
 
                         y -= 25;
-                        if (y < margin + 60) {
-                            break;
-                        }
+                        if (y < margin + 60) break;
                     }
                 }
 
-                // ---- 3-3. スポット詳細ページ ----
+                // ---- Day地図（1枚） ----
+                String dayMapB64 = null;
+                if (payload.dayMapImages != null && day < payload.dayMapImages.size()) {
+                    dayMapB64 = payload.dayMapImages.get(day);
+                }
+                PDImageXObject dayMapImage = loadImageFromBase64(doc, dayMapB64);
+
+                // ---- 詳細 ----
                 for (int i = 0; i < dayRoute.size(); i++) {
                     RoutePoint rp = dayRoute.get(i);
                     PDPage page = detailPages.get(i);
@@ -533,14 +492,11 @@ public class PDFOutputServlet extends HttpServlet {
                         moveMin = (dist / speed) * 60.0;
                     }
 
-                    // ★ 写真（typeに応じて default or DB URL）
-                    PDImageXObject photoImage = loadPhotoImage(doc, rp);
-                    // ★ マップ画像（各地点用 Base64）
-                    PDImageXObject mapImage = loadImageFromBase64(doc, rp.mapImage);
+                    // ★ここが重要：photoUrlの形式を全部吸収する版
+                    PDImageXObject photoImage = loadPhotoImage(doc, req, rp);
 
                     try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
 
-                        // タイトル：地点名 or 「前の地点 → この地点」
                         String title;
                         if (prev != null) {
                             title = String.format("Day %d 地点%d: %s → %s",
@@ -553,7 +509,6 @@ public class PDFOutputServlet extends HttpServlet {
                                     safeShort(rp.name, 20));
                         }
 
-                        // タイトル帯
                         float titleHeight = 40;
                         float titleWidth = mb.getWidth() - margin * 2;
 
@@ -570,7 +525,6 @@ public class PDFOutputServlet extends HttpServlet {
 
                         y -= (titleHeight + 40);
 
-                        // 写真（左）
                         float imgHeight = 200;
                         float imgWidth = 200;
                         float imgY = y - imgHeight;
@@ -589,13 +543,12 @@ public class PDFOutputServlet extends HttpServlet {
                             cs.endText();
                         }
 
-                        // 地図（右側）
                         float mapX = margin + imgWidth + 30;
                         float mapWidth = mb.getWidth() - margin - mapX;
                         float mapHeight = imgHeight;
 
-                        if (mapImage != null) {
-                            cs.drawImage(mapImage, mapX, imgY, mapWidth, mapHeight);
+                        if (dayMapImage != null) {
+                            cs.drawImage(dayMapImage, mapX, imgY, mapWidth, mapHeight);
                         } else {
                             cs.setNonStrokingColor(200, 200, 200);
                             cs.addRect(mapX, imgY, mapWidth, mapHeight);
@@ -610,7 +563,6 @@ public class PDFOutputServlet extends HttpServlet {
 
                         y = imgY - 40;
 
-                        // 移動手段・距離・時間
                         cs.setNonStrokingColor(0, 0, 0);
                         cs.beginText();
                         cs.setFont(font, 14);
@@ -635,7 +587,6 @@ public class PDFOutputServlet extends HttpServlet {
                             y -= 30;
                         }
 
-                        // メモ
                         String memo = (rp.memo != null) ? rp.memo : "";
                         cs.beginText();
                         cs.setFont(font, 14);
@@ -646,13 +597,11 @@ public class PDFOutputServlet extends HttpServlet {
                 }
             }
 
-            // ====== 4. レスポンスとしてPDFを返却 ======
             res.setContentType("application/pdf");
             String fileName = "route_" +
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +
                     ".pdf";
             res.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-
             doc.save(res.getOutputStream());
 
         } catch (Exception e) {
