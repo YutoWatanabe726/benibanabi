@@ -579,7 +579,10 @@ async function setupPdfButton() {
     status.className = "alert alert-info";
     status.textContent = "PDF送信準備中です…";
 
-    const sendData = buildSendPayloadBase(routeData, dayMapImages);
+    const sendData = buildSendPayloadBase(
+    		  JSON.parse(JSON.stringify(routeData)),
+    		  dayMapImages
+    		);
 
     const form = document.getElementById("pdfForm");
     const jsonInput = document.getElementById("pdfJsonInput");
