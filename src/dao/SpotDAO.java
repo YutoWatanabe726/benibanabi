@@ -229,4 +229,66 @@ public class SpotDAO extends Dao {
         }
         return areas;
     }
+
+    public int countAll() throws Exception {
+
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM SPOT";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            throw new SQLException("観光スポット件数取得中にエラーが発生しました。", e);
+        }
+
+        return count;
+    }
+
+    public List<Spot> findByPage(int limit, int offset) throws Exception {
+
+        List<Spot> list = new ArrayList<>();
+
+        String sql =
+            "SELECT SPOT_ID, SPOT_NAME, AREA, DESCRIPTION, SPOT_PHOTO, "
+          + "LATITUDE, LONGITUDE, ADDRESS "
+          + "FROM SPOT "
+          + "ORDER BY SPOT_ID "
+          + "LIMIT ? OFFSET ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, limit);
+            ps.setInt(2, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Spot s = new Spot();
+                    s.setSpotId(rs.getInt("SPOT_ID"));
+                    s.setSpotName(rs.getString("SPOT_NAME"));
+                    s.setArea(rs.getString("AREA"));
+                    s.setDescription(rs.getString("DESCRIPTION"));
+                    s.setSpotPhoto(rs.getString("SPOT_PHOTO"));
+                    s.setLatitude(rs.getDouble("LATITUDE"));
+                    s.setLongitude(rs.getDouble("LONGITUDE"));
+                    s.setAddress(rs.getString("ADDRESS"));
+                    list.add(s);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new SQLException("観光スポットページ取得中にエラーが発生しました。", e);
+        }
+
+        return list;
+    }
+
+
+
 }
