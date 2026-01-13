@@ -7,9 +7,9 @@
 		name="jdbc/benibanabi"
 		auth="Container"
 		type="javax.sql.DataSource"
-		driverClassName="org.h2.Driver"
-		url="jdbc:h2:tcp://localhost/~/benibanabi"
-		username="sa"
-		password=""
+		driverClassName="org.postgresql.Driver"
+		url="jdbc:postgresql://localhost:5432/benibanabi"
+		username="postgres"
+		password="admin"
 	/>
 </Context>
