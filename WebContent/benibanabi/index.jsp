@@ -188,17 +188,7 @@ setInterval(showSlide, 4500);
 </c:if>
 
 
-<!-- ================= イベント（暫定：トピックス再利用） ================= -->
-<h2 class="section-title fade-left">直近のイベント</h2>
 
-<div class="event-list">
-  <c:forEach var="t" items="${topTopics}">
-    <div class="event-item fade-up">
-      <h3>${t.topicsContent}</h3>
-      <p>${t.topicsStartDate} 〜 ${t.topicsEndDate} ／ ${t.topicsArea}</p>
-    </div>
-  </c:forEach>
-</div>
 
 
   </c:param>

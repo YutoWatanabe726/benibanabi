@@ -16,7 +16,7 @@
             <p>観光スポットの削除が完了しました。</p>
 
             <div class="button-group">
-                <a href="AdminSpotSetting.action">観光スポット一覧へ</a>
+                <a href="AdminSpotSetting.action">観光スポット機能一覧へ</a>
                 <a href="AdminMenu.action">管理者メニューへ</a>
             </div>
         </div>
