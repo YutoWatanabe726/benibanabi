@@ -10,20 +10,34 @@ import javax.servlet.http.HttpServletResponse;
 
 import bean.Spot;
 import bean.Tag;
+import constant.PaginationConst;
 import dao.SpotDAO;
 import dao.TagDAO;
 import tool.Action;
 
 public class SpotSearchAction extends Action {
 
+    private static final int PAGE_SIZE = PaginationConst.PAGE_SIZE;
+
     @Override
     public void execute(HttpServletRequest req, HttpServletResponse res) throws Exception {
 
         req.setCharacterEncoding("UTF-8");
 
-        // -----------------------------
-        // 1. パラメータ取得
-        // -----------------------------
+        /* ===============================
+         * 1. ページ番号取得
+         * =============================== */
+        int currentPage = 1;
+        String pageStr = req.getParameter("page");
+        if (pageStr != null && pageStr.matches("\\d+")) {
+            currentPage = Integer.parseInt(pageStr);
+        }
+
+        int offset = (currentPage - 1) * PAGE_SIZE;
+
+        /* ===============================
+         * 2. パラメータ取得
+         * =============================== */
         String keyword = req.getParameter("keyword");
         if (keyword == null) keyword = "";
 
@@ -39,9 +53,9 @@ public class SpotSearchAction extends Action {
 
         boolean isFavoriteOnly = "on".equals(req.getParameter("favoriteOnly"));
 
-        // -----------------------------
-        // 2. Cookie からお気に入りID取得
-        // -----------------------------
+        /* ===============================
+         * 3. Cookie（お気に入り）
+         * =============================== */
         List<String> favoriteIds = new ArrayList<>();
         Cookie[] cookies = req.getCookies();
 
@@ -51,47 +65,63 @@ public class SpotSearchAction extends Action {
                         && c.getValue() != null
                         && !c.getValue().isEmpty()) {
 
-                    // ★ URLデコード（重要）
                     String decoded = java.net.URLDecoder.decode(c.getValue(), "UTF-8");
-
-                    // カンマで分割
                     favoriteIds.addAll(Arrays.asList(decoded.split(",")));
                 }
             }
         }
 
-        // -----------------------------
-        // 3. DAO による検索
-        // -----------------------------
+        /* ===============================
+         * 4. 検索（全件取得）
+         * =============================== */
         SpotDAO dao = new SpotDAO();
-        List<Spot> spotList = dao.searchSpots(keyword, areaList, tagList);
+        List<Spot> allResult = dao.searchSpots(keyword, areaList, tagList);
 
-        // -----------------------------
-        // 4. お気に入りのみ表示
-        // -----------------------------
+        // お気に入りのみ
         if (isFavoriteOnly) {
-            spotList.removeIf(s -> !favoriteIds.contains(String.valueOf(s.getSpotId())));
+            allResult.removeIf(s ->
+                !favoriteIds.contains(String.valueOf(s.getSpotId()))
+            );
         }
 
-        // -----------------------------
-        // 5. タグ一覧取得
-        // -----------------------------
+        /* ===============================
+         * 5. ページング処理
+         * =============================== */
+        int totalCount = allResult.size();
+        int totalPages = (int) Math.ceil((double) totalCount / PAGE_SIZE);
+        if (totalPages == 0) totalPages = 1;
+
+        int toIndex = Math.min(offset + PAGE_SIZE, totalCount);
+        List<Spot> spotList = new ArrayList<>();
+
+        if (offset < totalCount) {
+            spotList = allResult.subList(offset, toIndex);
+        }
+
+        /* ===============================
+         * 6. タグ一覧
+         * =============================== */
         TagDAO tagDao = new TagDAO();
         ArrayList<Tag> tagAllList = tagDao.findAllTags();
 
-        // -----------------------------
-        // 6. JSP へ渡す
-        // -----------------------------
+        /* ===============================
+         * 7. JSPへ渡す
+         * =============================== */
         req.setAttribute("spotList", spotList);
         req.setAttribute("tagAllList", tagAllList);
+
         req.setAttribute("keyword", keyword);
         req.setAttribute("selectedAreas", areaList);
         req.setAttribute("selectedTags", tagList);
         req.setAttribute("favoriteOnly", isFavoriteOnly ? "on" : null);
 
-        // -----------------------------
-        // 7. JSP へフォワード
-        // -----------------------------
-        req.getRequestDispatcher("/benibanabi/main/spot_list.jsp").forward(req, res);
+        req.setAttribute("currentPage", currentPage);
+        req.setAttribute("totalPages", totalPages);
+
+        /* ===============================
+         * 8. forward
+         * =============================== */
+        req.getRequestDispatcher("/benibanabi/main/spot_list.jsp")
+           .forward(req, res);
     }
 }

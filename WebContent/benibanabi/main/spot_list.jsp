@@ -111,12 +111,18 @@ function closeModal(id) { document.getElementById(id).style.display="none"; }
 
 // ページネーションジャンプ
 function goPage(page) {
-    const form = document.querySelector('#searchMenu form');
+    const form = document.getElementById("searchForm");
+
+    // 既存の page を削除（重要）
+    const old = form.querySelector('input[name="page"]');
+    if (old) old.remove();
+
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = "page";
     input.value = page;
     form.appendChild(input);
+
     form.submit();
 }
 
@@ -141,7 +147,7 @@ window.addEventListener("click", function(e) {
     <h1>観光スポット一覧</h1>
 </div>
 
-<form action="SpotSearch.action" method="post">
+<form id="searchForm" action="SpotSearch.action" method="post">
 <div id="searchMenu">
     <button type="button" id="areaBtn" onclick="openModal('areaModal')">エリア選択 ▼</button>
     <button type="button" id="tagBtn" onclick="openModal('tagModal')">タグ選択 ▼</button>
@@ -177,10 +183,42 @@ window.addEventListener("click", function(e) {
 </div>
 
 <div class="pagination">
-<% for(int i=1; i<=totalPages; i++){ %>
-    <button class="<%= (i==currentPage)?"active":"" %>" onclick="goPage(<%=i%>)"><%=i%></button>
-<% } %>
+
+    <!-- 先頭ページ -->
+    <button class="nav-btn"
+        onclick="goPage(1)"
+        <%= currentPage == 1 ? "disabled" : "" %>>
+        ⏮
+    </button>
+
+    <!-- 前のページ -->
+    <button class="nav-btn"
+        onclick="goPage(<%= currentPage - 1 %>)"
+        <%= currentPage == 1 ? "disabled" : "" %>>
+        ◀
+    </button>
+
+    <!-- 現在のページ -->
+    <span class="current-page">
+        <%= currentPage %>
+    </span>
+
+    <!-- 次のページ -->
+    <button class="nav-btn"
+        onclick="goPage(<%= currentPage + 1 %>)"
+        <%= currentPage == totalPages ? "disabled" : "" %>>
+        ▶
+    </button>
+
+    <!-- 最終ページ -->
+    <button class="nav-btn"
+        onclick="goPage(<%= totalPages %>)"
+        <%= currentPage == totalPages ? "disabled" : "" %>>
+        ⏭
+    </button>
+
 </div>
+
 
 <!-- モーダル: エリア選択 -->
 <div id="areaModal" class="modal">
