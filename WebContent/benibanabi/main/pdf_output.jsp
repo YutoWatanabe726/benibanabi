@@ -208,7 +208,7 @@ body {
 let routeData = {};
 let activeDayIndex = 0;
 let previewMap = null;
-let routeLayerGroup = null;
+let routeFeatureGroup = null;   // FeatureGroup（getBounds OK）
 let tileLayerRef = null;
 
 function loadRouteData() {
@@ -341,11 +341,25 @@ function renderRouteListForDay(dayIndex) {
     card.appendChild(headerDiv);
 
     if (rp.photoUrl) {
-      const img = document.createElement("img");
-      img.className = "spot-thumb";
-      img.src = rp.photoUrl;
-      img.alt = name;
-      card.appendChild(img);
+    	let photoUrl = rp.photoUrl;
+
+    	if (!photoUrl) {
+    	  if (rp.type === "start") {
+    	    photoUrl = "<%= request.getContextPath() %>/images/defaults/start.jpg";
+    	  } else if (rp.type === "goal") {
+    	    photoUrl = "<%= request.getContextPath() %>/images/defaults/goal.jpg";
+    	  } else if (rp.type === "meal") {
+    	    photoUrl = "<%= request.getContextPath() %>/images/defaults/meal.jpg";
+    	  }
+    	}
+
+    	if (photoUrl) {
+    	  const img = document.createElement("img");
+    	  img.className = "spot-thumb";
+    	  img.src = photoUrl;
+    	  img.alt = name;
+    	  card.appendChild(img);
+    	}
     }
 
     const metaDiv = document.createElement("div");
@@ -382,9 +396,16 @@ function initMapIfNeeded() {
   if (!mapDiv) return;
 
   if (!previewMap) {
-    previewMap = L.map("previewMap").setView([38.2485, 140.3276], 8);
+    // ★ズレ対策：アニメーションOFF
+    previewMap = L.map("previewMap", {
+      zoomAnimation: false,
+      fadeAnimation: false,
+      markerZoomAnimation: false,
+      inertia: false,
+      preferCanvas: true
+    }).setView([38.2485, 140.3276], 8);
 
-    // ★重要：CORS対応（html2canvasでタイルを写すため）
+    // ★重要：CORS対応（html2canvasでタイルを写す）
     tileLayerRef = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:"&copy; OpenStreetMap contributors",
       crossOrigin: true
@@ -392,12 +413,126 @@ function initMapIfNeeded() {
   }
 }
 
+function sleep(ms) {
+  return new Promise(function(resolve){ setTimeout(resolve, ms); });
+}
+
+function raf() {
+  return new Promise(function(resolve){ requestAnimationFrame(function(){ resolve(); }); });
+}
+
+// ★タイルが読み終わるのを待つ（loadが来ない環境もあるのでタイムアウト併用）
+function waitTileLoaded(timeoutMs) {
+  timeoutMs = timeoutMs || 1500;
+  return new Promise(function(resolve){
+    if (!tileLayerRef) return resolve();
+
+    let done = false;
+    const timer = setTimeout(function(){
+      if (done) return;
+      done = true;
+      resolve();
+    }, timeoutMs);
+
+    tileLayerRef.once("load", function(){
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      resolve();
+    });
+  });
+}
+
+// ★moveend/zoomend を待つ（fitBounds直後の「まだ動いてる」を潰す）
+function waitMapMoveEnd(timeoutMs) {
+  timeoutMs = timeoutMs || 1200;
+  return new Promise(function(resolve){
+    if (!previewMap) return resolve();
+
+    let done = false;
+    const timer = setTimeout(function(){
+      if (done) return;
+      done = true;
+      resolve();
+    }, timeoutMs);
+
+    // moveend/zoomend は複数回起きることがあるので once でOK
+    const onDone = function() {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      resolve();
+    };
+
+    previewMap.once("moveend", onDone);
+    previewMap.once("zoomend", onDone);
+
+    // すでに止まってる可能性があるので少しだけ保険
+    setTimeout(function(){
+      if (done) return;
+      // moveend/zoomend来ない環境もあるのでタイムアウト任せ
+    }, 50);
+  });
+}
+
+// ★最重要：Leaflet描画が完全に落ち着くまで待つ
+async function stabilizeBeforeCapture() {
+  if (!previewMap) return;
+
+  // サイズ確定
+  previewMap.invalidateSize(true);
+  await sleep(120);
+
+  // 動き終わり待ち
+  await waitMapMoveEnd(1200);
+
+  // タイルロード待ち
+  await waitTileLoaded(1800);
+
+  // ベクター/DOM反映を2フレーム待つ（ここが効きます）
+  await raf();
+  await raf();
+}
+
+async function drawOsrmSegment(from, to, group) {
+  if (!from || !to) return;
+  if (from.lat == null || from.lng == null || to.lat == null || to.lng == null) return;
+
+  const url =
+    "https://router.project-osrm.org/route/v1/driving/" +
+    from.lng + "," + from.lat + ";" +
+    to.lng + "," + to.lat +
+    "?overview=full&geometries=geojson";
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.routes || !data.routes[0]) {
+      // ★OSRM失敗時は直線で代替（線が出ない対策）
+      const fallback = L.polyline([[from.lat, from.lng],[to.lat,to.lng]], { weight: 4, color: "#2563eb" });
+      fallback.addTo(group);
+      return;
+    }
+
+    const line = L.geoJSON(data.routes[0].geometry, {
+      style: { weight: 4, color: "#2563eb" }
+    });
+    line.addTo(group);
+  } catch (e) {
+    console.error("OSRM error:", e);
+    // ★OSRM失敗時は直線で代替
+    const fallback = L.polyline([[from.lat, from.lng],[to.lat,to.lng]], { weight: 4, color: "#2563eb" });
+    fallback.addTo(group);
+  }
+}
+
 async function renderMapForDay(dayIndex) {
   initMapIfNeeded();
   if (!previewMap) return;
 
-  if (routeLayerGroup) previewMap.removeLayer(routeLayerGroup);
-  routeLayerGroup = L.layerGroup().addTo(previewMap);
+  if (routeFeatureGroup) previewMap.removeLayer(routeFeatureGroup);
+
+  routeFeatureGroup = L.featureGroup().addTo(previewMap);
 
   if (!routeData || !Array.isArray(routeData.routes)) return;
 
@@ -419,7 +554,7 @@ async function renderMapForDay(dayIndex) {
 
     const marker = L.marker([lat, lng], {
       icon: getIconByType(rp.type || "normal")
-    }).addTo(routeLayerGroup);
+    }).addTo(routeFeatureGroup);
 
     const popupHtml =
       "<strong>" + escapeHtml(rp.name || "") + "</strong><br>" +
@@ -427,37 +562,37 @@ async function renderMapForDay(dayIndex) {
       "緯度: " + lat + " / 経度: " + lng;
     marker.bindPopup(popupHtml);
   });
-  if (latlngs.length >= 2) {
-	  await drawOsrmRouteForDay(dayRoute);
-	} else if (latlngs.length === 1) {
-	  previewMap.setView(latlngs[0], 14);
-	} else {
-	  previewMap.setView([38.2485, 140.3276], 8);
-	}
 
-  // レイアウト崩れ防止
-  setTimeout(function() {
-    previewMap.invalidateSize();
-  }, 50);
-}
+  if (dayRoute.length >= 2) {
+    for (let i = 0; i < dayRoute.length - 1; i++) {
+      await drawOsrmSegment(dayRoute[i], dayRoute[i+1], routeFeatureGroup);
+    }
+    previewMap.invalidateSize(true);
+    await sleep(80);
+    try {
+      previewMap.fitBounds(routeFeatureGroup.getBounds(), { padding:[30,30] });
+    } catch(e) {
+      previewMap.setView(latlngs[0], 12);
+    }
+  } else if (latlngs.length === 1) {
+    previewMap.setView(latlngs[0], 14);
+  } else {
+    previewMap.setView([38.2485, 140.3276], 8);
+  }
 
-function sleep(ms) {
-  return new Promise(function(resolve){ setTimeout(resolve, ms); });
+  // ★ここで「落ち着かせる」
+  await stabilizeBeforeCapture();
 }
 
 /**
  * Leaflet地図を画像化（Base64）
- * - useCORS:true が重要
- * - できるだけ軽くするため scale:1
  */
 async function captureMapBase64() {
   const mapEl = document.getElementById("previewMap");
   if (!mapEl) return "";
 
-  // タイル読み込み待ち（環境差があるので複数回待つ）
-  await sleep(600);
-  if (previewMap) previewMap.invalidateSize();
-  await sleep(400);
+  // ★撮影直前に必ず安定化
+  await stabilizeBeforeCapture();
 
   try {
     const canvas = await html2canvas(mapEl, {
@@ -467,8 +602,7 @@ async function captureMapBase64() {
       scale: 1
     });
 
-    // JPEGにして軽量化
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.80);
     return dataUrl;
   } catch (e) {
     console.error("captureMapBase64 失敗:", e);
@@ -477,58 +611,76 @@ async function captureMapBase64() {
 }
 
 /**
- * 送信用payload生成：
- * - mapImage（各地点）は送らない
- * - dayMapImages[] を追加して送る（Dayごとに1枚）
+ * 区間(i-1 -> i)だけの地図を作って撮影する
  */
- async function drawOsrmRouteForDay(dayRoute) {
-	  if (!dayRoute || dayRoute.length < 2) return;
+async function captureSegmentMap(dayIndex, segIndex) {
+  initMapIfNeeded();
+  if (!previewMap) return "";
 
-	  for (let i = 0; i < dayRoute.length - 1; i++) {
-	    const from = dayRoute[i];
-	    const to   = dayRoute[i + 1];
+  if (!routeData || !Array.isArray(routeData.routes)) return "";
 
-	    if (
-	      from.lat == null || from.lng == null ||
-	      to.lat == null || to.lng == null
-	    ) continue;
+  const dayRoute = routeData.routes[dayIndex];
+  if (!dayRoute || dayRoute.length === 0) return "";
 
-	    const url =
-	      "https://router.project-osrm.org/route/v1/driving/" +
-	      from.lng + "," + from.lat + ";" +
-	      to.lng + "," + to.lat +
-	      "?overview=full&geometries=geojson";
+  if (routeFeatureGroup) {
+    try { previewMap.removeLayer(routeFeatureGroup); } catch(e) {}
+  }
+  routeFeatureGroup = L.featureGroup().addTo(previewMap);
 
-	    try {
-	      const res = await fetch(url);
-	      const data = await res.json();
-	      if (!data.routes || !data.routes[0]) continue;
+  // segIndex=0 は最初の地点だけ
+  if (segIndex === 0) {
+    const rp0 = dayRoute[0];
+    if (rp0 && rp0.lat != null && rp0.lng != null) {
+      const lat0 = parseFloat(rp0.lat);
+      const lng0 = parseFloat(rp0.lng);
 
-	      L.geoJSON(data.routes[0].geometry, {
-	        style: {
-	          weight: 4,
-	          color: "#2563eb"
-	        }
-	      }).addTo(routeLayerGroup);
-	    } catch (e) {
-	      console.error("OSRM error:", e);
-	    }
-	  }
+      L.marker([lat0, lng0], { icon: getIconByType(rp0.type || "start") }).addTo(routeFeatureGroup);
 
-	  // 全区間描画後にフィット
-	  previewMap.fitBounds(routeLayerGroup.getBounds(), { padding:[30,30] });
-	}
+      previewMap.invalidateSize(true);
+      previewMap.setView([lat0, lng0], 14);
 
+      return await captureMapBase64();
+    }
+    previewMap.setView([38.2485, 140.3276], 8);
+    return await captureMapBase64();
+  }
 
-function buildSendPayloadBase(original, dayMapImages) {
+  const from = dayRoute[segIndex - 1];
+  const to   = dayRoute[segIndex];
+
+  if (!from || !to || from.lat == null || from.lng == null || to.lat == null || to.lng == null) {
+    return "";
+  }
+
+  const fromLat = parseFloat(from.lat), fromLng = parseFloat(from.lng);
+  const toLat   = parseFloat(to.lat),   toLng   = parseFloat(to.lng);
+
+  L.marker([fromLat, fromLng], { icon: getIconByType(from.type || "start") }).addTo(routeFeatureGroup);
+  L.marker([toLat, toLng],     { icon: getIconByType(to.type || "normal") }).addTo(routeFeatureGroup);
+
+  await drawOsrmSegment(from, to, routeFeatureGroup);
+
+  // ★ズレの主因：fitBounds直後の未完了描画を撮っていた
+  previewMap.invalidateSize(true);
+  await sleep(80);
+
+  try {
+    previewMap.fitBounds(routeFeatureGroup.getBounds(), { padding:[40,40] });
+  } catch(e) {
+    previewMap.setView([toLat, toLng], 13);
+  }
+
+  // ★ここで「動き終わり＋タイル＋フレーム」を待ってから撮る
+  return await captureMapBase64();
+}
+
+function buildSendPayloadBase(original, segmentMapImages) {
   const cloned = JSON.parse(JSON.stringify(original || {}));
 
-  // 互換用：tripDays が無い場合に補完
   if (!cloned.tripDays) {
     cloned.tripDays = (cloned.routes && Array.isArray(cloned.routes)) ? cloned.routes.length : 1;
   }
 
-  // 各地点の mapImage は送らない（重複で巨大化するため）
   if (cloned.routes && Array.isArray(cloned.routes)) {
     cloned.routes.forEach(function(dayRoute) {
       if (!dayRoute || !Array.isArray(dayRoute)) return;
@@ -539,7 +691,7 @@ function buildSendPayloadBase(original, dayMapImages) {
     });
   }
 
-  cloned.dayMapImages = dayMapImages || [];
+  cloned.segmentMapImages = segmentMapImages || [];
   return cloned;
 }
 
@@ -554,7 +706,7 @@ async function setupPdfButton() {
       return;
     }
 
-    const ok = confirm("現在のルート情報で PDF を生成しますか？（Dayごとの地図画像も作成します）");
+    const ok = confirm("現在のルート情報で PDF を生成しますか？（地点ごとの地図画像も作成します）");
     if (!ok) return;
 
     btn.disabled = true;
@@ -562,27 +714,32 @@ async function setupPdfButton() {
     status.className = "alert alert-info";
     status.textContent = "地図画像を作成中です…（少し待ってください）";
 
-    const dayMapImages = [];
+    const segmentMapImages = []; // [day][i]
 
     for (let day = 0; day < routeData.routes.length; day++) {
-      status.textContent = "地図画像を作成中… Day " + (day + 1);
+      const dayRoute = routeData.routes[day] || [];
+      const segArr = [];
 
-      // そのDayを表示してからキャプチャ
       activeDayIndex = day;
       renderRouteListForDay(activeDayIndex);
-      renderMapForDay(activeDayIndex);
+      await renderMapForDay(activeDayIndex);
 
-      const b64 = await captureMapBase64();
-      dayMapImages.push(b64 || "");
+      for (let i = 0; i < dayRoute.length; i++) {
+        status.textContent = "地図画像を作成中… Day " + (day + 1) + " / 地点 " + (i + 1);
+        const b64 = await captureSegmentMap(day, i);
+        segArr.push(b64 || "");
+      }
+
+      segmentMapImages.push(segArr);
     }
 
     status.className = "alert alert-info";
     status.textContent = "PDF送信準備中です…";
 
     const sendData = buildSendPayloadBase(
-    		  JSON.parse(JSON.stringify(routeData)),
-    		  dayMapImages
-    		);
+      JSON.parse(JSON.stringify(routeData)),
+      segmentMapImages
+    );
 
     const form = document.getElementById("pdfForm");
     const jsonInput = document.getElementById("pdfJsonInput");

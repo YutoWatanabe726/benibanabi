@@ -47,7 +47,7 @@ public class PDFOutputServlet extends HttpServlet {
         public Integer stayTime; // 分
         public String memo;
         public String transport; // 徒歩/車/電車
-        public String photoUrl;  // ここに入ってくる想定
+        public String photoUrl;
         public String mapImage;  // 互換のため残す
     }
 
@@ -59,7 +59,10 @@ public class PDFOutputServlet extends HttpServlet {
         public String startTime;
         public List<List<RoutePoint>> routes;
 
-        // Dayごとの地図画像（data:image/jpeg;base64,...）
+        // ★地点ページごとの地図画像：[day][i]（iは地点index）
+        public List<List<String>> segmentMapImages;
+
+        // 互換用（残してもOK）
         public List<String> dayMapImages;
     }
 
@@ -98,9 +101,6 @@ public class PDFOutputServlet extends HttpServlet {
         return s.substring(0, maxLen - 1) + "…";
     }
 
-    /**
-     * Base64(dataURL形式もOK) → PDImageXObject
-     */
     private PDImageXObject loadImageFromBase64(PDDocument doc, String base64) {
         try {
             if (base64 == null || base64.trim().isEmpty()) return null;
@@ -114,13 +114,6 @@ public class PDFOutputServlet extends HttpServlet {
         }
     }
 
-    /**
-     * どんな形式の photoUrl でも読めるようにする：
-     * - data:image/... (Base64)
-     * - http/https URL
-     * - /images/... などWebアプリ内パス
-     * - /benibanabi/images/... のように contextPath 付きでもOK
-     */
     private PDImageXObject loadPhotoImage(PDDocument doc, HttpServletRequest req, RoutePoint rp) {
         try {
             if (rp == null) return null;
@@ -128,6 +121,20 @@ public class PDFOutputServlet extends HttpServlet {
             if (urlStr == null || urlStr.trim().isEmpty()) return null;
 
             String p = urlStr.trim();
+
+            if (urlStr == null || urlStr.trim().isEmpty()) {
+                String type = rp.type != null ? rp.type : "normal";
+
+                if ("start".equals(type)) {
+                    urlStr = "/images/defaults/start.jpg";
+                } else if ("goal".equals(type)) {
+                    urlStr = "/images/defaults/goal.jpg";
+                } else if ("meal".equals(type)) {
+                    urlStr = "/images/defaults/meal.jpg";
+                } else {
+                    return null; // 通常スポットは無理に出さない
+                }
+            }
 
             // 1) dataURL (Base64)
             if (p.startsWith("data:image/")) {
@@ -164,7 +171,6 @@ public class PDFOutputServlet extends HttpServlet {
                     }
                 }
             } catch (Exception ignore) {
-                // 次の手段へ
             }
 
             // 4-B) getRealPath（展開されてる場合）
@@ -184,6 +190,55 @@ public class PDFOutputServlet extends HttpServlet {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private PDImageXObject loadDefaultImage(PDDocument doc, HttpServletRequest req, String type) {
+        String path;
+
+        switch (type) {
+            case "start":
+                path = "/images/defaults/start.jpg";
+                break;
+            case "meal":
+                path = "/images/defaults/meal.jpg";
+                break;
+            case "goal":
+                path = "/images/defaults/goal.jpg";
+                break;
+            default:
+                return null;
+        }
+
+        try (InputStream in = getServletContext().getResourceAsStream(path)) {
+            if (in == null) return null;
+            BufferedImage img = ImageIO.read(in);
+            if (img == null) return null;
+            return LosslessFactory.createFromImage(doc, img);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    // [day][i] の画像を安全に取る（無ければ null）
+    private String getSegmentMapB64(PdfRoutePayload payload, int day, int i) {
+        if (payload == null) return null;
+
+        if (payload.segmentMapImages != null
+                && day >= 0 && day < payload.segmentMapImages.size()) {
+
+            List<String> dayArr = payload.segmentMapImages.get(day);
+            if (dayArr != null && i >= 0 && i < dayArr.size()) {
+                return dayArr.get(i);
+            }
+        }
+
+        // 互換：dayMapImagesがあるならそれを返す
+        if (payload.dayMapImages != null && day >= 0 && day < payload.dayMapImages.size()) {
+            return payload.dayMapImages.get(day);
+        }
+
+        return null;
     }
 
     @Override
@@ -466,13 +521,6 @@ public class PDFOutputServlet extends HttpServlet {
                     }
                 }
 
-                // ---- Day地図（1枚） ----
-                String dayMapB64 = null;
-                if (payload.dayMapImages != null && day < payload.dayMapImages.size()) {
-                    dayMapB64 = payload.dayMapImages.get(day);
-                }
-                PDImageXObject dayMapImage = loadImageFromBase64(doc, dayMapB64);
-
                 // ---- 詳細 ----
                 for (int i = 0; i < dayRoute.size(); i++) {
                     RoutePoint rp = dayRoute.get(i);
@@ -492,8 +540,17 @@ public class PDFOutputServlet extends HttpServlet {
                         moveMin = (dist / speed) * 60.0;
                     }
 
-                    // ★ここが重要：photoUrlの形式を全部吸収する版
                     PDImageXObject photoImage = loadPhotoImage(doc, req, rp);
+
+	                 // ★ 写真が無い場合は type に応じたデフォルト画像
+	                 if (photoImage == null) {
+	                     photoImage = loadDefaultImage(doc, req, rp.type);
+	                 }
+
+
+                    // ★地点ページごとの地図画像を取る（なければ互換dayMapImages）
+                    String segMapB64 = getSegmentMapB64(payload, day, i);
+                    PDImageXObject mapImage = loadImageFromBase64(doc, segMapB64);
 
                     try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
 
@@ -547,8 +604,8 @@ public class PDFOutputServlet extends HttpServlet {
                         float mapWidth = mb.getWidth() - margin - mapX;
                         float mapHeight = imgHeight;
 
-                        if (dayMapImage != null) {
-                            cs.drawImage(dayMapImage, mapX, imgY, mapWidth, mapHeight);
+                        if (mapImage != null) {
+                            cs.drawImage(mapImage, mapX, imgY, mapWidth, mapHeight);
                         } else {
                             cs.setNonStrokingColor(200, 200, 200);
                             cs.addRect(mapX, imgY, mapWidth, mapHeight);
