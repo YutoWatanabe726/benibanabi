@@ -62,7 +62,7 @@ public class PDFOutputServlet extends HttpServlet {
         // ★地点ページごとの地図画像：[day][i]（iは地点index）
         public List<List<String>> segmentMapImages;
 
-        // 互換用（残してもOK）
+        // 互換用
         public List<String> dayMapImages;
     }
 
@@ -117,32 +117,27 @@ public class PDFOutputServlet extends HttpServlet {
     private PDImageXObject loadPhotoImage(PDDocument doc, HttpServletRequest req, RoutePoint rp) {
         try {
             if (rp == null) return null;
-            String urlStr = rp.photoUrl;
-            if (urlStr == null || urlStr.trim().isEmpty()) return null;
+
+            String urlStr = (rp.photoUrl != null) ? rp.photoUrl.trim() : "";
+
+            // photoUrl が空なら type で defaults
+            if (urlStr.isEmpty()) {
+                String type = (rp.type != null) ? rp.type : "normal";
+                if ("start".equals(type)) urlStr = "/images/defaults/start.jpg";
+                else if ("goal".equals(type)) urlStr = "/images/defaults/goal.jpg";
+                else if ("meal".equals(type)) urlStr = "/images/defaults/meal.jpg";
+                else return null;
+            }
 
             String p = urlStr.trim();
 
-            if (urlStr == null || urlStr.trim().isEmpty()) {
-                String type = rp.type != null ? rp.type : "normal";
-
-                if ("start".equals(type)) {
-                    urlStr = "/images/defaults/start.jpg";
-                } else if ("goal".equals(type)) {
-                    urlStr = "/images/defaults/goal.jpg";
-                } else if ("meal".equals(type)) {
-                    urlStr = "/images/defaults/meal.jpg";
-                } else {
-                    return null; // 通常スポットは無理に出さない
-                }
-            }
-
-            // 1) dataURL (Base64)
+            // 1) dataURL
             if (p.startsWith("data:image/")) {
                 PDImageXObject x = loadImageFromBase64(doc, p);
                 if (x != null) return x;
             }
 
-            // 2) http/https URL
+            // 2) http/https
             if (p.startsWith("http://") || p.startsWith("https://")) {
                 try (InputStream in = new URL(p).openStream()) {
                     BufferedImage image = ImageIO.read(in);
@@ -151,76 +146,40 @@ public class PDFOutputServlet extends HttpServlet {
                 }
             }
 
-            // 3) contextPath 付きのURLっぽいパスを除去（例: /benibanabi/images/a.jpg）
+            // 3) contextPath 除去
             String ctx = (req != null) ? req.getContextPath() : "";
             if (ctx != null && !ctx.isEmpty() && p.startsWith(ctx + "/")) {
-                p = p.substring(ctx.length()); // /images/a.jpg にする
+                p = p.substring(ctx.length());
             }
 
-            // 4) Webアプリ内パスとして読む（/images/...）
-            if (!p.startsWith("/")) {
-                p = "/" + p;
-            }
+            // 4) Webアプリ内パス
+            if (!p.startsWith("/")) p = "/" + p;
 
-            // 4-A) getResourceAsStream（WAR内でも読める）
+            // 4-A) getResourceAsStream
             try (InputStream in = getServletContext().getResourceAsStream(p)) {
                 if (in != null) {
                     BufferedImage image = ImageIO.read(in);
-                    if (image != null) {
-                        return LosslessFactory.createFromImage(doc, image);
-                    }
+                    if (image != null) return LosslessFactory.createFromImage(doc, image);
                 }
-            } catch (Exception ignore) {
-            }
+            } catch (Exception ignore) {}
 
-            // 4-B) getRealPath（展開されてる場合）
+            // 4-B) getRealPath
             String realPath = getServletContext().getRealPath(p);
             if (realPath != null) {
                 File f = new File(realPath);
                 if (f.exists()) {
                     BufferedImage image = ImageIO.read(f);
-                    if (image != null) {
-                        return LosslessFactory.createFromImage(doc, image);
-                    }
+                    if (image != null) return LosslessFactory.createFromImage(doc, image);
                 }
             }
 
             return null;
-
         } catch (Exception e) {
             return null;
         }
     }
 
-    private PDImageXObject loadDefaultImage(PDDocument doc, HttpServletRequest req, String type) {
-        String path;
-
-        switch (type) {
-            case "start":
-                path = "/images/defaults/start.jpg";
-                break;
-            case "meal":
-                path = "/images/defaults/meal.jpg";
-                break;
-            case "goal":
-                path = "/images/defaults/goal.jpg";
-                break;
-            default:
-                return null;
-        }
-
-        try (InputStream in = getServletContext().getResourceAsStream(path)) {
-            if (in == null) return null;
-            BufferedImage img = ImageIO.read(in);
-            if (img == null) return null;
-            return LosslessFactory.createFromImage(doc, img);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-
-    // [day][i] の画像を安全に取る（無ければ null）
+    // [day][i]
     private String getSegmentMapB64(PdfRoutePayload payload, int day, int i) {
         if (payload == null) return null;
 
@@ -233,12 +192,40 @@ public class PDFOutputServlet extends HttpServlet {
             }
         }
 
-        // 互換：dayMapImagesがあるならそれを返す
+        // 互換
         if (payload.dayMapImages != null && day >= 0 && day < payload.dayMapImages.size()) {
             return payload.dayMapImages.get(day);
         }
 
         return null;
+    }
+
+    // ===== レイアウト用ヘルパ =====
+
+    private void drawFilledRoundRect(PDPageContentStream cs, float x, float y, float w, float h,
+                                     int r, int g, int b) throws IOException {
+        cs.setNonStrokingColor(r, g, b);
+        cs.addRect(x, y, w, h);
+        cs.fill();
+    }
+
+    private void drawBorderRect(PDPageContentStream cs, float x, float y, float w, float h,
+                                int r, int g, int b, float lineW) throws IOException {
+        cs.setStrokingColor(r, g, b);
+        cs.setLineWidth(lineW);
+        cs.addRect(x, y, w, h);
+        cs.stroke();
+    }
+
+    private void drawText(PDPageContentStream cs, PDType0Font font, float size,
+                          float x, float y, String text,
+                          int r, int g, int b) throws IOException {
+        cs.setNonStrokingColor(r, g, b);
+        cs.beginText();
+        cs.setFont(font, size);
+        cs.newLineAtOffset(x, y);
+        cs.showText(text);
+        cs.endText();
     }
 
     @Override
@@ -292,72 +279,56 @@ public class PDFOutputServlet extends HttpServlet {
             // ====== 表紙 ======
             PDPage coverPage = new PDPage(PDRectangle.A4);
             doc.addPage(coverPage);
-            float coverMargin = 60;
 
             try (PDPageContentStream cs = new PDPageContentStream(doc, coverPage)) {
                 PDRectangle mb = coverPage.getMediaBox();
                 float w = mb.getWidth();
                 float h = mb.getHeight();
 
-                cs.setNonStrokingColor(255, 242, 230);
-                cs.addRect(0, h - 200, w, 200);
-                cs.fill();
+                // 背景を少し華やかに（薄いグラデっぽく2段）
+                drawFilledRoundRect(cs, 0, 0, w, h, 255, 250, 245);
+                drawFilledRoundRect(cs, 0, h - 230, w, 230, 255, 236, 215);
 
-                cs.setNonStrokingColor(0, 0, 0);
+                // タイトル帯
+                drawFilledRoundRect(cs, 60, h - 190, w - 120, 90, 255, 255, 255);
+                drawBorderRect(cs, 60, h - 190, w - 120, 90, 230, 126, 34, 2f);
+
                 String mainTitle = "旅行しおり";
-                float titleFontSize = 30f;
+                float titleFontSize = 32f;
                 float titleWidth = font.getStringWidth(mainTitle) / 1000f * titleFontSize;
                 float titleX = (w - titleWidth) / 2f;
-                float titleY = h - coverMargin - 40;
+                float titleY = h - 145;
 
-                cs.beginText();
-                cs.setFont(font, titleFontSize);
-                cs.newLineAtOffset(titleX, titleY);
-                cs.showText(mainTitle);
-                cs.endText();
+                drawText(cs, font, titleFontSize, titleX, titleY, mainTitle, 40, 40, 40);
 
-                cs.beginText();
-                cs.setFont(font, 20);
-                cs.newLineAtOffset(coverMargin, h - coverMargin - 120);
+                // 情報カード
+                float cardX = 70;
+                float cardY = h - 380;
+                float cardW = w - 140;
+                float cardH = 170;
+
+                drawFilledRoundRect(cs, cardX, cardY, cardW, cardH, 255, 255, 255);
+                drawBorderRect(cs, cardX, cardY, cardW, cardH, 230, 126, 34, 1.5f);
+
                 String title = (payload.courseTitle != null && !payload.courseTitle.isEmpty())
                         ? payload.courseTitle : "タイトル未設定";
-                cs.showText("コースタイトル： " + title);
-                cs.endText();
-
-                cs.beginText();
-                cs.setFont(font, 16);
-                cs.newLineAtOffset(coverMargin, h - coverMargin - 160);
-                cs.showText("旅行日数： " + payload.tripDays + " 日");
-                cs.endText();
-
                 String startPoint = payload.startPoint != null ? payload.startPoint : "";
                 String startAddr  = payload.startAddress != null ? payload.startAddress : "";
                 String startTime  = payload.startTime != null ? payload.startTime : "";
 
-                cs.beginText();
-                cs.setFont(font, 16);
-                cs.newLineAtOffset(coverMargin, h - coverMargin - 200);
-                cs.showText("開始地点： " + startPoint + " " + startAddr);
-                cs.endText();
+                float tx = cardX + 18;
+                float ty = cardY + cardH - 35;
 
-                cs.beginText();
-                cs.setFont(font, 16);
-                cs.newLineAtOffset(coverMargin, h - coverMargin - 230);
-                cs.showText("開始時間： " + startTime);
-                cs.endText();
+                drawText(cs, font, 16, tx, ty, "コースタイトル： " + title, 20, 20, 20); ty -= 28;
+                drawText(cs, font, 14, tx, ty, "旅行日数： " + payload.tripDays + " 日", 20, 20, 20); ty -= 24;
+                drawText(cs, font, 14, tx, ty, "開始地点： " + startPoint + " " + startAddr, 20, 20, 20); ty -= 24;
+                drawText(cs, font, 14, tx, ty, "開始時間： " + startTime, 20, 20, 20); ty -= 24;
 
-                cs.beginText();
-                cs.setFont(font, 12);
-                cs.newLineAtOffset(coverMargin, h - coverMargin - 270);
                 String nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
-                cs.showText("作成日時： " + nowStr);
-                cs.endText();
+                drawText(cs, font, 11, tx, cardY + 16, "作成日時： " + nowStr, 80, 80, 80);
 
-                cs.beginText();
-                cs.setFont(font, 12);
-                cs.newLineAtOffset(coverMargin, coverMargin + 30);
-                cs.showText("Generated by Benibanabi Route Maker");
-                cs.endText();
+                // 下部コピー
+                drawText(cs, font, 10, 60, 40, "Generated by Benibanabi Route Maker", 120, 120, 120);
             }
 
             // ====== Dayページ作成 ======
@@ -395,8 +366,10 @@ public class PDFOutputServlet extends HttpServlet {
 
                 if (dayRoute == null || dayRoute.isEmpty()) continue;
 
+                // arriveTimes / departTimes を作る
                 LocalTime current = baseStartTime;
                 LocalTime[] arriveTimes = new LocalTime[dayRoute.size()];
+                LocalTime[] departTimes = new LocalTime[dayRoute.size()];
 
                 for (int i = 0; i < dayRoute.size(); i++) {
                     RoutePoint rp = dayRoute.get(i);
@@ -410,8 +383,9 @@ public class PDFOutputServlet extends HttpServlet {
                         current = current.plusMinutes(moveMin);
                         arriveTimes[i] = current;
                     }
-                    int stay = rp.stayTime != null ? rp.stayTime : 0;
+                    int stay = (rp.stayTime != null) ? rp.stayTime : 0;
                     current = current.plusMinutes(stay);
+                    departTimes[i] = current;
                 }
 
                 // ---- Day概要 ----
@@ -420,82 +394,45 @@ public class PDFOutputServlet extends HttpServlet {
                     float margin = 50;
                     float y = mb.getHeight() - margin;
 
-                    float headerHeight = 50;
+                    // 背景
+                    drawFilledRoundRect(cs, 0, 0, mb.getWidth(), mb.getHeight(), 255, 252, 248);
+
+                    float headerHeight = 52;
                     float headerWidth = mb.getWidth() - margin * 2;
 
-                    cs.setNonStrokingColor(230, 126, 34);
-                    cs.addRect(margin, y - headerHeight, headerWidth, headerHeight);
-                    cs.fill();
+                    drawFilledRoundRect(cs, margin, y - headerHeight, headerWidth, headerHeight, 230, 126, 34);
+                    drawText(cs, font, 22, margin + 14, y - 36, "Day " + (day + 1) + " スケジュール", 255, 255, 255);
 
-                    String headerTitle = "Day " + (day + 1) + " スケジュール";
-                    float headerFontSize = 22f;
-                    float headerTextWidth = font.getStringWidth(headerTitle) / 1000f * headerFontSize;
-                    float headerTextX = margin + (headerWidth - headerTextWidth) / 2f;
-                    float headerTextY = y - headerHeight / 2f - headerFontSize / 2f + 8;
+                    y -= (headerHeight + 26);
 
-                    cs.setNonStrokingColor(255, 255, 255);
-                    cs.beginText();
-                    cs.setFont(font, headerFontSize);
-                    cs.newLineAtOffset(headerTextX, headerTextY);
-                    cs.showText(headerTitle);
-                    cs.endText();
-
-                    y -= (headerHeight + 40);
-
-                    cs.setNonStrokingColor(0, 0, 0);
-                    cs.beginText();
-                    cs.setFont(font, 14);
-                    cs.newLineAtOffset(margin, y);
-                    cs.showText("時刻        | スポット名（クリックで詳細へ）");
-                    cs.endText();
-                    y -= 25;
-
-                    cs.setNonStrokingColor(230, 126, 34);
-                    cs.setLineWidth(1.5f);
+                    // 見出し行
+                    drawText(cs, font, 13, margin, y, "時刻", 30, 30, 30);
+                    drawText(cs, font, 13, margin + 80, y, "スポット名（クリックで詳細へ）", 30, 30, 30);
+                    y -= 12;
+                    cs.setStrokingColor(230, 126, 34);
+                    cs.setLineWidth(1.2f);
                     cs.moveTo(margin, y);
                     cs.lineTo(margin + headerWidth, y);
                     cs.stroke();
-                    y -= 20;
+                    y -= 18;
 
-                    float timeFontSize = 14f;
-                    String sampleTime = "00:00";
-                    float timeWidth = font.getStringWidth(sampleTime) / 1000f * timeFontSize;
-
+                    float timeFontSize = 13f;
                     for (int i = 0; i < dayRoute.size(); i++) {
                         RoutePoint rp = dayRoute.get(i);
-                        LocalTime at = arriveTimes[i];
-                        String timeStr = formatTime(at);
+                        String timeStr = formatTime(arriveTimes[i]);
                         String nameStr = rp.name != null ? rp.name : "";
 
-                        float textX = margin;
-                        float textY = y;
+                        // 行カード
+                        float rowH = 26;
+                        drawFilledRoundRect(cs, margin, y - 6, headerWidth, rowH, 255, 255, 255);
+                        drawBorderRect(cs, margin, y - 6, headerWidth, rowH, 245, 220, 200, 1f);
 
-                        cs.setNonStrokingColor(0, 0, 0);
-                        cs.beginText();
-                        cs.setFont(font, timeFontSize);
-                        cs.newLineAtOffset(textX, textY);
-                        cs.showText(timeStr);
-                        cs.endText();
+                        drawText(cs, font, timeFontSize, margin + 8, y + 6, timeStr, 20, 20, 20);
 
-                        String delim = "   |  ";
-                        float delimWidth = font.getStringWidth(delim) / 1000f * timeFontSize;
-                        float delimX = textX + timeWidth + 8;
+                        float linkX = margin + 90;
+                        drawText(cs, font, timeFontSize, linkX, y + 6, nameStr, 0, 102, 204);
 
-                        cs.beginText();
-                        cs.setFont(font, timeFontSize);
-                        cs.newLineAtOffset(delimX, textY);
-                        cs.showText(delim);
-                        cs.endText();
-
-                        float linkX = delimX + delimWidth;
-                        cs.setNonStrokingColor(0, 102, 204);
-                        cs.beginText();
-                        cs.setFont(font, timeFontSize);
-                        cs.newLineAtOffset(linkX, textY);
-                        cs.showText(nameStr);
-                        cs.endText();
-                        cs.setNonStrokingColor(0, 0, 0);
-
+                        // リンク
                         PDPage targetPage = detailPages.get(i);
                         PDPageXYZDestination dest = new PDPageXYZDestination();
                         dest.setPage(targetPage);
@@ -511,13 +448,12 @@ public class PDFOutputServlet extends HttpServlet {
                         link.setBorderStyle(border);
 
                         float nameWidth = font.getStringWidth(nameStr) / 1000f * timeFontSize;
-                        PDRectangle rect = new PDRectangle(linkX, textY - 2, nameWidth + 2, timeFontSize + 4);
+                        PDRectangle rect = new PDRectangle(linkX, y + 3, nameWidth + 2, timeFontSize + 10);
                         link.setRectangle(rect);
-
                         overview.getAnnotations().add(link);
 
-                        y -= 25;
-                        if (y < margin + 60) break;
+                        y -= 30;
+                        if (y < margin + 50) break;
                     }
                 }
 
@@ -527,8 +463,8 @@ public class PDFOutputServlet extends HttpServlet {
                     PDPage page = detailPages.get(i);
                     PDRectangle mb = page.getMediaBox();
                     float margin = 50;
-                    float y = mb.getHeight() - margin;
 
+                    // prev
                     RoutePoint prev = (i > 0) ? dayRoute.get(i - 1) : null;
                     double dist = 0.0;
                     double moveMin = 0.0;
@@ -540,20 +476,24 @@ public class PDFOutputServlet extends HttpServlet {
                         moveMin = (dist / speed) * 60.0;
                     }
 
+                    // 画像
                     PDImageXObject photoImage = loadPhotoImage(doc, req, rp);
-
-	                 // ★ 写真が無い場合は type に応じたデフォルト画像
-	                 if (photoImage == null) {
-	                     photoImage = loadDefaultImage(doc, req, rp.type);
-	                 }
-
-
-                    // ★地点ページごとの地図画像を取る（なければ互換dayMapImages）
                     String segMapB64 = getSegmentMapB64(payload, day, i);
                     PDImageXObject mapImage = loadImageFromBase64(doc, segMapB64);
 
+                    // ★滞在時間
+                    int stayMin = (rp.stayTime != null) ? rp.stayTime : 0;
+                    String arriveStr = formatTime(arriveTimes[i]);
+                    String departStr = formatTime(departTimes[i]);
+
                     try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
 
+                        // 背景
+                        drawFilledRoundRect(cs, 0, 0, mb.getWidth(), mb.getHeight(), 255, 252, 248);
+
+                        float y = mb.getHeight() - margin;
+
+                        // タイトル帯
                         String title;
                         if (prev != null) {
                             title = String.format("Day %d 地点%d: %s → %s",
@@ -566,90 +506,93 @@ public class PDFOutputServlet extends HttpServlet {
                                     safeShort(rp.name, 20));
                         }
 
-                        float titleHeight = 40;
-                        float titleWidth = mb.getWidth() - margin * 2;
+                        float titleH = 44;
+                        float titleW = mb.getWidth() - margin * 2;
+                        drawFilledRoundRect(cs, margin, y - titleH, titleW, titleH, 255, 236, 215);
+                        drawBorderRect(cs, margin, y - titleH, titleW, titleH, 230, 126, 34, 1.4f);
+                        drawText(cs, font, 16, margin + 12, y - 28, title, 30, 30, 30);
 
-                        cs.setNonStrokingColor(255, 229, 204);
-                        cs.addRect(margin, y - titleHeight, titleWidth, titleHeight);
-                        cs.fill();
+                        y -= (titleH + 22);
 
-                        cs.setNonStrokingColor(0, 0, 0);
-                        cs.beginText();
-                        cs.setFont(font, 18);
-                        cs.newLineAtOffset(margin + 10, y - titleHeight + 12);
-                        cs.showText(title);
-                        cs.endText();
+                        // 画像枠
+                        float imgH = 210;
+                        float imgW = 210;
+                        float imgY = y - imgH;
 
-                        y -= (titleHeight + 40);
-
-                        float imgHeight = 200;
-                        float imgWidth = 200;
-                        float imgY = y - imgHeight;
-
+                        // 左：写真
+                        drawFilledRoundRect(cs, margin, imgY, imgW, imgH, 255, 255, 255);
+                        drawBorderRect(cs, margin, imgY, imgW, imgH, 245, 220, 200, 1.2f);
                         if (photoImage != null) {
-                            cs.drawImage(photoImage, margin, imgY, imgWidth, imgHeight);
+                            cs.drawImage(photoImage, margin + 6, imgY + 6, imgW - 12, imgH - 12);
                         } else {
-                            cs.setNonStrokingColor(200, 200, 200);
-                            cs.addRect(margin, imgY, imgWidth, imgHeight);
-                            cs.stroke();
-                            cs.beginText();
-                            cs.setFont(font, 12);
-                            cs.setNonStrokingColor(0, 0, 0);
-                            cs.newLineAtOffset(margin + 10, imgY + imgHeight / 2);
-                            cs.showText("写真なし");
-                            cs.endText();
+                            drawText(cs, font, 12, margin + 16, imgY + imgH / 2, "写真なし", 120, 120, 120);
                         }
 
-                        float mapX = margin + imgWidth + 30;
-                        float mapWidth = mb.getWidth() - margin - mapX;
-                        float mapHeight = imgHeight;
+                        // 右：地図
+                        float mapX = margin + imgW + 22;
+                        float mapW = mb.getWidth() - margin - mapX;
+                        float mapH = imgH;
 
+                        drawFilledRoundRect(cs, mapX, imgY, mapW, mapH, 255, 255, 255);
+                        drawBorderRect(cs, mapX, imgY, mapW, mapH, 245, 220, 200, 1.2f);
                         if (mapImage != null) {
-                            cs.drawImage(mapImage, mapX, imgY, mapWidth, mapHeight);
+                            cs.drawImage(mapImage, mapX + 6, imgY + 6, mapW - 12, mapH - 12);
                         } else {
-                            cs.setNonStrokingColor(200, 200, 200);
-                            cs.addRect(mapX, imgY, mapWidth, mapHeight);
-                            cs.stroke();
-                            cs.beginText();
-                            cs.setFont(font, 12);
-                            cs.setNonStrokingColor(0, 0, 0);
-                            cs.newLineAtOffset(mapX + 10, imgY + mapHeight / 2);
-                            cs.showText("MAP");
-                            cs.endText();
+                            drawText(cs, font, 12, mapX + 16, imgY + mapH / 2, "MAP", 120, 120, 120);
                         }
 
-                        y = imgY - 40;
+                        y = imgY - 18;
 
-                        cs.setNonStrokingColor(0, 0, 0);
-                        cs.beginText();
-                        cs.setFont(font, 14);
-                        cs.newLineAtOffset(margin, y);
-                        cs.showText("移動手段： " + transport);
-                        cs.endText();
-                        y -= 22;
+                        // 情報カード（下半分が寂しくならない対策）
+                        float infoW = mb.getWidth() - margin * 2;
+                        float infoH = 150;
+                        float infoY = y - infoH;
+
+                        drawFilledRoundRect(cs, margin, infoY, infoW, infoH, 255, 255, 255);
+                        drawBorderRect(cs, margin, infoY, infoW, infoH, 245, 220, 200, 1.2f);
+
+                        float tx = margin + 14;
+                        float ty = infoY + infoH - 26;
+
+                        // ★滞在時間表示（到着→滞在→出発）
+                        drawText(cs, font, 14, tx, ty, "到着： " + arriveStr + "　滞在： " + stayMin + " 分　出発： " + departStr, 30, 30, 30);
+                        ty -= 24;
+
+                        drawText(cs, font, 13, tx, ty, "移動手段： " + transport, 30, 30, 30);
+                        ty -= 22;
 
                         if (prev != null) {
-                            cs.beginText();
-                            cs.setFont(font, 14);
-                            cs.newLineAtOffset(margin, y);
-                            cs.showText(String.format("概算移動時間（分）： %.0f 分", moveMin));
-                            cs.endText();
-                            y -= 22;
+                            drawText(cs, font, 13, tx, ty, String.format("概算移動時間： %.0f 分", moveMin), 30, 30, 30);
+                            ty -= 22;
+                            drawText(cs, font, 13, tx, ty, String.format("移動距離： %.1f km", dist), 30, 30, 30);
+                            ty -= 22;
+                        } else {
+                            drawText(cs, font, 13, tx, ty, "移動時間・距離： （スタート地点）", 100, 100, 100);
+                            ty -= 22;
+                        }
 
-                            cs.beginText();
-                            cs.setFont(font, 14);
-                            cs.newLineAtOffset(margin, y);
-                            cs.showText(String.format("移動距離（km）： %.1f km", dist));
-                            cs.endText();
-                            y -= 30;
+                        // メモ枠（大きめ）
+                        float memoBoxY = infoY - 170;
+                        float memoBoxH = 160;
+                        drawFilledRoundRect(cs, margin, memoBoxY, infoW, memoBoxH, 255, 255, 255);
+                        drawBorderRect(cs, margin, memoBoxY, infoW, memoBoxH, 245, 220, 200, 1.2f);
+
+                        drawText(cs, font, 13, margin + 14, memoBoxY + memoBoxH - 24, "メモ", 30, 30, 30);
+
+                        // 罫線（書き込める感じ）
+                        cs.setStrokingColor(235, 235, 235);
+                        cs.setLineWidth(1f);
+                        float lineY = memoBoxY + memoBoxH - 44;
+                        for (int ln = 0; ln < 6; ln++) {
+                            cs.moveTo(margin + 12, lineY);
+                            cs.lineTo(margin + infoW - 12, lineY);
+                            cs.stroke();
+                            lineY -= 20;
                         }
 
                         String memo = (rp.memo != null) ? rp.memo : "";
-                        cs.beginText();
-                        cs.setFont(font, 14);
-                        cs.newLineAtOffset(margin, y);
-                        cs.showText("メモ： " + safeShort(memo, 80));
-                        cs.endText();
+                        // 1行だけ軽く表示（長文は溢れるので控えめ）
+                        drawText(cs, font, 11, margin + 14, memoBoxY + memoBoxH - 62, safeShort(memo, 90), 80, 80, 80);
                     }
                 }
             }
