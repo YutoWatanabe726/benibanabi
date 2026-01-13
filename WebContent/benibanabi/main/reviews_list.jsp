@@ -43,11 +43,15 @@
 
 <script>
 function goPage(page) {
-    const form = document.getElementById('pageForm');
-    form.page.value = page;
+    const form = document.getElementById("pageForm");
+
+    // page を更新
+    form.querySelector('input[name="page"]').value = page;
+
     form.submit();
 }
 </script>
+
 </head>
 
 <body>
@@ -80,18 +84,48 @@ function goPage(page) {
     <% } %>
 
     <!-- ページネーション -->
-    <div class="pagination">
-        <form id="pageForm" action="ReviewsList.action" method="get" style="display:none;">
-            <input type="hidden" name="spot_id" value="<%= spot.getSpotId() %>">
-            <input type="hidden" name="page" value="<%= currentPage %>">
-        </form>
+<div class="pagination">
 
-        <% for(int i = 1; i <= totalPages; i++) { %>
-            <button type="button" class="<%= (i == currentPage) ? "active" : "" %>" onclick="goPage(<%=i%>)">
-                <%= i %>
-            </button>
-        <% } %>
-    </div>
+    <form id="pageForm" action="ReviewsList.action" method="get" style="display:none;">
+        <input type="hidden" name="spot_id" value="<%= spot.getSpotId() %>">
+        <input type="hidden" name="page" value="<%= currentPage %>">
+    </form>
+
+    <!-- 先頭ページ -->
+    <button class="nav-btn"
+        onclick="goPage(1)"
+        <%= currentPage == 1 ? "disabled" : "" %>>
+        ⏮
+    </button>
+
+    <!-- 前のページ -->
+    <button class="nav-btn"
+        onclick="goPage(<%= currentPage - 1 %>)"
+        <%= currentPage == 1 ? "disabled" : "" %>>
+        ◀
+    </button>
+
+    <!-- 現在のページ（文字のみ） -->
+    <span class="current-page">
+        <%= currentPage %>
+    </span>
+
+    <!-- 次のページ -->
+    <button class="nav-btn"
+        onclick="goPage(<%= currentPage + 1 %>)"
+        <%= currentPage == totalPages ? "disabled" : "" %>>
+        ▶
+    </button>
+
+    <!-- 最終ページ -->
+    <button class="nav-btn"
+        onclick="goPage(<%= totalPages %>)"
+        <%= currentPage == totalPages ? "disabled" : "" %>>
+        ⏭
+    </button>
+
+</div>
+
 
     <!-- 下部戻るボタン -->
     <a href="SpotDetail.action?spot_id=<%= spot.getSpotId() %>" class="back-btn">スポット詳細へ戻る</a>

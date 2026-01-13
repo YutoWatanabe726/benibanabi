@@ -59,28 +59,54 @@ h1 {
     background: linear-gradient(90deg, #D92929, #FFB35E);
 }
 
-/* ページネーション */
+/* ===============================
+   ページネーション
+================================= */
 .pagination {
-    text-align: center;
-    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 30px 0;
 }
 
-.pagination button {
-    padding: 6px 12px;
-    margin: 2px;
-    border: none;
-    border-radius: 4px;
+/* 矢印ボタン */
+.pagination .nav-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #555;
     cursor: pointer;
-    background: #FFB35E;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.pagination .nav-btn:hover:not(:disabled) {
+    background: #ffe1d2;
+    color: #D92929;
+    transform: translateY(-2px);
+}
+
+/* 非活性 */
+.pagination .nav-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* 現在ページ */
+.pagination .current-page {
+    min-width: 60px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
     color: #fff;
-    font-weight: 700;
-    transition: 0.3s;
-}
-
-.pagination button.active {
-    background: #D92929;
-}
-
-.pagination button:hover:not(.active) {
-    background: #FF7A45;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #D92929, #FF7A45);
+    box-shadow: 0 6px 16px rgba(217,41,41,0.45);
 }
