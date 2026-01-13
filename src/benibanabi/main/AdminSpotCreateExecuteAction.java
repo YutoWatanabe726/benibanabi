@@ -57,11 +57,21 @@ public class AdminSpotCreateExecuteAction extends Action {
             if (item.isFormField()) {
                 String value = item.getString("UTF-8");
                 switch (item.getFieldName()) {
-                    case "spotName": spotName = value; break;
-                    case "description": description = value; break;
-                    case "district": district = value; break;
-                    case "city": city = value; break;
-                    case "address": address = value; break;
+                    case "spotName":
+                        spotName = value;
+                        break;
+                    case "description":
+                        description = value;
+                        break;
+                    case "district":
+                        district = value;
+                        break;
+                    case "city":
+                        city = value;
+                        break;
+                    case "address":
+                        address = value;
+                        break;
                     case "tags":
                         if (value != null && !value.isEmpty()) {
                             Tag t = new Tag();
@@ -71,9 +81,12 @@ public class AdminSpotCreateExecuteAction extends Action {
                         break;
                 }
             } else if (item.getFieldName().equals("spotPhoto") && item.getSize() > 0) {
+
                 String fileName = new File(item.getName()).getName();
                 String ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-                if (!ext.equals("jpg") && !ext.equals("jpeg") && !ext.equals("png") && !ext.equals("gif")) {
+
+                if (!ext.equals("jpg") && !ext.equals("jpeg")
+                        && !ext.equals("png") && !ext.equals("gif")) {
                     req.setAttribute("error", "画像ファイルのみアップロード可能です。");
                     req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
                     return;
@@ -83,9 +96,10 @@ public class AdminSpotCreateExecuteAction extends Action {
                 File saveFile = new File(uploadDir, photoFileName);
                 item.write(saveFile);
 
-                /* ★★★ 追加：Eclipse プロジェクトにも保存 ★★★ */
+                // Eclipse プロジェクト側にも保存
                 try {
-                    String localSaveDirPath = "C:/pleiades/workspace/benibanabi/WebContent/spotimages";
+                    String localSaveDirPath =
+                            "C:/pleiades/workspace/benibanabi/WebContent/spotimages";
 
                     File localDir = new File(localSaveDirPath);
                     if (!localDir.exists()) localDir.mkdirs();
@@ -93,11 +107,10 @@ public class AdminSpotCreateExecuteAction extends Action {
                     File localSaveFile = new File(localDir, photoFileName);
 
                     java.nio.file.Files.copy(
-                        new File(uploadDir, photoFileName).toPath(),
+                        saveFile.toPath(),
                         localSaveFile.toPath(),
                         java.nio.file.StandardCopyOption.REPLACE_EXISTING
                     );
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -109,6 +122,7 @@ public class AdminSpotCreateExecuteAction extends Action {
             req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
             return;
         }
+
         if (city == null || city.isEmpty()) {
             req.setAttribute("error", "市町村は必須です。");
             req.getRequestDispatcher("admin_spot_create.jsp").forward(req, res);
@@ -120,7 +134,9 @@ public class AdminSpotCreateExecuteAction extends Action {
         spot.setDescription(description);
         spot.setArea(city);
         spot.setAddress(address);
-        if (photoFileName != null) spot.setSpotPhoto("/spotimages/" + photoFileName);
+        if (photoFileName != null) {
+            spot.setSpotPhoto("/spotimages/" + photoFileName);
+        }
 
         double[] latlng = getLatLngFromCommunityGeocoder("山形県", city, address);
         spot.setLatitude(latlng[0]);
@@ -133,32 +149,45 @@ public class AdminSpotCreateExecuteAction extends Action {
     }
 
     private double[] getLatLngFromCommunityGeocoder(String prefecture, String city, String address) {
+
         double[] latlng = new double[]{38.2554, 140.3396};
+
         try {
             String fullAddr = (prefecture + " " + city + " " + address).trim();
-            String urlStr = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates"
-                          + "?SingleLine=" + URLEncoder.encode(fullAddr, "UTF-8")
-                          + "&f=pjson";
+
+            String urlStr =
+                "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates"
+                + "?SingleLine=" + URLEncoder.encode(fullAddr, "UTF-8")
+                + "&f=pjson";
+
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+
             StringBuilder sb = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) sb.append(line);
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
             reader.close();
 
             JSONObject json = new JSONObject(sb.toString());
             JSONArray candidates = json.getJSONArray("candidates");
+
             if (candidates.length() > 0) {
-                JSONObject loc = candidates.getJSONObject(0).getJSONObject("location");
+                JSONObject loc =
+                    candidates.getJSONObject(0).getJSONObject("location");
                 latlng[0] = loc.getDouble("y");
                 latlng[1] = loc.getDouble("x");
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return latlng;
     }
 }
