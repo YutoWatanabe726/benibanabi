@@ -1,3 +1,4 @@
+<%-- 管理者メニューJSP --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
@@ -10,14 +11,14 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_menu.css" />
 <div class="menu-wrapper">
 <div class="container">
-<div>ログイン中のアカウント"<c:out value='${admin_id}'/>"</div>
-<h1>管理者機能</h1>
+<div>ログイン中のアカウント<c:out value='${admin_id}'/></div>
+<h1>管理者メニュー</h1>
 
-      <a href="AdminSpotSetting.action" class="menu-item">観光スポットの登録・更新・削除</a>
-<a href="AdminTopicsSetting.action" class="menu-item">トピックの追加、編集</a>
+      <a href="AdminSpotSetting.action" class="menu-item">観光スポットの追加・編集・削除</a>
+<a href="AdminTopicsSetting.action" class="menu-item">トピックスの追加、編集</a>
 <a href="AdminSouvenirSetting.action" class="menu-item">名産品の追加、編集</a>
-<a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action" class="menu-item">コメント管理</a>
-<a href="AdminPasswordUpdate.action" class="menu-item">パスワード編集</a>
+<a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action" class="menu-item">観光スポットの口コミ管理</a>
+<a href="AdminPasswordUpdate.action" class="menu-item">パスワード変更</a>
 <a href="AdminDelete.action" class="menu-item">アカウント削除</a>
 <a href="AdminLogout.action" class="menu-item">ログアウト</a>
 

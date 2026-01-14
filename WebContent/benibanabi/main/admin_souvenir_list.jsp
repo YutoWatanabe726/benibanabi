@@ -1,3 +1,4 @@
+<%-- 管理者名産品一覧JSP --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
@@ -17,7 +18,7 @@
 
             <!-- ▼ 四季プルダウン（自動送信） -->
             <form method="get" action="AdminSouvenirList.action" class="mt-3">
-                <label for="seasonSelect">四季で絞り込み：</label>
+                <label for="seasonSelect">四季指定：</label>
                 <select name="season" id="seasonSelect" onchange="this.form.submit()">
                     <option value="">すべて</option>
                     <option value="春" <c:if test="${param.season=='春'}">selected</c:if>>春</option>

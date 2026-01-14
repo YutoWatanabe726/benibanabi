@@ -31,7 +31,7 @@
 				<div>
 					<!-- ＩＤ -->
 					<div class="form-floating mx-5">
-						<label>ＩＤ</label>
+						<label>管理者ID</label>
 						<input class="form-control px-5 fs-5" autocomplete="off"
 							id="id-input" maxlength="20" name="id"
 							placeholder="半角でご入力下さい"

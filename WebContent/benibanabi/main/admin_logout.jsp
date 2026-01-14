@@ -11,7 +11,7 @@
     	<link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_login_logout_password_delete.css" />
 
 		<div id="wrap_box">
-			<h2>管理者ログアウト</h2>
+			<h2>ログアウト</h2>
 				<p>ログアウトしました</p>
 				<a href="AdminLogin.action">ログイン</a>
 			</div>

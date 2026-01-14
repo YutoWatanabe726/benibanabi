@@ -1,14 +1,15 @@
+<%-- 管理者観光スポット編集JSP --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <c:import url="/common/admin_base.jsp">
-    <c:param name="title">観光スポット更新</c:param>
+    <c:param name="title">観光スポット編集</c:param>
     <c:param name="content">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_spot_topics_souvenir_all.css">
     <div class="container mt-4">
-        <h2 class="mb-4">観光スポット更新</h2>
+        <h2 class="mb-4">観光スポット編集</h2>
 
         <c:if test="${not empty error}">
             <div class="alert alert-danger">${error}</div>

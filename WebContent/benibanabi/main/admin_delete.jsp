@@ -1,4 +1,4 @@
-<%-- 管理者削除JSP --%>
+<%-- 管理者アカウント削除JSP --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
@@ -17,10 +17,10 @@
 	        </c:if>
 	        <div class="alert alert-warning mt-3">
 	            ※ この操作は取り消すことができません。<br>
-	            あなたのアカウント "<c:out value='${admin_id}'/>" を削除します。本当に削除しますか？
+	            現在のアカウント<c:out value='${admin_id}'/>を削除します。本当に削除しますか？
 	        </div>
 	        <div class="button-group">
-	            <input type="submit" value="削除する" class="btn-danger" />
+	            <input type="submit" value="削除" class="btn-danger" />
 				<a href="AdminMenu.action">戻る</a>
 	        </div>
 	    </div>

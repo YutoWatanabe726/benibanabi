@@ -1,3 +1,4 @@
+<%-- 管理者トピックス一覧JSP --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
@@ -17,7 +18,7 @@
 
             <!-- ▼ 年選択プルダウン -->
             <form method="get" class="mt-3">
-                <label for="yearSelect">年で絞り込み：</label>
+                <label for="yearSelect">年度指定：</label>
                 <select name="year" id="yearSelect" onchange="this.form.submit()">
                     <c:forEach var="y" items="${years}">
                         <option value="${y}" <c:if test="${y == selectedYear}">selected</c:if>>

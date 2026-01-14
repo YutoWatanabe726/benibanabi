@@ -12,10 +12,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.tomcat.util.http.fileupload.FileItem;
-import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
-import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
-import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -59,13 +59,27 @@ public class AdminSpotUpdateExecuteAction extends Action {
             if (item.isFormField()) {
                 String value = item.getString("UTF-8");
                 switch (item.getFieldName()) {
-                    case "spotId": spotId = Integer.parseInt(value); break;
-                    case "spotName": spotName = value; break;
-                    case "description": description = value; break;
-                    case "district": district = value; break;
-                    case "city": city = value; break;
-                    case "address": address = value; break;
-                    case "oldPhoto": oldPhoto = value; break;
+                    case "spotId":
+                        spotId = Integer.parseInt(value);
+                        break;
+                    case "spotName":
+                        spotName = value;
+                        break;
+                    case "description":
+                        description = value;
+                        break;
+                    case "district":
+                        district = value;
+                        break;
+                    case "city":
+                        city = value;
+                        break;
+                    case "address":
+                        address = value;
+                        break;
+                    case "oldPhoto":
+                        oldPhoto = value;
+                        break;
                     case "tags":
                         if (value != null && !value.isEmpty()) {
                             Tag t = new Tag();
@@ -75,9 +89,12 @@ public class AdminSpotUpdateExecuteAction extends Action {
                         break;
                 }
             } else if (item.getFieldName().equals("spotPhoto") && item.getSize() > 0) {
+
                 String fileName = new File(item.getName()).getName();
                 String ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-                if (!ext.equals("jpg") && !ext.equals("jpeg") && !ext.equals("png") && !ext.equals("gif")) {
+
+                if (!ext.equals("jpg") && !ext.equals("jpeg")
+                        && !ext.equals("png") && !ext.equals("gif")) {
                     req.setAttribute("error", "画像ファイルのみアップロード可能です。");
                     req.getRequestDispatcher("admin_spot_update.jsp").forward(req, res);
                     return;
@@ -87,14 +104,18 @@ public class AdminSpotUpdateExecuteAction extends Action {
                 File saveFile = new File(uploadDir, photoFileName);
                 item.write(saveFile);
 
-                // Eclipseプロジェクトにもコピー
+                // Eclipse プロジェクト側にもコピー
                 try {
-                    String localSaveDirPath = "C:/pleiades/workspace/benibanabi/WebContent/spotimages";
+                    String localSaveDirPath =
+                        "C:/pleiades/workspace/benibanabi/WebContent/spotimages";
+
                     File localDir = new File(localSaveDirPath);
                     if (!localDir.exists()) localDir.mkdirs();
+
                     File localSaveFile = new File(localDir, photoFileName);
+
                     java.nio.file.Files.copy(
-                        new File(uploadDir, photoFileName).toPath(),
+                        saveFile.toPath(),
                         localSaveFile.toPath(),
                         java.nio.file.StandardCopyOption.REPLACE_EXISTING
                     );
@@ -109,6 +130,7 @@ public class AdminSpotUpdateExecuteAction extends Action {
             req.getRequestDispatcher("admin_spot_update.jsp").forward(req, res);
             return;
         }
+
         if (city == null || city.isEmpty()) {
             req.setAttribute("error", "市町村は必須です。");
             req.getRequestDispatcher("admin_spot_update.jsp").forward(req, res);
@@ -125,10 +147,9 @@ public class AdminSpotUpdateExecuteAction extends Action {
         if (photoFileName != null) {
             spot.setSpotPhoto("/spotimages/" + photoFileName);
         } else {
-            spot.setSpotPhoto(oldPhoto); // ★元の写真パスを使う
+            spot.setSpotPhoto(oldPhoto); // 元の画像を維持
         }
 
-        // 緯度経度取得
         double[] latlng = getLatLngFromCommunityGeocoder("山形県", city, address);
         spot.setLatitude(latlng[0]);
         spot.setLongitude(latlng[1]);
@@ -140,32 +161,45 @@ public class AdminSpotUpdateExecuteAction extends Action {
     }
 
     private double[] getLatLngFromCommunityGeocoder(String prefecture, String city, String address) {
+
         double[] latlng = new double[]{38.2554, 140.3396};
+
         try {
             String fullAddr = (prefecture + " " + city + " " + address).trim();
-            String urlStr = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates"
-                          + "?SingleLine=" + URLEncoder.encode(fullAddr, "UTF-8")
-                          + "&f=pjson";
+
+            String urlStr =
+                "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates"
+                + "?SingleLine=" + URLEncoder.encode(fullAddr, "UTF-8")
+                + "&f=pjson";
+
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+
             StringBuilder sb = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) sb.append(line);
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
             reader.close();
 
             JSONObject json = new JSONObject(sb.toString());
             JSONArray candidates = json.getJSONArray("candidates");
+
             if (candidates.length() > 0) {
-                JSONObject loc = candidates.getJSONObject(0).getJSONObject("location");
+                JSONObject loc =
+                    candidates.getJSONObject(0).getJSONObject("location");
                 latlng[0] = loc.getDouble("y");
                 latlng[1] = loc.getDouble("x");
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return latlng;
     }
 }

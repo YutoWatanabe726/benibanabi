@@ -7,10 +7,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.tomcat.util.http.fileupload.FileItem;
-import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
-import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
-import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload.servlet.ServletRequestContext;
 
 import bean.Souvenir;
 import dao.SouvenirDAO;
@@ -46,14 +46,23 @@ public class AdminSouvenirCreateExecuteAction extends Action {
             if (item.isFormField()) {
                 String value = item.getString("UTF-8");
                 switch (item.getFieldName()) {
-                    case "souvenirName": name = value; break;
-                    case "souvenirContent": content = value; break;
-                    case "souvenirSeasons": seasons = value; break;
+                    case "souvenirName":
+                        name = value;
+                        break;
+                    case "souvenirContent":
+                        content = value;
+                        break;
+                    case "souvenirSeasons":
+                        seasons = value;
+                        break;
                 }
             } else if (item.getFieldName().equals("souvenirPhoto") && item.getSize() > 0) {
+
                 String fileName = new File(item.getName()).getName();
                 String ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-                if (!ext.equals("jpg") && !ext.equals("jpeg") && !ext.equals("png") && !ext.equals("gif")) {
+
+                if (!ext.equals("jpg") && !ext.equals("jpeg")
+                        && !ext.equals("png") && !ext.equals("gif")) {
                     req.setAttribute("error", "画像ファイルのみアップロード可能です。");
                     req.getRequestDispatcher("admin_souvenir_create.jsp").forward(req, res);
                     return;
@@ -63,13 +72,21 @@ public class AdminSouvenirCreateExecuteAction extends Action {
                 File saveFile = new File(uploadDir, photoFileName);
                 item.write(saveFile);
 
-                /* Eclipse プロジェクトにもコピー */
+                // Eclipse プロジェクトにもコピー
                 try {
-                    String localSaveDirPath = "C:/pleiades/workspace/benibanabi/WebContent/souvenirimages";
+                    String localSaveDirPath =
+                        "C:/pleiades/workspace/benibanabi/WebContent/souvenirimages";
+
                     File localDir = new File(localSaveDirPath);
                     if (!localDir.exists()) localDir.mkdirs();
+
                     File localSaveFile = new File(localDir, photoFileName);
-                    Files.copy(saveFile.toPath(), localSaveFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                    Files.copy(
+                        saveFile.toPath(),
+                        localSaveFile.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    );
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -77,7 +94,8 @@ public class AdminSouvenirCreateExecuteAction extends Action {
         }
 
         // 必須チェック
-        if (name == null || name.isEmpty() || seasons == null || seasons.isEmpty()) {
+        if (name == null || name.isEmpty()
+                || seasons == null || seasons.isEmpty()) {
             req.setAttribute("error", "必須項目が入力されていません。");
             req.getRequestDispatcher("admin_souvenir_create.jsp").forward(req, res);
             return;
@@ -87,7 +105,9 @@ public class AdminSouvenirCreateExecuteAction extends Action {
         s.setSouvenirName(name);
         s.setSouvenirContent(content);
         s.setSouvenirSeasons(seasons);
-        if (photoFileName != null) s.setSouvenirPhoto("/souvenirimages/" + photoFileName);
+        if (photoFileName != null) {
+            s.setSouvenirPhoto("/souvenirimages/" + photoFileName);
+        }
 
         SouvenirDAO dao = new SouvenirDAO();
         dao.insert(s);

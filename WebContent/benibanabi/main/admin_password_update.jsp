@@ -1,4 +1,4 @@
-<%-- 管理者パスワード更新JSP --%>
+<%-- 管理者パスワード変更JSP --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
@@ -19,7 +19,7 @@
         <form action="AdminPasswordUpdateExecute.action" method="post" class="w-50">
 
 			<div class="alert alert-warning mb-3">
-				ログイン中のアカウント"<c:out value='${admin_id}'/>"
+				ログイン中のアカウント<c:out value='${admin_id}'/>
             </div>
 
 
@@ -41,7 +41,7 @@
                 <input type="password" id="newPass2" name="newPass2" class="form-control" required>
             </div>
  			<div class="button-group">
-	            <button type="submit" class="btn btn-primary">変更する</button>
+	            <button type="submit" class="btn btn-primary">変更</button>
 	            <a href="AdminMenu.action" class="btn btn-secondary">戻る</a>
 			</div>
         </form>
