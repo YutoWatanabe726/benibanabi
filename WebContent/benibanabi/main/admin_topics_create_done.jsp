@@ -16,7 +16,7 @@
             <p>トピックスの登録が完了しました。</p>
 
             <div class="button-group">
-                <a href="AdminTopicsSetting.action">トピックス機能一覧へ</a>
+                <a href="AdminTopicsSetting.action">トピックス<br>機能一覧へ</a>
                 <a href="AdminMenu.action">管理者機能一覧へ</a>
             </div>
         </div>
