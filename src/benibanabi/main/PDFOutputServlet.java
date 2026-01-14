@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
@@ -66,6 +67,53 @@ public class PDFOutputServlet extends HttpServlet {
         public List<String> dayMapImages;
     }
 
+    // =========================
+    // 追加：デフォルト画像（複数）＋ 表紙画像（複数）
+    // ※ 画像の場所はスクショの構成に合わせて /images/defaults/ 配下
+    // =========================
+    private static final String[] START_DEFAULTS = {
+        "/images/defaults/start.jpg",
+        "/images/defaults/start2.jpg"
+    };
+    private static final String[] GOAL_DEFAULTS = {
+        "/images/defaults/goal.jpg",
+        "/images/defaults/goal2.jpg",
+        "/images/defaults/goal3.jpg"
+    };
+    private static final String[] MEAL_DEFAULTS = {
+        "/images/defaults/meal.jpg",
+        "/images/defaults/meal2.jpg",
+        "/images/defaults/meal3.jpg",
+        "/images/defaults/meal4.jpg"
+    };
+    private static final String[] TOPPAGE_IMAGES = {
+        "/images/defaults/toppage1.jpg",
+        "/images/defaults/toppage2.png",
+        "/images/defaults/toppage3.png"
+    };
+
+    // =========================
+    // 追加：分 → 「X時間Y分」
+    // =========================
+    private String formatDurationMinutes(int minutes) {
+        int m = Math.max(0, minutes);
+        int h = m / 60;
+        int r = m % 60;
+        if (h <= 0) return r + "分";
+        if (r == 0) return h + "時間";
+        return h + "時間" + r + "分";
+    }
+
+    private String formatDurationMinutesDouble(double minutes) {
+        int m = (int) Math.round(minutes);
+        return formatDurationMinutes(m);
+    }
+
+    private String pickRandom(String[] arr, Random rnd) {
+        if (arr == null || arr.length == 0) return "";
+        return arr[rnd.nextInt(arr.length)];
+    }
+
     private double calcDistanceKm(double lat1, double lng1, double lat2, double lng2) {
         final double R = 6371.0;
         double dLat = Math.toRadians(lat2 - lat1);
@@ -114,22 +162,11 @@ public class PDFOutputServlet extends HttpServlet {
         }
     }
 
-    private PDImageXObject loadPhotoImage(PDDocument doc, HttpServletRequest req, RoutePoint rp) {
+    // 追加：photoUrl / /images/... / http(s) / dataURL を1つの関数で読む
+    private PDImageXObject loadImageAny(PDDocument doc, HttpServletRequest req, String urlOrPath) {
         try {
-            if (rp == null) return null;
-
-            String urlStr = (rp.photoUrl != null) ? rp.photoUrl.trim() : "";
-
-            // photoUrl が空なら type で defaults
-            if (urlStr.isEmpty()) {
-                String type = (rp.type != null) ? rp.type : "normal";
-                if ("start".equals(type)) urlStr = "/images/defaults/start.jpg";
-                else if ("goal".equals(type)) urlStr = "/images/defaults/goal.jpg";
-                else if ("meal".equals(type)) urlStr = "/images/defaults/meal.jpg";
-                else return null;
-            }
-
-            String p = urlStr.trim();
+            if (urlOrPath == null || urlOrPath.trim().isEmpty()) return null;
+            String p = urlOrPath.trim();
 
             // 1) dataURL
             if (p.startsWith("data:image/")) {
@@ -137,7 +174,7 @@ public class PDFOutputServlet extends HttpServlet {
                 if (x != null) return x;
             }
 
-            // 2) http/https
+            // 2) http(s)
             if (p.startsWith("http://") || p.startsWith("https://")) {
                 try (InputStream in = new URL(p).openStream()) {
                     BufferedImage image = ImageIO.read(in);
@@ -155,7 +192,7 @@ public class PDFOutputServlet extends HttpServlet {
             // 4) Webアプリ内パス
             if (!p.startsWith("/")) p = "/" + p;
 
-            // 4-A) getResourceAsStream
+            // 4-A) WAR内
             try (InputStream in = getServletContext().getResourceAsStream(p)) {
                 if (in != null) {
                     BufferedImage image = ImageIO.read(in);
@@ -163,7 +200,7 @@ public class PDFOutputServlet extends HttpServlet {
                 }
             } catch (Exception ignore) {}
 
-            // 4-B) getRealPath
+            // 4-B) 展開時
             String realPath = getServletContext().getRealPath(p);
             if (realPath != null) {
                 File f = new File(realPath);
@@ -174,6 +211,19 @@ public class PDFOutputServlet extends HttpServlet {
             }
 
             return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private PDImageXObject loadPhotoImage(PDDocument doc, HttpServletRequest req, RoutePoint rp) {
+        try {
+            if (rp == null) return null;
+
+            String urlStr = (rp.photoUrl != null) ? rp.photoUrl.trim() : "";
+            if (urlStr.isEmpty()) return null; // ★ここではデフォルト判定しない（呼び出し側でランダム選択する）
+            return loadImageAny(doc, req, urlStr);
+
         } catch (Exception e) {
             return null;
         }
@@ -276,6 +326,22 @@ public class PDFOutputServlet extends HttpServlet {
                 return;
             }
 
+            // =========================
+            // ★PDF生成1回につき乱数を固定して選ぶ（同じPDF内で統一したいものに使う）
+            // =========================
+            Random rnd = new Random(System.nanoTime());
+
+            // start/goal は「このPDF内で統一」：最初に1枚ずつ選ぶ
+            String pickedStartPath = pickRandom(START_DEFAULTS, rnd);
+            String pickedGoalPath  = pickRandom(GOAL_DEFAULTS, rnd);
+
+            // toppage は「全部」読み込む
+            List<PDImageXObject> topImages = new ArrayList<>();
+            for (String tp : TOPPAGE_IMAGES) {
+                PDImageXObject im = loadImageAny(doc, req, tp);
+                if (im != null) topImages.add(im);
+            }
+
             // ====== 表紙 ======
             PDPage coverPage = new PDPage(PDRectangle.A4);
             doc.addPage(coverPage);
@@ -285,7 +351,7 @@ public class PDFOutputServlet extends HttpServlet {
                 float w = mb.getWidth();
                 float h = mb.getHeight();
 
-                // 背景を少し華やかに（薄いグラデっぽく2段）
+                // 背景
                 drawFilledRoundRect(cs, 0, 0, w, h, 255, 250, 245);
                 drawFilledRoundRect(cs, 0, h - 230, w, 230, 255, 236, 215);
 
@@ -298,7 +364,6 @@ public class PDFOutputServlet extends HttpServlet {
                 float titleWidth = font.getStringWidth(mainTitle) / 1000f * titleFontSize;
                 float titleX = (w - titleWidth) / 2f;
                 float titleY = h - 145;
-
                 drawText(cs, font, titleFontSize, titleX, titleY, mainTitle, 40, 40, 40);
 
                 // 情報カード
@@ -326,6 +391,32 @@ public class PDFOutputServlet extends HttpServlet {
 
                 String nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
                 drawText(cs, font, 11, tx, cardY + 16, "作成日時： " + nowStr, 80, 80, 80);
+
+                // ★追加：表紙に toppage1〜3 を全部入れる（下の空白を埋める）
+                if (!topImages.isEmpty()) {
+                    float areaX = 70;
+                    float areaW = w - 140;
+                    float areaY = 80;                 // 下余白
+                    float areaH = cardY - 20 - areaY; // 情報カードの下〜下余白まで
+
+                    int n = topImages.size();
+                    float gap = 14f;
+                    float cellW = (areaW - gap * (n - 1)) / n;
+                    float cellH = Math.min(areaH, 240f);
+                    float imgY = areaY + (areaH - cellH) / 2f;
+
+                    float x = areaX;
+                    for (int i = 0; i < n; i++) {
+                        PDImageXObject im = topImages.get(i);
+
+                        // カード枠
+                        drawFilledRoundRect(cs, x - 3, imgY - 3, cellW + 6, cellH + 6, 255, 255, 255);
+                        drawBorderRect(cs, x - 3, imgY - 3, cellW + 6, cellH + 6, 230, 126, 34, 1.2f);
+
+                        cs.drawImage(im, x, imgY, cellW, cellH);
+                        x += cellW + gap;
+                    }
+                }
 
                 // 下部コピー
                 drawText(cs, font, 10, 60, 40, "Generated by Benibanabi Route Maker", 120, 120, 120);
@@ -366,7 +457,7 @@ public class PDFOutputServlet extends HttpServlet {
 
                 if (dayRoute == null || dayRoute.isEmpty()) continue;
 
-                // arriveTimes / departTimes を作る
+                // arriveTimes / departTimes
                 LocalTime current = baseStartTime;
                 LocalTime[] arriveTimes = new LocalTime[dayRoute.size()];
                 LocalTime[] departTimes = new LocalTime[dayRoute.size()];
@@ -476,8 +567,29 @@ public class PDFOutputServlet extends HttpServlet {
                         moveMin = (dist / speed) * 60.0;
                     }
 
-                    // 画像
+                    // 画像（photoUrl優先、無ければ type のデフォルトをランダム）
                     PDImageXObject photoImage = loadPhotoImage(doc, req, rp);
+                    if (photoImage == null) {
+                        String type = (rp.type != null) ? rp.type : "normal";
+                        String fallbackPath = "";
+
+                        if ("start".equals(type)) {
+                            fallbackPath = pickedStartPath; // PDF内で統一
+                        } else if ("goal".equals(type)) {
+                            fallbackPath = pickedGoalPath; // PDF内で統一
+                        } else if ("meal".equals(type)) {
+                            // mealは「スポットごと」にランダム（同じPDFでも食事スポットが複数なら変化）
+                            fallbackPath = pickRandom(MEAL_DEFAULTS, rnd);
+                        } else {
+                            fallbackPath = "";
+                        }
+
+                        if (!fallbackPath.isEmpty()) {
+                            photoImage = loadImageAny(doc, req, fallbackPath);
+                        }
+                    }
+
+                    // 地図
                     String segMapB64 = getSegmentMapB64(payload, day, i);
                     PDImageXObject mapImage = loadImageFromBase64(doc, segMapB64);
 
@@ -543,7 +655,7 @@ public class PDFOutputServlet extends HttpServlet {
 
                         y = imgY - 18;
 
-                        // 情報カード（下半分が寂しくならない対策）
+                        // 情報カード
                         float infoW = mb.getWidth() - margin * 2;
                         float infoH = 150;
                         float infoY = y - infoH;
@@ -554,15 +666,18 @@ public class PDFOutputServlet extends HttpServlet {
                         float tx = margin + 14;
                         float ty = infoY + infoH - 26;
 
-                        // ★滞在時間表示（到着→滞在→出発）
-                        drawText(cs, font, 14, tx, ty, "到着： " + arriveStr + "　滞在： " + stayMin + " 分　出発： " + departStr, 30, 30, 30);
+                        // ★滞在時間表示（分→時間表記）
+                        drawText(cs, font, 14, tx, ty,
+                                "到着： " + arriveStr + "　滞在： " + formatDurationMinutes(stayMin) + "　出発： " + departStr,
+                                30, 30, 30);
                         ty -= 24;
 
                         drawText(cs, font, 13, tx, ty, "移動手段： " + transport, 30, 30, 30);
                         ty -= 22;
 
                         if (prev != null) {
-                            drawText(cs, font, 13, tx, ty, String.format("概算移動時間： %.0f 分", moveMin), 30, 30, 30);
+                            // ★概算移動時間（分→時間表記）
+                            drawText(cs, font, 13, tx, ty, "概算移動時間： " + formatDurationMinutesDouble(moveMin), 30, 30, 30);
                             ty -= 22;
                             drawText(cs, font, 13, tx, ty, String.format("移動距離： %.1f km", dist), 30, 30, 30);
                             ty -= 22;
@@ -571,7 +686,7 @@ public class PDFOutputServlet extends HttpServlet {
                             ty -= 22;
                         }
 
-                        // メモ枠（大きめ）
+                        // メモ枠
                         float memoBoxY = infoY - 170;
                         float memoBoxH = 160;
                         drawFilledRoundRect(cs, margin, memoBoxY, infoW, memoBoxH, 255, 255, 255);
@@ -579,7 +694,7 @@ public class PDFOutputServlet extends HttpServlet {
 
                         drawText(cs, font, 13, margin + 14, memoBoxY + memoBoxH - 24, "メモ", 30, 30, 30);
 
-                        // 罫線（書き込める感じ）
+                        // 罫線
                         cs.setStrokingColor(235, 235, 235);
                         cs.setLineWidth(1f);
                         float lineY = memoBoxY + memoBoxH - 44;
@@ -591,7 +706,6 @@ public class PDFOutputServlet extends HttpServlet {
                         }
 
                         String memo = (rp.memo != null) ? rp.memo : "";
-                        // 1行だけ軽く表示（長文は溢れるので控えめ）
                         drawText(cs, font, 11, margin + 14, memoBoxY + memoBoxH - 62, safeShort(memo, 90), 80, 80, 80);
                     }
                 }
