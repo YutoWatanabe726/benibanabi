@@ -144,6 +144,19 @@ body {
   color:#ffffff;
   box-shadow:0 0 0 2px rgba(255,112,67,0.2);
 }
+.small-muted {
+  font-size: 0.82rem;
+  color: #666;
+}
+.time-chip {
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:999px;
+  background:#eef2ff;
+  color:#1e40af;
+  font-size:0.78rem;
+  margin-right:6px;
+}
 </style>
 </head>
 
@@ -170,7 +183,7 @@ body {
     <div class="col-md-4 text-md-end">
       <div class="button-area">
         <button id="generatePdfBtn" class="btn btn-danger">PDFを生成</button>
-        <a href="CourseSpot.jsp" class="btn btn-outline-secondary">ルート編集画面に戻る</a>
+        <a href="CourseSpot.jsp" id="backToEditBtn" class="btn btn-outline-secondary">ルート編集画面に戻る</a>
       </div>
     </div>
   </div>
@@ -208,26 +221,173 @@ body {
 let routeData = {};
 let activeDayIndex = 0;
 let previewMap = null;
-let routeFeatureGroup = null;   // FeatureGroup（getBounds OK）
+let routeFeatureGroup = null;
 let tileLayerRef = null;
+
+const SS_KEY_ROUTE = "pdfPreview.routeData";
+
+// ---------- 時刻表示（到着/出発）ユーティリティ ----------
+function isValidHHMM(str) {
+  if (!str) return false;
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(str).trim());
+}
+
+function parseHHMM(str) {
+  if (!isValidHHMM(str)) return null;
+  const s = String(str).trim();
+  const h = parseInt(s.slice(0,2), 10);
+  const m = parseInt(s.slice(3,5), 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+function formatHHMM(totalMin) {
+  if (totalMin == null || isNaN(totalMin)) return "";
+  let t = totalMin % (24 * 60);
+  if (t < 0) t += 24 * 60;
+  const h = Math.floor(t / 60);
+  const m = t % 60;
+  const hh = (h < 10 ? "0" : "") + h;
+  const mm = (m < 10 ? "0" : "") + m;
+  return hh + ":" + mm;
+}
+
+function getFirstExistingTime(rp, keys) {
+  if (!rp) return "";
+  for (let i = 0; i < keys.length; i++) {
+    const v = rp[keys[i]];
+    if (isValidHHMM(v)) return String(v).trim();
+  }
+  return "";
+}
+
+function getMoveMinutes(rp) {
+  if (!rp) return null;
+  const candidates = ["moveMinutes", "travelMinutes", "moveTime", "travelTime"];
+  for (let i = 0; i < candidates.length; i++) {
+    const v = rp[candidates[i]];
+    if (v == null || v === "") continue;
+    const n = Number(v);
+    if (!isNaN(n) && isFinite(n) && n >= 0) return Math.floor(n);
+  }
+  return null;
+}
+
+function computeArrivalDepartureForDay(dayRoute) {
+  if (!dayRoute || !Array.isArray(dayRoute) || dayRoute.length === 0) return;
+
+  const startT = parseHHMM(routeData.startTime);
+  let cursor = (startT != null ? startT : null);
+
+  for (let i = 0; i < dayRoute.length; i++) {
+    const rp = dayRoute[i];
+    if (!rp) continue;
+
+    const existingArr = getFirstExistingTime(rp, ["arrivalTime", "arriveTime", "arrival", "arrivedAt"]);
+    const existingDep = getFirstExistingTime(rp, ["departTime", "departureTime", "depart", "departedAt"]);
+
+    rp._calcArrival = "";
+    rp._calcDeparture = "";
+
+    if (existingArr || existingDep) {
+      if (existingArr) rp._calcArrival = existingArr;
+      if (existingDep) rp._calcDeparture = existingDep;
+      if (existingDep && isValidHHMM(existingDep)) cursor = parseHHMM(existingDep);
+      continue;
+    }
+
+    if (cursor == null) continue;
+
+    if (i === 0) {
+      const arr = cursor;
+      rp._calcArrival = formatHHMM(arr);
+
+      const stay = (rp.stayTime != null && rp.stayTime !== "") ? Number(rp.stayTime) : null;
+      if (stay != null && !isNaN(stay) && isFinite(stay) && stay >= 0) {
+        const dep = arr + Math.floor(stay);
+        rp._calcDeparture = formatHHMM(dep);
+        cursor = dep;
+      }
+      continue;
+    }
+
+    const mv = getMoveMinutes(rp);
+    if (mv == null) continue;
+
+    const arr = cursor + mv;
+    rp._calcArrival = formatHHMM(arr);
+
+    const stay = (rp.stayTime != null && rp.stayTime !== "") ? Number(rp.stayTime) : null;
+    if (stay != null && !isNaN(stay) && isFinite(stay) && stay >= 0) {
+      const dep = arr + Math.floor(stay);
+      rp._calcDeparture = formatHHMM(dep);
+      cursor = dep;
+    }
+  }
+}
+
+function pickArrivalTimeText(rp) {
+  const v = getFirstExistingTime(rp, ["arrivalTime", "arriveTime", "arrival", "arrivedAt"]);
+  if (v) return v;
+  if (rp && isValidHHMM(rp._calcArrival)) return rp._calcArrival;
+  return "-";
+}
+
+function pickDepartureTimeText(rp) {
+  const v = getFirstExistingTime(rp, ["departTime", "departureTime", "depart", "departedAt"]);
+  if (v) return v;
+  if (rp && isValidHHMM(rp._calcDeparture)) return rp._calcDeparture;
+  return "-";
+}
+
+// ---------- sessionStorage ----------
+function saveRouteDataToSessionStorage() {
+  try {
+    if (!routeData) return;
+    sessionStorage.setItem(SS_KEY_ROUTE, JSON.stringify(routeData));
+  } catch (e) {
+    console.warn("sessionStorage save failed:", e);
+  }
+}
+
+function loadRouteDataFromSessionStorage() {
+  try {
+    const s = sessionStorage.getItem(SS_KEY_ROUTE);
+    if (!s) return null;
+    return JSON.parse(s);
+  } catch (e) {
+    console.warn("sessionStorage load failed:", e);
+    return null;
+  }
+}
 
 function loadRouteData() {
   const textarea = document.getElementById("routeDataJson");
   if (!textarea) return;
 
   const raw = (textarea.value || textarea.textContent || "").trim();
-  if (!raw) {
-    alert("ルート情報が見つかりませんでした。もう一度ルートを作成してください。");
+
+  if (raw) {
+    try {
+      routeData = JSON.parse(raw);
+      console.log("routeData (from param):", routeData);
+      activeDayIndex = 0;
+      saveRouteDataToSessionStorage();
+      return;
+    } catch (e) {
+      console.error("JSON 解析エラー(param):", e);
+    }
+  }
+
+  const fromSS = loadRouteDataFromSessionStorage();
+  if (fromSS) {
+    routeData = fromSS;
+    console.log("routeData (from sessionStorage):", routeData);
+    activeDayIndex = 0;
     return;
   }
-  try {
-    routeData = JSON.parse(raw);
-    console.log("routeData:", routeData);
-    activeDayIndex = 0;
-  } catch (e) {
-    console.error("JSON 解析エラー:", e);
-    alert("ルート情報の読み込みに失敗しました。もう一度ルートを作成してください。");
-  }
+
+  alert("ルート情報が見つかりませんでした。もう一度ルートを作成してください。");
 }
 
 function renderCourseHeader() {
@@ -238,6 +398,8 @@ function renderCourseHeader() {
   document.getElementById("startPointText").textContent = routeData.startPoint || "";
   if (routeData.startAddress) {
     document.getElementById("startAddressText").textContent = "（" + routeData.startAddress + "）";
+  } else {
+    document.getElementById("startAddressText").textContent = "";
   }
   document.getElementById("startTimeText").textContent = routeData.startTime || "";
 }
@@ -259,7 +421,8 @@ function renderDayTabs() {
     btn.textContent = "Day " + (idx + 1);
     if (idx === activeDayIndex) btn.classList.add("active");
 
-    btn.addEventListener("click", function() {
+    // ★OSRM取得(地図描画)→一覧描画 の順にするため async
+    btn.addEventListener("click", async function() {
       const newIndex = parseInt(this.dataset.dayIndex, 10);
       if (isNaN(newIndex)) return;
       if (newIndex === activeDayIndex) return;
@@ -271,8 +434,9 @@ function renderDayTabs() {
           b.classList.toggle("active", parseInt(b.dataset.dayIndex, 10) === activeDayIndex);
         }
       );
-      renderRouteListForDay(activeDayIndex);
-      renderMapForDay(activeDayIndex);
+
+      await renderMapForDay(activeDayIndex);   // ★先にOSRM呼ぶ
+      renderRouteListForDay(activeDayIndex);   // ★moveMinutesが埋まってから表示
     });
 
     tabsContainer.appendChild(btn);
@@ -316,11 +480,23 @@ function renderRouteListForDay(dayIndex) {
     return;
   }
 
+  // ★moveMinutes が埋まっている前提で計算
+  computeArrivalDepartureForDay(dayRoute);
+
   const dayDiv = document.createElement("div");
   dayDiv.className = "day-block";
 
+  const first = dayRoute[0];
+  const last = dayRoute[dayRoute.length - 1];
+  const dayStart = (first ? pickDepartureTimeText(first) : "-");
+  const dayArrive = (last ? pickArrivalTimeText(last) : "-");
   const dayHeader = document.createElement("div");
-  dayHeader.innerHTML = "<strong>Day " + (dayIndex + 1) + "</strong>";
+  dayHeader.innerHTML =
+    "<div><strong>Day " + (dayIndex + 1) + "</strong></div>" +
+    "<div class='small-muted mt-1'>" +
+      "<span class='time-chip'>出発: " + escapeHtml(dayStart) + "</span>" +
+      "<span class='time-chip'>到着: " + escapeHtml(dayArrive) + "</span>" +
+    "</div>";
   dayDiv.appendChild(dayHeader);
 
   dayRoute.forEach(function(rp, idx) {
@@ -332,6 +508,9 @@ function renderRouteListForDay(dayIndex) {
     const lat = rp.lat;
     const lng = rp.lng;
 
+    const arrivalText = pickArrivalTimeText(rp);
+    const departText  = pickDepartureTimeText(rp);
+
     const card = document.createElement("div");
     card.className = "spot-card";
 
@@ -341,30 +520,32 @@ function renderRouteListForDay(dayIndex) {
     card.appendChild(headerDiv);
 
     if (rp.photoUrl) {
-    	let photoUrl = rp.photoUrl;
+      let photoUrl = rp.photoUrl;
 
-    	if (!photoUrl) {
-    	  if (rp.type === "start") {
-    	    photoUrl = "<%= request.getContextPath() %>/images/defaults/start.jpg";
-    	  } else if (rp.type === "goal") {
-    	    photoUrl = "<%= request.getContextPath() %>/images/defaults/goal.jpg";
-    	  } else if (rp.type === "meal") {
-    	    photoUrl = "<%= request.getContextPath() %>/images/defaults/meal.jpg";
-    	  }
-    	}
+      if (!photoUrl) {
+        if (rp.type === "start") {
+          photoUrl = "<%= request.getContextPath() %>/images/defaults/start.jpg";
+        } else if (rp.type === "goal") {
+          photoUrl = "<%= request.getContextPath() %>/images/defaults/goal.jpg";
+        } else if (rp.type === "meal") {
+          photoUrl = "<%= request.getContextPath() %>/images/defaults/meal.jpg";
+        }
+      }
 
-    	if (photoUrl) {
-    	  const img = document.createElement("img");
-    	  img.className = "spot-thumb";
-    	  img.src = photoUrl;
-    	  img.alt = name;
-    	  card.appendChild(img);
-    	}
+      if (photoUrl) {
+        const img = document.createElement("img");
+        img.className = "spot-thumb";
+        img.src = photoUrl;
+        img.alt = name;
+        card.appendChild(img);
+      }
     }
 
     const metaDiv = document.createElement("div");
     metaDiv.className = "spot-meta";
     metaDiv.innerHTML =
+      "到着時間: " + escapeHtml(arrivalText) + "<br>" +
+      "出発時間: " + escapeHtml(departText) + "<br>" +
       "滞在時間: " + stay + " 分<br>" +
       "移動手段: " + escapeHtml(transport) + "<br>" +
       "緯度: " + lat + " / 経度: " + lng +
@@ -396,7 +577,6 @@ function initMapIfNeeded() {
   if (!mapDiv) return;
 
   if (!previewMap) {
-    // ★ズレ対策：アニメーションOFF
     previewMap = L.map("previewMap", {
       zoomAnimation: false,
       fadeAnimation: false,
@@ -405,7 +585,6 @@ function initMapIfNeeded() {
       preferCanvas: true
     }).setView([38.2485, 140.3276], 8);
 
-    // ★重要：CORS対応（html2canvasでタイルを写す）
     tileLayerRef = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:"&copy; OpenStreetMap contributors",
       crossOrigin: true
@@ -421,7 +600,6 @@ function raf() {
   return new Promise(function(resolve){ requestAnimationFrame(function(){ resolve(); }); });
 }
 
-// ★タイルが読み終わるのを待つ（loadが来ない環境もあるのでタイムアウト併用）
 function waitTileLoaded(timeoutMs) {
   timeoutMs = timeoutMs || 1500;
   return new Promise(function(resolve){
@@ -443,7 +621,6 @@ function waitTileLoaded(timeoutMs) {
   });
 }
 
-// ★moveend/zoomend を待つ（fitBounds直後の「まだ動いてる」を潰す）
 function waitMapMoveEnd(timeoutMs) {
   timeoutMs = timeoutMs || 1200;
   return new Promise(function(resolve){
@@ -456,7 +633,6 @@ function waitMapMoveEnd(timeoutMs) {
       resolve();
     }, timeoutMs);
 
-    // moveend/zoomend は複数回起きることがあるので once でOK
     const onDone = function() {
       if (done) return;
       done = true;
@@ -467,36 +643,33 @@ function waitMapMoveEnd(timeoutMs) {
     previewMap.once("moveend", onDone);
     previewMap.once("zoomend", onDone);
 
-    // すでに止まってる可能性があるので少しだけ保険
     setTimeout(function(){
       if (done) return;
-      // moveend/zoomend来ない環境もあるのでタイムアウト任せ
     }, 50);
   });
 }
 
-// ★最重要：Leaflet描画が完全に落ち着くまで待つ
 async function stabilizeBeforeCapture() {
   if (!previewMap) return;
 
-  // サイズ確定
   previewMap.invalidateSize(true);
   await sleep(120);
 
-  // 動き終わり待ち
   await waitMapMoveEnd(1200);
-
-  // タイルロード待ち
   await waitTileLoaded(1800);
 
-  // ベクター/DOM反映を2フレーム待つ（ここが効きます）
   await raf();
   await raf();
 }
 
+/**
+ * OSRMで経路線を描画
+ * ★追加：duration(秒)を分にして返す
+ * ★追加：to.moveMinutes が未設定なら埋める（到着/出発計算用）
+ */
 async function drawOsrmSegment(from, to, group) {
-  if (!from || !to) return;
-  if (from.lat == null || from.lng == null || to.lat == null || to.lng == null) return;
+  if (!from || !to) return null;
+  if (from.lat == null || from.lng == null || to.lat == null || to.lng == null) return null;
 
   const url =
     "https://router.project-osrm.org/route/v1/driving/" +
@@ -508,21 +681,31 @@ async function drawOsrmSegment(from, to, group) {
     const res = await fetch(url);
     const data = await res.json();
     if (!data.routes || !data.routes[0]) {
-      // ★OSRM失敗時は直線で代替（線が出ない対策）
       const fallback = L.polyline([[from.lat, from.lng],[to.lat,to.lng]], { weight: 4, color: "#2563eb" });
       fallback.addTo(group);
-      return;
+      return null;
     }
 
     const line = L.geoJSON(data.routes[0].geometry, {
       style: { weight: 4, color: "#2563eb" }
     });
     line.addTo(group);
+
+    // ★duration 秒 → 分（四捨五入）
+    const durSec = data.routes[0].duration;
+    const durMin = (durSec != null && isFinite(durSec)) ? Math.max(0, Math.round(Number(durSec) / 60)) : null;
+
+    // ★to 側に moveMinutes を入れる（既にあるなら上書きしない）
+    if (durMin != null && to && (to.moveMinutes == null || to.moveMinutes === "")) {
+      to.moveMinutes = durMin;
+    }
+
+    return durMin;
   } catch (e) {
     console.error("OSRM error:", e);
-    // ★OSRM失敗時は直線で代替
     const fallback = L.polyline([[from.lat, from.lng],[to.lat,to.lng]], { weight: 4, color: "#2563eb" });
     fallback.addTo(group);
+    return null;
   }
 }
 
@@ -531,7 +714,6 @@ async function renderMapForDay(dayIndex) {
   if (!previewMap) return;
 
   if (routeFeatureGroup) previewMap.removeLayer(routeFeatureGroup);
-
   routeFeatureGroup = L.featureGroup().addTo(previewMap);
 
   if (!routeData || !Array.isArray(routeData.routes)) return;
@@ -564,6 +746,7 @@ async function renderMapForDay(dayIndex) {
   });
 
   if (dayRoute.length >= 2) {
+    // ★OSRMを呼びながら to.moveMinutes を埋める
     for (let i = 0; i < dayRoute.length - 1; i++) {
       await drawOsrmSegment(dayRoute[i], dayRoute[i+1], routeFeatureGroup);
     }
@@ -580,18 +763,13 @@ async function renderMapForDay(dayIndex) {
     previewMap.setView([38.2485, 140.3276], 8);
   }
 
-  // ★ここで「落ち着かせる」
   await stabilizeBeforeCapture();
 }
 
-/**
- * Leaflet地図を画像化（Base64）
- */
 async function captureMapBase64() {
   const mapEl = document.getElementById("previewMap");
   if (!mapEl) return "";
 
-  // ★撮影直前に必ず安定化
   await stabilizeBeforeCapture();
 
   try {
@@ -602,17 +780,13 @@ async function captureMapBase64() {
       scale: 1
     });
 
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.80);
-    return dataUrl;
+    return canvas.toDataURL("image/jpeg", 0.80);
   } catch (e) {
     console.error("captureMapBase64 失敗:", e);
     return "";
   }
 }
 
-/**
- * 区間(i-1 -> i)だけの地図を作って撮影する
- */
 async function captureSegmentMap(dayIndex, segIndex) {
   initMapIfNeeded();
   if (!previewMap) return "";
@@ -627,7 +801,6 @@ async function captureSegmentMap(dayIndex, segIndex) {
   }
   routeFeatureGroup = L.featureGroup().addTo(previewMap);
 
-  // segIndex=0 は最初の地点だけ
   if (segIndex === 0) {
     const rp0 = dayRoute[0];
     if (rp0 && rp0.lat != null && rp0.lng != null) {
@@ -658,9 +831,9 @@ async function captureSegmentMap(dayIndex, segIndex) {
   L.marker([fromLat, fromLng], { icon: getIconByType(from.type || "start") }).addTo(routeFeatureGroup);
   L.marker([toLat, toLng],     { icon: getIconByType(to.type || "normal") }).addTo(routeFeatureGroup);
 
+  // ★ここでも moveMinutes を埋める（未設定なら）
   await drawOsrmSegment(from, to, routeFeatureGroup);
 
-  // ★ズレの主因：fitBounds直後の未完了描画を撮っていた
   previewMap.invalidateSize(true);
   await sleep(80);
 
@@ -670,7 +843,6 @@ async function captureSegmentMap(dayIndex, segIndex) {
     previewMap.setView([toLat, toLng], 13);
   }
 
-  // ★ここで「動き終わり＋タイル＋フレーム」を待ってから撮る
   return await captureMapBase64();
 }
 
@@ -687,6 +859,8 @@ function buildSendPayloadBase(original, segmentMapImages) {
       dayRoute.forEach(function(rp) {
         if (!rp) return;
         delete rp.mapImage;
+        delete rp._calcArrival;
+        delete rp._calcDeparture;
       });
     });
   }
@@ -709,20 +883,24 @@ async function setupPdfButton() {
     const ok = confirm("現在のルート情報で PDF を生成しますか？（地点ごとの地図画像も作成します）");
     if (!ok) return;
 
+    saveRouteDataToSessionStorage();
+
     btn.disabled = true;
     status.style.display = "block";
     status.className = "alert alert-info";
     status.textContent = "地図画像を作成中です…（少し待ってください）";
 
-    const segmentMapImages = []; // [day][i]
+    const segmentMapImages = [];
 
     for (let day = 0; day < routeData.routes.length; day++) {
       const dayRoute = routeData.routes[day] || [];
       const segArr = [];
 
       activeDayIndex = day;
-      renderRouteListForDay(activeDayIndex);
+
+      // ★OSRM取得 → 一覧描画 の順にする（moveMinutesが埋まってから表示）
       await renderMapForDay(activeDayIndex);
+      renderRouteListForDay(activeDayIndex);
 
       for (let i = 0; i < dayRoute.length; i++) {
         status.textContent = "地図画像を作成中… Day " + (day + 1) + " / 地点 " + (i + 1);
@@ -753,13 +931,26 @@ async function setupPdfButton() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+function setupBackToEditButton() {
+  const a = document.getElementById("backToEditBtn");
+  if (!a) return;
+
+  a.addEventListener("click", function() {
+    saveRouteDataToSessionStorage();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", async function() {
   loadRouteData();
   renderCourseHeader();
   renderDayTabs();
+
+  // ★初期表示も「地図(OSRM)→一覧」
+  await renderMapForDay(activeDayIndex);
   renderRouteListForDay(activeDayIndex);
-  renderMapForDay(activeDayIndex);
+
   setupPdfButton();
+  setupBackToEditButton();
 });
 </script>
 

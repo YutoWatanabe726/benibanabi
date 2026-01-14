@@ -439,6 +439,82 @@ h3 {
 */
 
 /* ------------------------
+   ★追加：PDF確認画面と同じキー（戻り対策）
+   ------------------------ */
+// start.jsp から値が来ているか（空文字じゃなく “属性が存在” を優先）
+const HAS_JSP_COURSE_TITLE = <%= (request.getAttribute("courseTitle") != null) ? "true" : "false" %>;
+const HAS_JSP_TRIP_DAYS    = <%= (request.getAttribute("tripDays")   != null) ? "true" : "false" %>;
+const HAS_JSP_META = (HAS_JSP_COURSE_TITLE || HAS_JSP_TRIP_DAYS);
+const SS_KEY_ROUTE = "pdfPreview.routeData"; // PDF確認画面側で保存しているキー
+const LS_KEY_ROUTE = "routesData";           // CourseSpot.jsp が元々使っているキー
+
+function safeJsonParse(str) {
+  try { return JSON.parse(str); } catch(e) { return null; }
+}
+
+function applyCourseMetaToHeader() {
+  // 表示（span）に反映
+  const titleEl = document.getElementById("courseTitle");
+  const daysEl  = document.getElementById("tripDaysDisplay");
+  const spEl    = document.getElementById("startPointDisplay");
+  const stEl    = document.getElementById("startTimeDisplay");
+
+  if (titleEl) titleEl.textContent = (courseTitle && courseTitle.trim() !== "") ? courseTitle : "未設定";
+  if (daysEl)  daysEl.textContent  = (tripDays != null ? tripDays : 1);
+  if (spEl)    spEl.textContent    = startPointRaw || "山形駅";
+  if (stEl)    stEl.textContent    = startTime || "09:00";
+
+  const addrEl = document.getElementById("startAddress");
+  if (addrEl) {
+    if (startAddressRaw && startPointRaw === "任意の地点") {
+      addrEl.textContent = "（" + startAddressRaw + "）";
+    } else {
+      addrEl.textContent = "";
+    }
+  }
+}
+
+// sessionStorage(pdfPreview.routeData) があれば localStorage(routesData) にも反映しておく
+function syncSessionRouteToLocalIfExists() {
+  const ss = sessionStorage.getItem(SS_KEY_ROUTE);
+  if (!ss) return;
+
+  const ssData = safeJsonParse(ss);
+  if (!ssData) return;
+
+  // 既存の local とマージ（基本は session を優先）
+  const ls = localStorage.getItem(LS_KEY_ROUTE);
+  const lsData = ls ? safeJsonParse(ls) : null;
+
+  const merged = Object.assign({}, (lsData || {}), ssData);
+
+  // routes が無ければ lsData を残す（念のため）
+  if ((!merged.routes || !Array.isArray(merged.routes)) && lsData && Array.isArray(lsData.routes)) {
+    merged.routes = lsData.routes;
+  }
+
+  localStorage.setItem(LS_KEY_ROUTE, JSON.stringify(merged));
+}
+
+// localStorage(routesData) からメタ情報を取り出して JS変数に反映
+function restoreCourseMetaFromLocal() {
+  const ls = localStorage.getItem(LS_KEY_ROUTE);
+  if (!ls) return false;
+
+  const data = safeJsonParse(ls);
+  if (!data) return false;
+
+  if (typeof data.courseTitle === "string") courseTitle = data.courseTitle;
+  if (data.tripDays != null) tripDays = Number(data.tripDays) || tripDays;
+
+  if (typeof data.startPoint === "string") startPointRaw = data.startPoint;
+  if (typeof data.startAddress === "string") startAddressRaw = data.startAddress;
+  if (typeof data.startTime === "string") startTime = data.startTime;
+
+  return true;
+}
+
+/* ------------------------
    JSP -> JS への受け渡し
    ------------------------ */
 let tripDays = <%= request.getAttribute("tripDays") != null ? request.getAttribute("tripDays") : 1 %>;
@@ -448,6 +524,7 @@ let startAddressRaw = '<%= request.getAttribute("address") != null ? request.get
 let startTime = '<%= request.getAttribute("startTime") != null ? request.getAttribute("startTime").toString().replace("'", "\\'") : "09:00" %>';
 let allSpots = []; // モーダルで表示する全スポットを保持
 
+// ★ここは「まずJSP値で一旦表示」→（後でストレージ復元があれば上書き）
 document.getElementById("courseTitle").textContent = courseTitle || "未設定";
 document.getElementById("tripDaysDisplay").textContent = tripDays;
 document.getElementById("startPointDisplay").textContent = startPointRaw;
@@ -1329,6 +1406,12 @@ $("#confirmRouteBtn").on("click", function(){
     return;
   }
 
+  // ★念のため：表示中メタを変数へ（復元後にズレないため）
+  const titleSpan = document.getElementById("courseTitle");
+  const daysSpan  = document.getElementById("tripDaysDisplay");
+  if (titleSpan) courseTitle = titleSpan.textContent || courseTitle;
+  if (daysSpan)  tripDays = Number(daysSpan.textContent) || tripDays;
+
   syncRoutesFromDOM();
 
   const payload = buildPdfPayload();
@@ -1383,11 +1466,11 @@ function escapeHtml(str) {
 //------------------------
 function saveRoutesToLocal() {
   const payload = buildPdfPayload();
-  localStorage.setItem("routesData", JSON.stringify(payload));
+  localStorage.setItem(LS_KEY_ROUTE, JSON.stringify(payload));
 }
 
 function loadRoutesFromLocal() {
-  const dataStr = localStorage.getItem("routesData");
+  const dataStr = localStorage.getItem(LS_KEY_ROUTE);
   if (!dataStr) return null;
   try {
     return JSON.parse(dataStr);
@@ -1398,7 +1481,39 @@ function loadRoutesFromLocal() {
 }
 
 $(document).ready(function(){
-  populateAreaAndTagSelects("areaDropdown", "tagDropdown");
+
+  if (HAS_JSP_META) {
+	    // 古いPDF確認の残骸で上書きされないように消す
+	    sessionStorage.removeItem(SS_KEY_ROUTE);
+
+	    // LocalStorage に “今回のメタ情報” を保存して、以後の復元基準を更新
+	    const prev = safeJsonParse(localStorage.getItem(LS_KEY_ROUTE)) || {};
+	    prev.courseTitle   = courseTitle || "";
+	    prev.tripDays      = Number(tripDays) || 1;
+	    prev.startPoint    = startPointRaw || "山形駅";
+	    prev.startAddress  = startAddressRaw || "";
+	    prev.startTime     = startTime || "09:00";
+
+	    // ★重要：新しく作り直しのとき、前回のルートを残したくないなら routes を消す
+	    // （日数や出発が変わると整合性が崩れるので普通は消すのが安全）
+	    prev.routes = null;
+
+	    localStorage.setItem(LS_KEY_ROUTE, JSON.stringify(prev));
+	  } else {
+	    // ② “戻り” のときだけ復元ロジックを使う
+	    syncSessionRouteToLocalIfExists();
+	    restoreCourseMetaFromLocal();
+	  }
+
+		  applyCourseMetaToHeader();
+	populateAreaAndTagSelects("areaDropdown", "tagDropdown");
+
+  // ★追加：PDF確認画面→戻る で sessionStorage にある場合、localStorage に同期
+  syncSessionRouteToLocalIfExists();
+
+  // ★追加：localStorageから「コースタイトル/日数/開始情報」も復元してヘッダーを上書き
+  restoreCourseMetaFromLocal();
+  applyCourseMetaToHeader();
 
   function initStartSection(lat, lng, name, day=1) {
     createDaySection(day, lat, lng, name);
@@ -1412,6 +1527,15 @@ $(document).ready(function(){
   if (savedData && savedData.routes) {
     routesByDay = savedData.routes.map(day => day.map(r => ({ ...r })));
     dayCount = routesByDay.length;
+
+    // ★savedData内のメタ情報を優先して変数も更新（buildPdfPayloadのため）
+    if (typeof savedData.courseTitle === "string") courseTitle = savedData.courseTitle;
+    if (savedData.tripDays != null) tripDays = Number(savedData.tripDays) || tripDays;
+    if (typeof savedData.startPoint === "string") startPointRaw = savedData.startPoint;
+    if (typeof savedData.startAddress === "string") startAddressRaw = savedData.startAddress;
+    if (typeof savedData.startTime === "string") startTime = savedData.startTime;
+
+    applyCourseMetaToHeader();
 
     routesByDay.forEach((dayRoute, d) => {
       dayRoute.forEach((r, i) => {
