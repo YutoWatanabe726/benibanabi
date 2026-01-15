@@ -295,6 +295,31 @@ h3 {
   color: #1a4b7a;
 }
 
+/* 候補選択モーダル内マップ */
+#candidateMap {
+  width: 100%;
+  height: 360px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+#candidateList {
+  max-height: 220px;
+  overflow-y: auto;
+}
+.candidate-item {
+  padding: 8px 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  background: #fff;
+}
+.candidate-item.active {
+  border-color: #ff7043;
+  box-shadow: 0 0 0 2px rgba(255,112,67,0.18);
+}
+
 </style>
 </head>
 
@@ -404,12 +429,45 @@ h3 {
       <div class="modal-body">
         <input type="text" id="goalAddressInput" class="form-control"
                placeholder="例：山形県山形市香澄町1-1-1">
+        <div class="small-muted mt-2">
+          ※入力が曖昧な場合、候補が複数出るので地図上で選択できます。
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary"
                 data-bs-dismiss="modal">キャンセル</button>
         <button type="button" id="goalAddressSubmitBtn"
-                class="btn btn-primary">決定</button>
+                class="btn btn-primary">検索</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ★ 住所候補選択モーダル（地図にピン表示して選択） -->
+<div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">住所候補を選択</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-7">
+            <div id="candidateMap"></div>
+            <div class="small-muted mt-2">
+              ピンをクリックして候補を選択してください。
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div id="candidateList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="me-auto small-muted" id="candidateSelectedText">未選択</div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">戻る</button>
+        <button type="button" id="candidateConfirmBtn" class="btn btn-primary" disabled>この候補で決定</button>
       </div>
     </div>
   </div>
@@ -436,83 +494,8 @@ h3 {
   - お気に入り Cookie
   - CourseSpotSearch.action(listOnly / spots 検索)
   - PDFOutput へ JSON 送信（写真URL付き）
+  - ★ゴール住所検索：GSI（国土地理院）優先＋候補ピン選択（今回追加）
 */
-
-/* ------------------------
-   ★追加：PDF確認画面と同じキー（戻り対策）
-   ------------------------ */
-// start.jsp から値が来ているか（空文字じゃなく “属性が存在” を優先）
-const HAS_JSP_COURSE_TITLE = <%= (request.getAttribute("courseTitle") != null) ? "true" : "false" %>;
-const HAS_JSP_TRIP_DAYS    = <%= (request.getAttribute("tripDays")   != null) ? "true" : "false" %>;
-const HAS_JSP_META = (HAS_JSP_COURSE_TITLE || HAS_JSP_TRIP_DAYS);
-const SS_KEY_ROUTE = "pdfPreview.routeData"; // PDF確認画面側で保存しているキー
-const LS_KEY_ROUTE = "routesData";           // CourseSpot.jsp が元々使っているキー
-
-function safeJsonParse(str) {
-  try { return JSON.parse(str); } catch(e) { return null; }
-}
-
-function applyCourseMetaToHeader() {
-  // 表示（span）に反映
-  const titleEl = document.getElementById("courseTitle");
-  const daysEl  = document.getElementById("tripDaysDisplay");
-  const spEl    = document.getElementById("startPointDisplay");
-  const stEl    = document.getElementById("startTimeDisplay");
-
-  if (titleEl) titleEl.textContent = (courseTitle && courseTitle.trim() !== "") ? courseTitle : "未設定";
-  if (daysEl)  daysEl.textContent  = (tripDays != null ? tripDays : 1);
-  if (spEl)    spEl.textContent    = startPointRaw || "山形駅";
-  if (stEl)    stEl.textContent    = startTime || "09:00";
-
-  const addrEl = document.getElementById("startAddress");
-  if (addrEl) {
-    if (startAddressRaw && startPointRaw === "任意の地点") {
-      addrEl.textContent = "（" + startAddressRaw + "）";
-    } else {
-      addrEl.textContent = "";
-    }
-  }
-}
-
-// sessionStorage(pdfPreview.routeData) があれば localStorage(routesData) にも反映しておく
-function syncSessionRouteToLocalIfExists() {
-  const ss = sessionStorage.getItem(SS_KEY_ROUTE);
-  if (!ss) return;
-
-  const ssData = safeJsonParse(ss);
-  if (!ssData) return;
-
-  // 既存の local とマージ（基本は session を優先）
-  const ls = localStorage.getItem(LS_KEY_ROUTE);
-  const lsData = ls ? safeJsonParse(ls) : null;
-
-  const merged = Object.assign({}, (lsData || {}), ssData);
-
-  // routes が無ければ lsData を残す（念のため）
-  if ((!merged.routes || !Array.isArray(merged.routes)) && lsData && Array.isArray(lsData.routes)) {
-    merged.routes = lsData.routes;
-  }
-
-  localStorage.setItem(LS_KEY_ROUTE, JSON.stringify(merged));
-}
-
-// localStorage(routesData) からメタ情報を取り出して JS変数に反映
-function restoreCourseMetaFromLocal() {
-  const ls = localStorage.getItem(LS_KEY_ROUTE);
-  if (!ls) return false;
-
-  const data = safeJsonParse(ls);
-  if (!data) return false;
-
-  if (typeof data.courseTitle === "string") courseTitle = data.courseTitle;
-  if (data.tripDays != null) tripDays = Number(data.tripDays) || tripDays;
-
-  if (typeof data.startPoint === "string") startPointRaw = data.startPoint;
-  if (typeof data.startAddress === "string") startAddressRaw = data.startAddress;
-  if (typeof data.startTime === "string") startTime = data.startTime;
-
-  return true;
-}
 
 /* ------------------------
    JSP -> JS への受け渡し
@@ -524,14 +507,24 @@ let startAddressRaw = '<%= request.getAttribute("address") != null ? request.get
 let startTime = '<%= request.getAttribute("startTime") != null ? request.getAttribute("startTime").toString().replace("'", "\\'") : "09:00" %>';
 let allSpots = []; // モーダルで表示する全スポットを保持
 
-// ★ここは「まずJSP値で一旦表示」→（後でストレージ復元があれば上書き）
-document.getElementById("courseTitle").textContent = courseTitle || "未設定";
-document.getElementById("tripDaysDisplay").textContent = tripDays;
-document.getElementById("startPointDisplay").textContent = startPointRaw;
-document.getElementById("startTimeDisplay").textContent = startTime;
-if (startAddressRaw && startPointRaw === "任意の地点") {
-  document.getElementById("startAddress").textContent = "（" + startAddressRaw + "）";
-}
+applyHeaderToDom();
+
+function applyHeaderToDom() {
+	  document.getElementById("courseTitle").textContent = courseTitle || "未設定";
+	  document.getElementById("tripDaysDisplay").textContent = tripDays || 1;
+	  document.getElementById("startPointDisplay").textContent = startPointRaw || "山形駅";
+	  document.getElementById("startTimeDisplay").textContent = startTime || "09:00";
+
+	  const addrEl = document.getElementById("startAddress");
+	  if (addrEl) {
+	    if (startAddressRaw && startPointRaw === "任意の地点") {
+	      addrEl.textContent = "（" + startAddressRaw + "）";
+	    } else {
+	      addrEl.textContent = "";
+	    }
+	  }
+	}
+
 
 /* ------------------------
    固定の座標
@@ -593,7 +586,7 @@ function saveFavsToCookie(list) {
 }
 
 /* ------------------------
-   Nominatim ジオコーディング
+   Nominatim ジオコーディング（保険）
    ------------------------ */
 function geocodeAddressNominatim(address) {
   return new Promise(function(resolve, reject) {
@@ -619,6 +612,36 @@ function geocodeAddressNominatim(address) {
       })
       .catch(err => reject(err));
   });
+}
+
+/* ------------------------
+   ★GSI（国土地理院）住所検索：日本向けで精度が高い
+   - 複数候補を返す
+   ------------------------ */
+async function geocodeCandidatesGSI(address) {
+  if (!address || !address.trim()) throw new Error("住所が空です");
+
+  const url = "https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(address.trim());
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("GSI住所検索に失敗しました");
+
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) return [];
+
+  // 先頭から最大10件（多すぎると選べないため）
+  const slice = data.slice(0, 10);
+
+  return slice.map((d, idx) => {
+    const lng = d?.geometry?.coordinates?.[0];
+    const lat = d?.geometry?.coordinates?.[1];
+    const title = d?.properties?.title || ("候補 " + (idx + 1));
+    return {
+      lat: Number(lat),
+      lng: Number(lng),
+      title: String(title),
+      raw: d
+    };
+  }).filter(x => !isNaN(x.lat) && !isNaN(x.lng));
 }
 
 /* ------------------------
@@ -1257,7 +1280,7 @@ $(document).on("click", ".setGoalBtn", function(){
   modal.show();
 });
 
-/* 日本住所 → Nominatim向けに整形 */
+/* 日本住所 → 検索向けに整形（簡易） */
 function normalizeAddress(addr) {
   if (!addr) return addr;
   let a = addr.trim();
@@ -1272,7 +1295,141 @@ function normalizeAddress(addr) {
   return a;
 }
 
-/* ゴール住所決定 */
+/* ------------------------
+   ★ 住所候補選択：地図にピンを立てて選ぶ
+   ------------------------ */
+let candidateMap = null;
+let candidateLayer = null;
+let candidateMarkers = [];
+let candidateSelected = null;
+let candidateData = [];
+
+function initCandidateMapIfNeeded() {
+  const mapDiv = document.getElementById("candidateMap");
+  if (!mapDiv) return;
+
+  if (!candidateMap) {
+    candidateMap = L.map("candidateMap", {
+      zoomAnimation: false,
+      fadeAnimation: false,
+      markerZoomAnimation: false,
+      inertia: false,
+      preferCanvas: true
+    }).setView([38.2485, 140.3276], 12);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:"&copy; OpenStreetMap contributors"
+    }).addTo(candidateMap);
+
+    candidateLayer = L.layerGroup().addTo(candidateMap);
+  }
+}
+
+function clearCandidateUI() {
+  candidateSelected = null;
+  candidateData = [];
+  candidateMarkers = [];
+  $("#candidateList").empty();
+  $("#candidateSelectedText").text("未選択");
+  $("#candidateConfirmBtn").prop("disabled", true);
+  if (candidateLayer) candidateLayer.clearLayers();
+}
+
+function setCandidateSelected(idx) {
+  candidateSelected = candidateData[idx] || null;
+  $("#candidateList .candidate-item").removeClass("active");
+  $("#candidateList .candidate-item[data-idx='" + idx + "']").addClass("active");
+
+  if (candidateSelected) {
+    $("#candidateSelectedText").text(candidateSelected.title);
+    $("#candidateConfirmBtn").prop("disabled", false);
+  } else {
+    $("#candidateSelectedText").text("未選択");
+    $("#candidateConfirmBtn").prop("disabled", true);
+  }
+}
+
+function showCandidatesOnMap(list) {
+  initCandidateMapIfNeeded();
+  clearCandidateUI();
+
+  candidateData = (list || []).slice(0);
+
+  if (!candidateMap || !candidateLayer || candidateData.length === 0) return;
+
+  const bounds = [];
+
+  candidateData.forEach((c, idx) => {
+    const lat = c.lat;
+    const lng = c.lng;
+    bounds.push([lat, lng]);
+
+    const m = L.marker([lat, lng]).addTo(candidateLayer);
+    m.bindPopup("<strong>候補 " + (idx + 1) + "</strong><br>" + escapeHtml(c.title));
+    m.on("click", function(){
+      setCandidateSelected(idx);
+      try { m.openPopup(); } catch(e) {}
+    });
+    candidateMarkers.push(m);
+
+    // 右側リスト
+    const item = $(`
+      <div class="candidate-item" data-idx="${idx}">
+        <div><strong>候補 ${idx + 1}</strong></div>
+        <div class="small-muted">${escapeHtml(c.title)}</div>
+        <div class="small-muted">緯度:${lat.toFixed(5)} / 経度:${lng.toFixed(5)}</div>
+      </div>
+    `);
+    item.on("click", function(){
+      setCandidateSelected(idx);
+      candidateMap.setView([lat, lng], 16);
+      try { candidateMarkers[idx].openPopup(); } catch(e) {}
+    });
+    $("#candidateList").append(item);
+  });
+
+  // 画面を表示してからサイズ調整（モーダルは表示前にinvalidateするとズレる）
+  setTimeout(function(){
+    try { candidateMap.invalidateSize(true); } catch(e) {}
+    try {
+      candidateMap.fitBounds(bounds, { padding: [20, 20] });
+    } catch(e) {
+      candidateMap.setView(bounds[0], 15);
+    }
+  }, 200);
+}
+
+// ゴール確定（選ばれた lat/lng/title をここに集約）
+function applyGoalSelection(dayIndex, lat, lng, titleLabel) {
+  const formattedAddress = titleLabel || "ゴール地点";
+
+  addRouteHistory(dayIndex, formattedAddress, lat, lng, "goal", null, null);
+
+  if (routesByDay[dayIndex].length >= 2) {
+    redrawRouteLine(dayIndex);
+  }
+
+  if (mapsByDay[dayIndex] && mapsByDay[dayIndex].map) {
+    mapsByDay[dayIndex].map.setView([lat, lng], 14);
+  }
+
+  if (dayCount < tripDays) {
+    createDaySection(dayCount + 1, lat, lng, formattedAddress);
+
+    const nextDaySection = document.getElementById("daySection" + (dayCount));
+    if (nextDaySection) {
+      nextDaySection.scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+
+    alert("ゴールを設定しました。次の日のスタート地点として登録されました。");
+  } else {
+    alert("ゴールを設定しました。これ以上の日程はありません。");
+  }
+}
+
+/* ------------------------
+   ゴール住所決定：GSIで候補取得→複数なら地図選択
+   ------------------------ */
 $("#goalAddressSubmitBtn").on("click", async function(){
   const address = $("#goalAddressInput").val().trim();
 
@@ -1284,61 +1441,92 @@ $("#goalAddressSubmitBtn").on("click", async function(){
   const dayIndex = window.currentGoalDayIndex;
   if (dayIndex == null) return;
 
-  const modalEl = document.getElementById("goalModal");
-  const modal = bootstrap.Modal.getInstance(modalEl);
-  if (modal) {
-    modal.hide();
-  }
+  // goalModal を閉じる
+  const goalModalEl = document.getElementById("goalModal");
+  const goalModal = bootstrap.Modal.getInstance(goalModalEl);
+  if (goalModal) goalModal.hide();
 
   try {
     const normalized = normalizeAddress(address);
-    console.log("Nominatim 検索用住所:", normalized);
+    console.log("検索住所:", normalized);
 
-    const url =
-      "https://nominatim.openstreetmap.org/search?format=json&q=" +
-      encodeURIComponent(normalized) +
-      "&addressdetails=1";
+    // ① まずGSIで候補を取る
+    let candidates = await geocodeCandidatesGSI(normalized);
 
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (!Array.isArray(data) || data.length === 0) {
-      alert("住所が見つかりませんでした。入力を確認してください。");
+    // ② GSIが0件なら保険でNominatim（単発）
+    if (!candidates || candidates.length === 0) {
+      console.warn("GSIで0件。Nominatimへフォールバックします。");
+      const nomi = await geocodeAddressNominatim(normalized);
+      if (!nomi || nomi.lat == null || nomi.lng == null) {
+        alert("住所が見つかりませんでした。入力を確認してください。");
+        return;
+      }
+      applyGoalSelection(dayIndex, parseFloat(nomi.lat), parseFloat(nomi.lng), nomi.display_name || address);
       return;
     }
 
-    const result = data[0];
-    const lat = parseFloat(result.lat);
-    const lng = parseFloat(result.lon);
-
-    const formattedAddress = formatAddress(result.address) || address;
-
-    addRouteHistory(dayIndex, formattedAddress, lat, lng, "goal", null, null);
-
-    if (routesByDay[dayIndex].length >= 2) {
-      redrawRouteLine(dayIndex);
+    // ③ 候補が1件なら即採用
+    if (candidates.length === 1) {
+      const c = candidates[0];
+      applyGoalSelection(dayIndex, c.lat, c.lng, c.title || address);
+      return;
     }
 
-    if (mapsByDay[dayIndex] && mapsByDay[dayIndex].map) {
-      mapsByDay[dayIndex].map.setView([lat, lng], 14);
-    }
+    // ④ 複数なら候補選択モーダルへ
+    showCandidatesOnMap(candidates);
 
-    if (dayCount < tripDays) {
-      createDaySection(dayCount + 1, lat, lng, formattedAddress);
+    const candModalEl = document.getElementById("candidateModal");
+    const candModal = new bootstrap.Modal(candModalEl);
+    candModal.show();
 
-      const nextDaySection = document.getElementById("daySection" + (dayCount));
-      if (nextDaySection) {
-        nextDaySection.scrollIntoView({ behavior:"smooth", block:"start" });
+    // 初期は1件目を自動選択（やめたければコメントアウト）
+    setTimeout(function(){
+      setCandidateSelected(0);
+      try {
+        candidateMap.setView([candidates[0].lat, candidates[0].lng], 16);
+        candidateMarkers[0].openPopup();
+      } catch(e) {}
+    }, 300);
+
+    // 決定ボタン
+    $("#candidateConfirmBtn").off("click").on("click", function(){
+      if (!candidateSelected) {
+        alert("候補を選択してください。");
+        return;
       }
+      const lat = parseFloat(candidateSelected.lat);
+      const lng = parseFloat(candidateSelected.lng);
+      const label = candidateSelected.title || address;
 
-      alert("ゴールを設定しました。次の日のスタート地点として登録されました。");
-    } else {
-      alert("ゴールを設定しました。これ以上の日程はありません。");
-    }
+      // 候補モーダル閉じる
+      const inst = bootstrap.Modal.getInstance(candModalEl);
+      if (inst) inst.hide();
+
+      applyGoalSelection(dayIndex, lat, lng, label);
+    });
+
+    // 戻る（候補モーダルを閉じたあと、goalModalに戻したい場合）
+    candModalEl.addEventListener("hidden.bs.modal", function handler(){
+      // 選択確定済みの場合は戻さない（routeに追加されるので）
+      // 未確定で閉じた場合だけ再入力できるように戻す
+      if (!candidateSelected) {
+        // もう一度入力し直したいとき用
+        try {
+          const gm = new bootstrap.Modal(goalModalEl);
+          gm.show();
+        } catch(e) {}
+      }
+      candModalEl.removeEventListener("hidden.bs.modal", handler);
+    });
 
   } catch(err) {
     console.error("ゴール検索エラー:", err);
     alert("住所の検索中にエラーが発生しました。");
+    // 失敗時は入力モーダルを再表示
+    try {
+      const gm = new bootstrap.Modal(document.getElementById("goalModal"));
+      gm.show();
+    } catch(e) {}
   }
 });
 
@@ -1406,12 +1594,6 @@ $("#confirmRouteBtn").on("click", function(){
     return;
   }
 
-  // ★念のため：表示中メタを変数へ（復元後にズレないため）
-  const titleSpan = document.getElementById("courseTitle");
-  const daysSpan  = document.getElementById("tripDaysDisplay");
-  if (titleSpan) courseTitle = titleSpan.textContent || courseTitle;
-  if (daysSpan)  tripDays = Number(daysSpan.textContent) || tripDays;
-
   syncRoutesFromDOM();
 
   const payload = buildPdfPayload();
@@ -1466,11 +1648,11 @@ function escapeHtml(str) {
 //------------------------
 function saveRoutesToLocal() {
   const payload = buildPdfPayload();
-  localStorage.setItem(LS_KEY_ROUTE, JSON.stringify(payload));
+  localStorage.setItem("routesData", JSON.stringify(payload));
 }
 
 function loadRoutesFromLocal() {
-  const dataStr = localStorage.getItem(LS_KEY_ROUTE);
+  const dataStr = localStorage.getItem("routesData");
   if (!dataStr) return null;
   try {
     return JSON.parse(dataStr);
@@ -1481,39 +1663,7 @@ function loadRoutesFromLocal() {
 }
 
 $(document).ready(function(){
-
-  if (HAS_JSP_META) {
-	    // 古いPDF確認の残骸で上書きされないように消す
-	    sessionStorage.removeItem(SS_KEY_ROUTE);
-
-	    // LocalStorage に “今回のメタ情報” を保存して、以後の復元基準を更新
-	    const prev = safeJsonParse(localStorage.getItem(LS_KEY_ROUTE)) || {};
-	    prev.courseTitle   = courseTitle || "";
-	    prev.tripDays      = Number(tripDays) || 1;
-	    prev.startPoint    = startPointRaw || "山形駅";
-	    prev.startAddress  = startAddressRaw || "";
-	    prev.startTime     = startTime || "09:00";
-
-	    // ★重要：新しく作り直しのとき、前回のルートを残したくないなら routes を消す
-	    // （日数や出発が変わると整合性が崩れるので普通は消すのが安全）
-	    prev.routes = null;
-
-	    localStorage.setItem(LS_KEY_ROUTE, JSON.stringify(prev));
-	  } else {
-	    // ② “戻り” のときだけ復元ロジックを使う
-	    syncSessionRouteToLocalIfExists();
-	    restoreCourseMetaFromLocal();
-	  }
-
-		  applyCourseMetaToHeader();
-	populateAreaAndTagSelects("areaDropdown", "tagDropdown");
-
-  // ★追加：PDF確認画面→戻る で sessionStorage にある場合、localStorage に同期
-  syncSessionRouteToLocalIfExists();
-
-  // ★追加：localStorageから「コースタイトル/日数/開始情報」も復元してヘッダーを上書き
-  restoreCourseMetaFromLocal();
-  applyCourseMetaToHeader();
+  populateAreaAndTagSelects("areaDropdown", "tagDropdown");
 
   function initStartSection(lat, lng, name, day=1) {
     createDaySection(day, lat, lng, name);
@@ -1525,17 +1675,15 @@ $(document).ready(function(){
   // --------------------------
   const savedData = loadRoutesFromLocal();
   if (savedData && savedData.routes) {
-    routesByDay = savedData.routes.map(day => day.map(r => ({ ...r })));
+	  if (savedData.courseTitle !== undefined) courseTitle = savedData.courseTitle;
+	  if (savedData.tripDays !== undefined) tripDays = savedData.tripDays;
+	  if (savedData.startPoint !== undefined) startPointRaw = savedData.startPoint;
+	  if (savedData.startAddress !== undefined) startAddressRaw = savedData.startAddress;
+	  if (savedData.startTime !== undefined) startTime = savedData.startTime;
+
+	  applyHeaderToDom();
+	  routesByDay = savedData.routes.map(day => day.map(r => ({ ...r })));
     dayCount = routesByDay.length;
-
-    // ★savedData内のメタ情報を優先して変数も更新（buildPdfPayloadのため）
-    if (typeof savedData.courseTitle === "string") courseTitle = savedData.courseTitle;
-    if (savedData.tripDays != null) tripDays = Number(savedData.tripDays) || tripDays;
-    if (typeof savedData.startPoint === "string") startPointRaw = savedData.startPoint;
-    if (typeof savedData.startAddress === "string") startAddressRaw = savedData.startAddress;
-    if (typeof savedData.startTime === "string") startTime = savedData.startTime;
-
-    applyCourseMetaToHeader();
 
     routesByDay.forEach((dayRoute, d) => {
       dayRoute.forEach((r, i) => {

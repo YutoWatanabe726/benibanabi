@@ -359,7 +359,9 @@ public class PDFOutputServlet extends HttpServlet {
                 drawFilledRoundRect(cs, 60, h - 190, w - 120, 90, 255, 255, 255);
                 drawBorderRect(cs, 60, h - 190, w - 120, 90, 230, 126, 34, 2f);
 
-                String mainTitle = "旅行しおり";
+                String mainTitle = (payload.courseTitle != null && !payload.courseTitle.trim().isEmpty())
+                        ? payload.courseTitle.trim()
+                        : "旅行しおり";
                 float titleFontSize = 32f;
                 float titleWidth = font.getStringWidth(mainTitle) / 1000f * titleFontSize;
                 float titleX = (w - titleWidth) / 2f;
