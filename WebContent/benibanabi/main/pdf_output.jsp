@@ -271,7 +271,6 @@ body {
       </div>
 
       <div class="button-area">
-        <!-- ★type=button を必ず -->
         <button id="generatePdfBtn" type="button" class="btn btn-danger">PDFを生成</button>
         <a href="CourseSpot.jsp" id="backToEditBtn" class="btn btn-outline-secondary">ルート編集画面に戻る</a>
       </div>
@@ -294,7 +293,6 @@ body {
   </div>
 </div>
 
-<!-- ★JSONは escapeXml=false で素直に入れる -->
 <textarea id="routeDataJson" style="display:none;"><c:out value="${param.routeData}" escapeXml="false" /></textarea>
 
 <form id="pdfForm" method="post" action="<%= request.getContextPath() %>/PDFOutput">
@@ -307,6 +305,9 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
+/** ★PDFOutputのエンドポイント */
+const PDF_ENDPOINT = "<c:url value='/PDFOutput'/>";
+
 let routeData = {};
 let activeDayIndex = 0;
 let previewMap = null;
@@ -314,6 +315,9 @@ let routeFeatureGroup = null;
 let tileLayerRef = null;
 
 const SS_KEY_ROUTE = "pdfPreview.routeData";
+
+/** ★生成済みPDFを開くためのURL（Blob） */
+let generatedPdfObjectUrl = null;
 
 function isValidHHMM(str) {
   if (!str) return false;
@@ -921,11 +925,49 @@ function setPdfStatus(type, title, desc, progressPercent) {
   }
 }
 
+/** ★生成済みPDFを別タブで開く（ここだけユーザー操作なのでブロックされにくい） */
+function openGeneratedPdfInNewTab() {
+  if (!generatedPdfObjectUrl) {
+    alert("PDFがまだ生成されていません。先にPDFを生成してください。");
+    return;
+  }
+  const w = window.open(generatedPdfObjectUrl, "_blank", "noopener");
+  if (!w) {
+    // もしブロックされた時だけ案内
+    alert("ポップアップがブロックされました。ブラウザの設定で許可してからもう一度押してください。");
+  }
+}
+
+/** ★ボタンを「開く」状態に切り替える */
+function switchButtonToOpenMode(btn) {
+  if (!btn) return;
+  btn.dataset.mode = "open";
+  btn.textContent = "生成されたPDFを開く";
+  btn.classList.remove("btn-danger");
+  btn.classList.add("btn-success");
+}
+/** ★ボタンを「生成」状態に戻す */
+function switchButtonToGenerateMode(btn) {
+  if (!btn) return;
+  btn.dataset.mode = "generate";
+  btn.textContent = "PDFを生成";
+  btn.classList.remove("btn-success");
+  btn.classList.add("btn-danger");
+}
+
 function setupPdfButton() {
   const btn = document.getElementById("generatePdfBtn");
   if (!btn) return;
 
+  btn.dataset.mode = "generate";
+
   btn.addEventListener("click", async function() {
+    // 生成済みなら「別タブで開く」
+    if (btn.dataset.mode === "open") {
+      openGeneratedPdfInNewTab();
+      return;
+    }
+
     if (!routeData || !Array.isArray(routeData.routes) || routeData.routes.length === 0) {
       alert("ルート情報がありません。先にルートを作成してください。");
       return;
@@ -934,25 +976,13 @@ function setupPdfButton() {
     const ok = confirm("現在のルート情報で PDF を生成しますか？（地点ごとの地図画像も作成します）");
     if (!ok) return;
 
-    // クリック直後に空タブ確保（ブロック回避）
-    const targetName = "pdfOutput_" + Date.now();
-    const pdfWin = window.open("about:blank", targetName);
-
-    if (!pdfWin) {
-      setPdfStatus(
-        "danger",
-        "ポップアップがブロックされています",
-        "ブラウザのポップアップ許可をONにしてから、もう一度「PDFを生成」を押してください。",
-        100
-      );
-      return;
-    }
-
-    // すぐ元タブに戻す（処理が止まるのを防ぐ）
-    try { pdfWin.blur(); } catch(e) {}
-    try { window.focus(); } catch(e) {}
-
     saveRouteDataToSessionStorage();
+
+    // 以前のPDFがあれば破棄
+    if (generatedPdfObjectUrl) {
+      try { URL.revokeObjectURL(generatedPdfObjectUrl); } catch(e) {}
+      generatedPdfObjectUrl = null;
+    }
 
     btn.disabled = true;
     setPdfStatus("info", "地図画像を作成中…", "地点ごとの地図画像を作っています。しばらくお待ちください。", 5);
@@ -983,30 +1013,53 @@ function setupPdfButton() {
         segmentMapImages.push(segArr);
       }
 
-      setPdfStatus("info", "PDF送信準備中…", "PDFを生成しています。完了後に自動で新しいタブへ移動します。", 92);
+      setPdfStatus("info", "PDFを生成中…", "PDFを作成しています。完了後に「開く」ボタンに変わります。", 92);
 
       const sendData = buildSendPayloadBase(
         JSON.parse(JSON.stringify(routeData)),
         segmentMapImages
       );
 
-      const form = document.getElementById("pdfForm");
-      const jsonInput = document.getElementById("pdfJsonInput");
-      jsonInput.value = JSON.stringify(sendData);
+      // ★fetchでPDFを取得（この時点では開かない）
+      const body = new URLSearchParams();
+      body.append("json", JSON.stringify(sendData));
 
-      form.target = targetName;
-      form.submit();
+      const res = await fetch(PDF_ENDPOINT + "?_ts=" + Date.now(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+          "Accept": "application/pdf"
+        },
+        body: body.toString(),
+        cache: "no-store",
+        credentials: "same-origin"
+      });
 
-      // 最後にタブ移動
-      try { pdfWin.focus(); } catch(e) {}
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error("PDFOutput HTTP " + res.status + (text ? (" / " + text) : ""));
+      }
 
-      setPdfStatus("success", "PDF生成を開始しました", "新しいタブにPDFが表示されます。", 100);
+      const blob = await res.blob();
+
+      if (blob.type && !String(blob.type).toLowerCase().includes("pdf")) {
+        const maybeText = await blob.text().catch(() => "");
+        throw new Error("PDF以外の応答が返りました: " + blob.type + (maybeText ? (" / " + maybeText) : ""));
+      }
+
+      generatedPdfObjectUrl = URL.createObjectURL(blob);
+
+      setPdfStatus("success", "PDF生成が完了しました", "「生成されたPDFを開く」ボタンから別タブで開けます。", 100);
+
+      // ★ここでボタンを切替（自動で開かない）
+      switchButtonToOpenMode(btn);
+
       btn.disabled = false;
 
     } catch (e) {
       console.error("PDF生成処理エラー:", e);
-      try { pdfWin.close(); } catch(ex) {}
-      setPdfStatus("danger", "PDF生成に失敗しました", "もう一度お試しください。コンソールにもエラーが出ているはずです。", 100);
+      setPdfStatus("danger", "PDF生成に失敗しました", "もう一度お試しください。コンソールも確認してください。", 100);
+      switchButtonToGenerateMode(btn);
       btn.disabled = false;
     }
   });
@@ -1020,6 +1073,13 @@ function setupBackToEditButton() {
     saveRouteDataToSessionStorage();
   });
 }
+
+window.addEventListener("beforeunload", function() {
+  if (generatedPdfObjectUrl) {
+    try { URL.revokeObjectURL(generatedPdfObjectUrl); } catch(e) {}
+    generatedPdfObjectUrl = null;
+  }
+});
 
 document.addEventListener("DOMContentLoaded", async function() {
   loadRouteData();
