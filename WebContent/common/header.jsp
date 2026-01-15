@@ -132,7 +132,7 @@
     <a href="<c:url value='/benibanabi/index.jsp'/>">トップ</a>
     <a href="<c:url value='/benibanabi/main/start.jsp'/>" id="courseLink">コース</a>
     <a href="<c:url value='/benibanabi/main/SpotList.action'/>">スポット</a>
-    <a href="<c:url value='/benibanabi/main/souvenir.jsp'/>">お土産紹介</a>
+    <a href="<c:url value='/benibanabi/main/Souvenir.action'/>">お土産紹介</a>
     <a href="<c:url value='/benibanabi/main/yamagata.jsp'/>">アクセス情報</a>
     <a href="<c:url value='/benibanabi/main/reservation.jsp'/>">宿泊・レンタカー</a>
   </nav>

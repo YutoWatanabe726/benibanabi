@@ -13,7 +13,7 @@
 <div class="tab-container">
   <button class="tab" onclick="location.href='yamagata.jsp'">山形への行き方</button>
   <button class="tab active">現地移動手段</button>
-  <button class="tab" onclick="location.href='souvenir.jsp'">お土産・名産品</button>
+  <button class="tab" onclick="location.href='Souvenir.action'">お土産・名産品</button>
 </div>
 
 <main>

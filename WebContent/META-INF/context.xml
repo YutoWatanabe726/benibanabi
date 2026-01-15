@@ -3,13 +3,14 @@
 <!-- 上記はEclipseの警告を消すための記述です。 -->
 
 <Context reloadable="true">
-	<Resource
-		name="jdbc/benibanabi"
-		auth="Container"
-		type="javax.sql.DataSource"
-		driverClassName="org.postgresql.Driver"
-		url="jdbc:postgresql://localhost:5432/benibanabi"
-		username="postgres"
-		password="admin"
-	/>
+ <Resource
+  name="jdbc/benibanabi"
+  auth="Container"
+  type="javax.sql.DataSource"
+  driverClassName="org.postgresql.Driver"
+  url="jdbc:postgresql://localhost:5432/benibanabi"
+  username="postgres"
+  password="admin"
+ />
 </Context>
+
