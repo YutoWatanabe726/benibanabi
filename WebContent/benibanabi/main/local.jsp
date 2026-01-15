@@ -27,7 +27,12 @@
   onclick="location.href='http://54.147.142.225:8080/benibanabi/benibanabi/main/reservation.jsp'">
 </button>
 
-<a href="http://54.147.142.225:8080/benibanabi/benibanabi/main/reservation.jsp">
+<!-- レンタカー -->
+<button class="tab"
+  onclick="location.href='${pageContext.request.contextPath}/main/reservation.jsp'">
+</button>
+
+<a href="${pageContext.request.contextPath}/main/reservation.jsp">
   <div class="souvenir-item">
     <img src="../../images/NSX.jpg" alt="レンタカー">
     <h3>🚗 レンタカー</h3>

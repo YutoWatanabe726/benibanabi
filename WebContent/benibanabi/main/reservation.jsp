@@ -165,16 +165,16 @@ p {
     <a href="https://www.jalan.net/" target="_blank">じゃらんで予約</a>
   </div>
 
-  <div class="link-box">
-    <h3>楽天トラベル</h3>
-    <a href="https://travel.rakuten.co.jp/" target="_blank">楽天トラベルで予約</a>
-  </div>
+  	<div class="link-box">
+    	<h3>楽天トラベル</h3>
+    	<a href="https://travel.rakuten.co.jp/" target="_blank">楽天トラベルで予約</a>
+  	</div>
 </div>
 
-<div class="link-box">
-    <h3>樂吃購！日本</h3>
-    <a href="https://www.letsgojp.com/" target="_blank">樂吃購！日本で予約</a>
-  </div>
+	<div class="link-box">
+    	<h3>樂吃購！日本</h3>
+    	<a href="https://www.letsgojp.com/" target="_blank">樂吃購！日本で予約</a>
+  	</div>
 </div>
 
 <!-- レンタカー -->
