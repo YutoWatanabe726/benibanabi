@@ -110,7 +110,6 @@ body {
 @media (max-width: 768px) {
   .button-area { justify-content:center; }
 }
-#pdfStatus { margin-top:10px; }
 .page-title {
   font-size:1.3rem;
   font-weight:bold;
@@ -157,6 +156,82 @@ body {
   font-size:0.78rem;
   margin-right:6px;
 }
+
+/* ▼PDFステータス（ボタン上） */
+.pdf-status{
+  margin: 0 0 10px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  text-align: left;
+}
+.pdf-status--success{
+  border-color:#bbf7d0;
+  background:#ecfdf5;
+}
+.pdf-status--danger{
+  border-color:#fecaca;
+  background:#fef2f2;
+}
+.pdf-status__row{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.pdf-status__icon{
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#dbeafe;
+  font-size:18px;
+  flex:0 0 32px;
+}
+.pdf-status--success .pdf-status__icon{ background:#bbf7d0; }
+.pdf-status--danger  .pdf-status__icon{ background:#fecaca; }
+.pdf-status__title{
+  font-weight:800;
+  font-size:0.95rem;
+  line-height:1.2;
+  color:#0f172a;
+}
+.pdf-status__desc{
+  margin-top:2px;
+  font-size:0.85rem;
+  color:#475569;
+  line-height:1.35;
+}
+.pdf-status__bar{
+  margin-top:10px;
+  height:8px;
+  border-radius:999px;
+  background: rgba(15,23,42,0.08);
+  overflow:hidden;
+}
+.pdf-status__barFill{
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background: rgba(37,99,235,0.9);
+  transition: width 0.25s ease;
+}
+.pdf-status--success .pdf-status__barFill{ background: rgba(16,185,129,0.9); }
+.pdf-status--danger  .pdf-status__barFill{ background: rgba(225,29,72,0.9); }
+
+/* ▼スマホ時 */
+@media (max-width: 768px){
+  .route-header .col-md-4{
+    text-align:left !important;
+    margin-top:10px;
+  }
+  .button-area{
+    justify-content:flex-start;
+  }
+}
 </style>
 </head>
 
@@ -180,9 +255,24 @@ body {
       </div>
       <div><strong>開始時間：</strong><span id="startTimeText">-</span></div>
     </div>
+
     <div class="col-md-4 text-md-end">
+      <div id="pdfStatus" class="pdf-status" style="display:none;">
+        <div class="pdf-status__row">
+          <div class="pdf-status__icon" aria-hidden="true">⏳</div>
+          <div>
+            <div class="pdf-status__title" id="pdfStatusTitle">処理中…</div>
+            <div class="pdf-status__desc" id="pdfStatusDesc">しばらくお待ちください</div>
+          </div>
+        </div>
+        <div class="pdf-status__bar">
+          <div class="pdf-status__barFill" id="pdfStatusBar"></div>
+        </div>
+      </div>
+
       <div class="button-area">
-        <button id="generatePdfBtn" class="btn btn-danger">PDFを生成</button>
+        <!-- ★type=button を必ず -->
+        <button id="generatePdfBtn" type="button" class="btn btn-danger">PDFを生成</button>
         <a href="CourseSpot.jsp" id="backToEditBtn" class="btn btn-outline-secondary">ルート編集画面に戻る</a>
       </div>
     </div>
@@ -202,11 +292,10 @@ body {
       <div id="previewMap"></div>
     </div>
   </div>
-
-  <div id="pdfStatus" class="alert alert-info" style="display:none;"></div>
 </div>
 
-<textarea id="routeDataJson" style="display:none;"><c:out value="${param.routeData}" /></textarea>
+<!-- ★JSONは escapeXml=false で素直に入れる -->
+<textarea id="routeDataJson" style="display:none;"><c:out value="${param.routeData}" escapeXml="false" /></textarea>
 
 <form id="pdfForm" method="post" action="<%= request.getContextPath() %>/PDFOutput">
   <input type="hidden" name="json" id="pdfJsonInput">
@@ -226,12 +315,10 @@ let tileLayerRef = null;
 
 const SS_KEY_ROUTE = "pdfPreview.routeData";
 
-// ---------- 時刻表示（到着/出発）ユーティリティ ----------
 function isValidHHMM(str) {
   if (!str) return false;
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(str).trim());
 }
-
 function parseHHMM(str) {
   if (!isValidHHMM(str)) return null;
   const s = String(str).trim();
@@ -240,17 +327,15 @@ function parseHHMM(str) {
   if (isNaN(h) || isNaN(m)) return null;
   return h * 60 + m;
 }
-
 function formatHHMM(totalMin) {
   if (totalMin == null || isNaN(totalMin)) return "";
   let t = totalMin % (24 * 60);
   if (t < 0) t += 24 * 60;
   const h = Math.floor(t / 60);
   const m = t % 60;
-  const hh = (h < 10 ? "0" : "") + h;
-  const mm = (m < 10 ? "0" : "") + m;
-  return hh + ":" + mm;
+  return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
 }
+function isFiniteNumber(v){ return v != null && isFinite(v) && !isNaN(v); }
 
 function getFirstExistingTime(rp, keys) {
   if (!rp) return "";
@@ -260,7 +345,6 @@ function getFirstExistingTime(rp, keys) {
   }
   return "";
 }
-
 function getMoveMinutes(rp) {
   if (!rp) return null;
   const candidates = ["moveMinutes", "travelMinutes", "moveTime", "travelTime"];
@@ -268,11 +352,10 @@ function getMoveMinutes(rp) {
     const v = rp[candidates[i]];
     if (v == null || v === "") continue;
     const n = Number(v);
-    if (!isNaN(n) && isFinite(n) && n >= 0) return Math.floor(n);
+    if (isFiniteNumber(n) && n >= 0) return Math.floor(n);
   }
   return null;
 }
-
 function computeArrivalDepartureForDay(dayRoute) {
   if (!dayRoute || !Array.isArray(dayRoute) || dayRoute.length === 0) return;
 
@@ -303,7 +386,7 @@ function computeArrivalDepartureForDay(dayRoute) {
       rp._calcArrival = formatHHMM(arr);
 
       const stay = (rp.stayTime != null && rp.stayTime !== "") ? Number(rp.stayTime) : null;
-      if (stay != null && !isNaN(stay) && isFinite(stay) && stay >= 0) {
+      if (isFiniteNumber(stay) && stay >= 0) {
         const dep = arr + Math.floor(stay);
         rp._calcDeparture = formatHHMM(dep);
         cursor = dep;
@@ -318,21 +401,19 @@ function computeArrivalDepartureForDay(dayRoute) {
     rp._calcArrival = formatHHMM(arr);
 
     const stay = (rp.stayTime != null && rp.stayTime !== "") ? Number(rp.stayTime) : null;
-    if (stay != null && !isNaN(stay) && isFinite(stay) && stay >= 0) {
+    if (isFiniteNumber(stay) && stay >= 0) {
       const dep = arr + Math.floor(stay);
       rp._calcDeparture = formatHHMM(dep);
       cursor = dep;
     }
   }
 }
-
 function pickArrivalTimeText(rp) {
   const v = getFirstExistingTime(rp, ["arrivalTime", "arriveTime", "arrival", "arrivedAt"]);
   if (v) return v;
   if (rp && isValidHHMM(rp._calcArrival)) return rp._calcArrival;
   return "-";
 }
-
 function pickDepartureTimeText(rp) {
   const v = getFirstExistingTime(rp, ["departTime", "departureTime", "depart", "departedAt"]);
   if (v) return v;
@@ -349,7 +430,6 @@ function saveRouteDataToSessionStorage() {
     console.warn("sessionStorage save failed:", e);
   }
 }
-
 function loadRouteDataFromSessionStorage() {
   try {
     const s = sessionStorage.getItem(SS_KEY_ROUTE);
@@ -360,7 +440,6 @@ function loadRouteDataFromSessionStorage() {
     return null;
   }
 }
-
 function loadRouteData() {
   const textarea = document.getElementById("routeDataJson");
   if (!textarea) return;
@@ -370,19 +449,17 @@ function loadRouteData() {
   if (raw) {
     try {
       routeData = JSON.parse(raw);
-      console.log("routeData (from param):", routeData);
       activeDayIndex = 0;
       saveRouteDataToSessionStorage();
       return;
     } catch (e) {
-      console.error("JSON 解析エラー(param):", e);
+      console.error("JSON 解析エラー(param):", e, raw);
     }
   }
 
   const fromSS = loadRouteDataFromSessionStorage();
   if (fromSS) {
     routeData = fromSS;
-    console.log("routeData (from sessionStorage):", routeData);
     activeDayIndex = 0;
     return;
   }
@@ -396,11 +473,7 @@ function renderCourseHeader() {
   document.getElementById("tripDaysText").textContent =
     routeData.tripDays || (routeData.routes ? routeData.routes.length : 1);
   document.getElementById("startPointText").textContent = routeData.startPoint || "";
-  if (routeData.startAddress) {
-    document.getElementById("startAddressText").textContent = "（" + routeData.startAddress + "）";
-  } else {
-    document.getElementById("startAddressText").textContent = "";
-  }
+  document.getElementById("startAddressText").textContent = routeData.startAddress ? "（" + routeData.startAddress + "）" : "";
   document.getElementById("startTimeText").textContent = routeData.startTime || "";
 }
 
@@ -421,7 +494,6 @@ function renderDayTabs() {
     btn.textContent = "Day " + (idx + 1);
     if (idx === activeDayIndex) btn.classList.add("active");
 
-    // ★OSRM取得(地図描画)→一覧描画 の順にするため async
     btn.addEventListener("click", async function() {
       const newIndex = parseInt(this.dataset.dayIndex, 10);
       if (isNaN(newIndex)) return;
@@ -435,8 +507,8 @@ function renderDayTabs() {
         }
       );
 
-      await renderMapForDay(activeDayIndex);   // ★先にOSRM呼ぶ
-      renderRouteListForDay(activeDayIndex);   // ★moveMinutesが埋まってから表示
+      await renderMapForDay(activeDayIndex);
+      renderRouteListForDay(activeDayIndex);
     });
 
     tabsContainer.appendChild(btn);
@@ -480,7 +552,6 @@ function renderRouteListForDay(dayIndex) {
     return;
   }
 
-  // ★moveMinutes が埋まっている前提で計算
   computeArrivalDepartureForDay(dayRoute);
 
   const dayDiv = document.createElement("div");
@@ -490,6 +561,7 @@ function renderRouteListForDay(dayIndex) {
   const last = dayRoute[dayRoute.length - 1];
   const dayStart = (first ? pickDepartureTimeText(first) : "-");
   const dayArrive = (last ? pickArrivalTimeText(last) : "-");
+
   const dayHeader = document.createElement("div");
   dayHeader.innerHTML =
     "<div><strong>Day " + (dayIndex + 1) + "</strong></div>" +
@@ -505,8 +577,6 @@ function renderRouteListForDay(dayIndex) {
     const memo = escapeHtml(rp.memo || "");
     const type = rp.type || "normal";
     const transport = rp.transport || "徒歩";
-    const lat = rp.lat;
-    const lng = rp.lng;
 
     const arrivalText = pickArrivalTimeText(rp);
     const departText  = pickDepartureTimeText(rp);
@@ -520,25 +590,11 @@ function renderRouteListForDay(dayIndex) {
     card.appendChild(headerDiv);
 
     if (rp.photoUrl) {
-      let photoUrl = rp.photoUrl;
-
-      if (!photoUrl) {
-        if (rp.type === "start") {
-          photoUrl = "<%= request.getContextPath() %>/images/defaults/start.jpg";
-        } else if (rp.type === "goal") {
-          photoUrl = "<%= request.getContextPath() %>/images/defaults/goal.jpg";
-        } else if (rp.type === "meal") {
-          photoUrl = "<%= request.getContextPath() %>/images/defaults/meal.jpg";
-        }
-      }
-
-      if (photoUrl) {
-        const img = document.createElement("img");
-        img.className = "spot-thumb";
-        img.src = photoUrl;
-        img.alt = name;
-        card.appendChild(img);
-      }
+      const img = document.createElement("img");
+      img.className = "spot-thumb";
+      img.src = rp.photoUrl;
+      img.alt = name;
+      card.appendChild(img);
     }
 
     const metaDiv = document.createElement("div");
@@ -548,7 +604,7 @@ function renderRouteListForDay(dayIndex) {
       "出発時間: " + escapeHtml(departText) + "<br>" +
       "滞在時間: " + stay + " 分<br>" +
       "移動手段: " + escapeHtml(transport) + "<br>" +
-      "緯度: " + lat + " / 経度: " + lng +
+      "緯度: " + rp.lat + " / 経度: " + rp.lng +
       (memo ? ("<br>メモ: " + memo) : "");
     card.appendChild(metaDiv);
 
@@ -592,13 +648,8 @@ function initMapIfNeeded() {
   }
 }
 
-function sleep(ms) {
-  return new Promise(function(resolve){ setTimeout(resolve, ms); });
-}
-
-function raf() {
-  return new Promise(function(resolve){ requestAnimationFrame(function(){ resolve(); }); });
-}
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function raf() { return new Promise(resolve => requestAnimationFrame(() => resolve())); }
 
 function waitTileLoaded(timeoutMs) {
   timeoutMs = timeoutMs || 1500;
@@ -642,31 +693,19 @@ function waitMapMoveEnd(timeoutMs) {
 
     previewMap.once("moveend", onDone);
     previewMap.once("zoomend", onDone);
-
-    setTimeout(function(){
-      if (done) return;
-    }, 50);
   });
 }
 
 async function stabilizeBeforeCapture() {
   if (!previewMap) return;
-
   previewMap.invalidateSize(true);
   await sleep(120);
-
   await waitMapMoveEnd(1200);
   await waitTileLoaded(1800);
-
   await raf();
   await raf();
 }
 
-/**
- * OSRMで経路線を描画
- * ★追加：duration(秒)を分にして返す
- * ★追加：to.moveMinutes が未設定なら埋める（到着/出発計算用）
- */
 async function drawOsrmSegment(from, to, group) {
   if (!from || !to) return null;
   if (from.lat == null || from.lng == null || to.lat == null || to.lng == null) return null;
@@ -680,22 +719,19 @@ async function drawOsrmSegment(from, to, group) {
   try {
     const res = await fetch(url);
     const data = await res.json();
+
     if (!data.routes || !data.routes[0]) {
       const fallback = L.polyline([[from.lat, from.lng],[to.lat,to.lng]], { weight: 4, color: "#2563eb" });
       fallback.addTo(group);
       return null;
     }
 
-    const line = L.geoJSON(data.routes[0].geometry, {
-      style: { weight: 4, color: "#2563eb" }
-    });
+    const line = L.geoJSON(data.routes[0].geometry, { style: { weight: 4, color: "#2563eb" } });
     line.addTo(group);
 
-    // ★duration 秒 → 分（四捨五入）
     const durSec = data.routes[0].duration;
     const durMin = (durSec != null && isFinite(durSec)) ? Math.max(0, Math.round(Number(durSec) / 60)) : null;
 
-    // ★to 側に moveMinutes を入れる（既にあるなら上書きしない）
     if (durMin != null && to && (to.moveMinutes == null || to.moveMinutes === "")) {
       to.moveMinutes = durMin;
     }
@@ -734,19 +770,17 @@ async function renderMapForDay(dayIndex) {
 
     latlngs.push([lat, lng]);
 
-    const marker = L.marker([lat, lng], {
-      icon: getIconByType(rp.type || "normal")
-    }).addTo(routeFeatureGroup);
+    const marker = L.marker([lat, lng], { icon: getIconByType(rp.type || "normal") })
+      .addTo(routeFeatureGroup);
 
-    const popupHtml =
+    marker.bindPopup(
       "<strong>" + escapeHtml(rp.name || "") + "</strong><br>" +
       "種別: " + escapeHtml(rp.type || "スポット") + "<br>" +
-      "緯度: " + lat + " / 経度: " + lng;
-    marker.bindPopup(popupHtml);
+      "緯度: " + lat + " / 経度: " + lng
+    );
   });
 
   if (dayRoute.length >= 2) {
-    // ★OSRMを呼びながら to.moveMinutes を埋める
     for (let i = 0; i < dayRoute.length - 1; i++) {
       await drawOsrmSegment(dayRoute[i], dayRoute[i+1], routeFeatureGroup);
     }
@@ -779,7 +813,6 @@ async function captureMapBase64() {
       backgroundColor: "#ffffff",
       scale: 1
     });
-
     return canvas.toDataURL("image/jpeg", 0.80);
   } catch (e) {
     console.error("captureMapBase64 失敗:", e);
@@ -790,7 +823,6 @@ async function captureMapBase64() {
 async function captureSegmentMap(dayIndex, segIndex) {
   initMapIfNeeded();
   if (!previewMap) return "";
-
   if (!routeData || !Array.isArray(routeData.routes)) return "";
 
   const dayRoute = routeData.routes[dayIndex];
@@ -808,10 +840,8 @@ async function captureSegmentMap(dayIndex, segIndex) {
       const lng0 = parseFloat(rp0.lng);
 
       L.marker([lat0, lng0], { icon: getIconByType(rp0.type || "start") }).addTo(routeFeatureGroup);
-
       previewMap.invalidateSize(true);
       previewMap.setView([lat0, lng0], 14);
-
       return await captureMapBase64();
     }
     previewMap.setView([38.2485, 140.3276], 8);
@@ -820,10 +850,7 @@ async function captureSegmentMap(dayIndex, segIndex) {
 
   const from = dayRoute[segIndex - 1];
   const to   = dayRoute[segIndex];
-
-  if (!from || !to || from.lat == null || from.lng == null || to.lat == null || to.lng == null) {
-    return "";
-  }
+  if (!from || !to || from.lat == null || from.lng == null || to.lat == null || to.lng == null) return "";
 
   const fromLat = parseFloat(from.lat), fromLng = parseFloat(from.lng);
   const toLat   = parseFloat(to.lat),   toLng   = parseFloat(to.lng);
@@ -831,7 +858,6 @@ async function captureSegmentMap(dayIndex, segIndex) {
   L.marker([fromLat, fromLng], { icon: getIconByType(from.type || "start") }).addTo(routeFeatureGroup);
   L.marker([toLat, toLng],     { icon: getIconByType(to.type || "normal") }).addTo(routeFeatureGroup);
 
-  // ★ここでも moveMinutes を埋める（未設定なら）
   await drawOsrmSegment(from, to, routeFeatureGroup);
 
   previewMap.invalidateSize(true);
@@ -869,9 +895,34 @@ function buildSendPayloadBase(original, segmentMapImages) {
   return cloned;
 }
 
-async function setupPdfButton() {
+function setPdfStatus(type, title, desc, progressPercent) {
+  const box = document.getElementById("pdfStatus");
+  const t = document.getElementById("pdfStatusTitle");
+  const d = document.getElementById("pdfStatusDesc");
+  const barFill = document.getElementById("pdfStatusBar");
+  const icon = box ? box.querySelector(".pdf-status__icon") : null;
+
+  if (!box || !t || !d || !barFill) return;
+
+  box.style.display = "block";
+  box.classList.remove("pdf-status--success", "pdf-status--danger");
+
+  if (type === "success") box.classList.add("pdf-status--success");
+  if (type === "danger")  box.classList.add("pdf-status--danger");
+
+  t.textContent = title || "";
+  d.textContent = desc || "";
+
+  const p = Math.max(0, Math.min(100, Number(progressPercent || 0)));
+  barFill.style.width = p + "%";
+
+  if (icon) {
+    icon.textContent = (type === "success") ? "✅" : (type === "danger") ? "⚠️" : "⏳";
+  }
+}
+
+function setupPdfButton() {
   const btn = document.getElementById("generatePdfBtn");
-  const status = document.getElementById("pdfStatus");
   if (!btn) return;
 
   btn.addEventListener("click", async function() {
@@ -883,51 +934,81 @@ async function setupPdfButton() {
     const ok = confirm("現在のルート情報で PDF を生成しますか？（地点ごとの地図画像も作成します）");
     if (!ok) return;
 
+    // クリック直後に空タブ確保（ブロック回避）
+    const targetName = "pdfOutput_" + Date.now();
+    const pdfWin = window.open("about:blank", targetName);
+
+    if (!pdfWin) {
+      setPdfStatus(
+        "danger",
+        "ポップアップがブロックされています",
+        "ブラウザのポップアップ許可をONにしてから、もう一度「PDFを生成」を押してください。",
+        100
+      );
+      return;
+    }
+
+    // すぐ元タブに戻す（処理が止まるのを防ぐ）
+    try { pdfWin.blur(); } catch(e) {}
+    try { window.focus(); } catch(e) {}
+
     saveRouteDataToSessionStorage();
 
     btn.disabled = true;
-    status.style.display = "block";
-    status.className = "alert alert-info";
-    status.textContent = "地図画像を作成中です…（少し待ってください）";
+    setPdfStatus("info", "地図画像を作成中…", "地点ごとの地図画像を作っています。しばらくお待ちください。", 5);
 
-    const segmentMapImages = [];
+    try {
+      const segmentMapImages = [];
+      const totalSteps = routeData.routes.reduce((sum, r) => sum + ((r && r.length) ? r.length : 0), 0);
+      let doneSteps = 0;
 
-    for (let day = 0; day < routeData.routes.length; day++) {
-      const dayRoute = routeData.routes[day] || [];
-      const segArr = [];
+      for (let day = 0; day < routeData.routes.length; day++) {
+        const dayRoute = routeData.routes[day] || [];
+        const segArr = [];
 
-      activeDayIndex = day;
+        activeDayIndex = day;
 
-      // ★OSRM取得 → 一覧描画 の順にする（moveMinutesが埋まってから表示）
-      await renderMapForDay(activeDayIndex);
-      renderRouteListForDay(activeDayIndex);
+        await renderMapForDay(activeDayIndex);
+        renderRouteListForDay(activeDayIndex);
 
-      for (let i = 0; i < dayRoute.length; i++) {
-        status.textContent = "地図画像を作成中… Day " + (day + 1) + " / 地点 " + (i + 1);
-        const b64 = await captureSegmentMap(day, i);
-        segArr.push(b64 || "");
+        for (let i = 0; i < dayRoute.length; i++) {
+          doneSteps++;
+          const pct = totalSteps > 0 ? Math.round((doneSteps / totalSteps) * 85) : 10;
+          setPdfStatus("info", "地図画像を作成中…", "Day " + (day + 1) + " / 地点 " + (i + 1) + " を作成しています。", pct);
+
+          const b64 = await captureSegmentMap(day, i);
+          segArr.push(b64 || "");
+        }
+
+        segmentMapImages.push(segArr);
       }
 
-      segmentMapImages.push(segArr);
+      setPdfStatus("info", "PDF送信準備中…", "PDFを生成しています。完了後に自動で新しいタブへ移動します。", 92);
+
+      const sendData = buildSendPayloadBase(
+        JSON.parse(JSON.stringify(routeData)),
+        segmentMapImages
+      );
+
+      const form = document.getElementById("pdfForm");
+      const jsonInput = document.getElementById("pdfJsonInput");
+      jsonInput.value = JSON.stringify(sendData);
+
+      form.target = targetName;
+      form.submit();
+
+      // 最後にタブ移動
+      try { pdfWin.focus(); } catch(e) {}
+
+      setPdfStatus("success", "PDF生成を開始しました", "新しいタブにPDFが表示されます。", 100);
+      btn.disabled = false;
+
+    } catch (e) {
+      console.error("PDF生成処理エラー:", e);
+      try { pdfWin.close(); } catch(ex) {}
+      setPdfStatus("danger", "PDF生成に失敗しました", "もう一度お試しください。コンソールにもエラーが出ているはずです。", 100);
+      btn.disabled = false;
     }
-
-    status.className = "alert alert-info";
-    status.textContent = "PDF送信準備中です…";
-
-    const sendData = buildSendPayloadBase(
-      JSON.parse(JSON.stringify(routeData)),
-      segmentMapImages
-    );
-
-    const form = document.getElementById("pdfForm");
-    const jsonInput = document.getElementById("pdfJsonInput");
-    jsonInput.value = JSON.stringify(sendData);
-
-    form.submit();
-
-    status.className = "alert alert-success";
-    status.textContent = "PDF生成を開始しました。新しいタブにPDFが表示されます。";
-    btn.disabled = false;
   });
 }
 
@@ -945,7 +1026,6 @@ document.addEventListener("DOMContentLoaded", async function() {
   renderCourseHeader();
   renderDayTabs();
 
-  // ★初期表示も「地図(OSRM)→一覧」
   await renderMapForDay(activeDayIndex);
   renderRouteListForDay(activeDayIndex);
 
