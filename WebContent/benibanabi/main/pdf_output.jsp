@@ -208,7 +208,7 @@ body {
 
 <textarea id="routeDataJson" style="display:none;"><c:out value="${param.routeData}" /></textarea>
 
-<form id="pdfForm" method="post" action="<%= request.getContextPath() %>/PDFOutput" target="_blank">
+<form id="pdfForm" method="post" action="<%= request.getContextPath() %>/PDFOutput">
   <input type="hidden" name="json" id="pdfJsonInput">
 </form>
 
