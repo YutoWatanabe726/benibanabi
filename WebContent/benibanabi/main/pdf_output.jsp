@@ -933,8 +933,6 @@ function openGeneratedPdfInNewTab() {
   }
   const w = window.open(generatedPdfObjectUrl, "_blank", "noopener");
   if (!w) {
-    // もしブロックされた時だけ案内
-    alert("ポップアップがブロックされました。ブラウザの設定で許可してからもう一度押してください。");
   }
 }
 
@@ -972,9 +970,6 @@ function setupPdfButton() {
       alert("ルート情報がありません。先にルートを作成してください。");
       return;
     }
-
-    const ok = confirm("現在のルート情報で PDF を生成しますか？（地点ごとの地図画像も作成します）");
-    if (!ok) return;
 
     saveRouteDataToSessionStorage();
 
