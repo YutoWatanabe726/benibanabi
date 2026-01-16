@@ -13,7 +13,7 @@
 <div class="tab-container">
   <button class="tab" onclick="location.href='yamagata.jsp'">山形への行き方</button>
   <button class="tab active">現地移動手段</button>
-  <button class="tab" onclick="location.href='souvenir.jsp'">お土産・名産品</button>
+  <button class="tab" onclick="location.href='Souvenir.action'">お土産・名産品</button>
 </div>
 
 <main>
@@ -22,24 +22,15 @@
 
   <div class="souvenir-list">
 
-  <!-- レンタカー -->
-<button class="tab"
-  onclick="location.href='http://54.147.142.225:8080/benibanabi/benibanabi/main/reservation.jsp'">
-</button>
-
-<!-- レンタカー -->
-<button class="tab"
-  onclick="location.href='${pageContext.request.contextPath}/main/reservation.jsp'">
-</button>
-
-<a href="${pageContext.request.contextPath}/main/reservation.jsp">
-  <div class="souvenir-item">
-    <img src="../../images/NSX.jpg" alt="レンタカー">
-    <h3>🚗 レンタカー</h3>
-    <p>山形駅や空港で利用可能。主要観光地を巡るのに便利。</p>
-  </div>
-</a>
-
+    <!-- レンタカー -->
+    <a href="http://localhost:8080/benibanabi/benibanabi/main/reservation.jsp"
+       target="_blank" class="link-card">
+      <div class="souvenir-item">
+        <img src="../../images/NSX.jpg" alt="レンタカー">
+        <h3>🚗 レンタカー</h3>
+        <p>山形駅や空港で利用可能。主要観光地を巡るのに便利。</p>
+      </div>
+    </a>
 
     <!-- 電車 -->
     <a href="https://www.navitime.co.jp/diagram/area/06/"
