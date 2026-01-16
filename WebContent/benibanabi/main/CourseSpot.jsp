@@ -1,11 +1,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" isELIgnored="true"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <c:import url="/common/base.jsp">
-	<c:param name="title">
-	コース作成
-	</c:param>
+  <c:param name="title">
+  コース作成
+  </c:param>
 
-	<c:param name="content">
+  <c:param name="content">
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -53,6 +53,25 @@ h3 {
 
 .sidebar button:hover {
   background: #d92929;
+}
+
+/* Day出発時刻 */
+.day-starttime-box {
+  background: #fff7ef;
+  border: 1px solid #ffd0a6;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.day-starttime-box .label {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.day-starttime-box input[type="time"]{
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }
 
 /* ================================
@@ -126,6 +145,20 @@ h3 {
   color: #666;
   font-size: 0.85rem;
   margin-bottom: 4px;
+}
+
+/* 到着/出発表示（追加） */
+.time-row {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: #f6fbff;
+  border: 1px solid #d6ecff;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #245b88;
+}
+.time-row b {
+  color: #1a4b7a;
 }
 
 /* ================================
@@ -456,7 +489,7 @@ h3 {
           <div class="col-md-7">
             <div id="candidateMap"></div>
             <div class="small-muted mt-2">
-              ピンをクリックして候補を選択してください。
+              ピン or 右の候補リストを選択して「この候補で決定」を押してください。
             </div>
           </div>
           <div class="col-md-5">
@@ -486,15 +519,15 @@ h3 {
 
 <script>
 /*
-  統合版スクリプト（省略なし）
+  統合版スクリプト
   - start.jsp からの値受け取り
-  - 山形駅／山形空港 固定座標
-  - 任意住所は Nominatim ジオコーディング
   - Dayごとのマップ＋ルート履歴管理
   - お気に入り Cookie
   - CourseSpotSearch.action(listOnly / spots 検索)
-  - PDFOutput へ JSON 送信（写真URL付き）
-  - ★ゴール住所検索：GSI（国土地理院）優先＋候補ピン選択（今回追加）
+  - ★ゴール住所検索：GSI（国土地理院）優先＋候補ピン選択
+  - ★Dayごとの出発時刻入力
+  - ★各スポットに到着/出発時間を表示
+  - ★最終日のゴール確定後に上へスクロール
 */
 
 /* ------------------------
@@ -510,21 +543,20 @@ let allSpots = []; // モーダルで表示する全スポットを保持
 applyHeaderToDom();
 
 function applyHeaderToDom() {
-	  document.getElementById("courseTitle").textContent = courseTitle || "未設定";
-	  document.getElementById("tripDaysDisplay").textContent = tripDays || 1;
-	  document.getElementById("startPointDisplay").textContent = startPointRaw || "山形駅";
-	  document.getElementById("startTimeDisplay").textContent = startTime || "09:00";
+  document.getElementById("courseTitle").textContent = courseTitle || "未設定";
+  document.getElementById("tripDaysDisplay").textContent = tripDays || 1;
+  document.getElementById("startPointDisplay").textContent = startPointRaw || "山形駅";
+  document.getElementById("startTimeDisplay").textContent = startTime || "09:00";
 
-	  const addrEl = document.getElementById("startAddress");
-	  if (addrEl) {
-	    if (startAddressRaw && startPointRaw === "任意の地点") {
-	      addrEl.textContent = "（" + startAddressRaw + "）";
-	    } else {
-	      addrEl.textContent = "";
-	    }
-	  }
-	}
-
+  const addrEl = document.getElementById("startAddress");
+  if (addrEl) {
+    if (startAddressRaw && startPointRaw === "任意の地点") {
+      addrEl.textContent = "（" + startAddressRaw + "）";
+    } else {
+      addrEl.textContent = "";
+    }
+  }
+}
 
 /* ------------------------
    固定の座標
@@ -538,51 +570,46 @@ const FIXED_STARTS = {
    グローバル状態
    ------------------------ */
 let dayCount = 0;
-let routesByDay = [];   // 日ごと: [{name,lat,lng,type,circle,stayTime,memo,transport,photoUrl}, ...]
+let routesByDay = [];   // 日ごと: [{name,lat,lng,type,circle,stayTime,memo,transport,photoUrl,arriveTime,departTime}, ...]
 let mapsByDay = [];     // 日ごと: { map, markers, routeLine }
 let osrmLinesByDay = [];
+let startTimesByDay = []; // ★追加：Dayごとの出発時刻（"HH:MM"）
+
 /* 移動手段速度（km/h） */
 const speedMap = { "徒歩":5, "車":40, "電車":60 };
 
 /* ------------------------
-   Cookie ユーティリティ
-   ------------------------ */
-function setCookieJSON(name, obj, days) {
-  if (days === undefined) days = 365;
-  const v = encodeURIComponent(JSON.stringify(obj));
-  const d = new Date();
-  d.setTime(d.getTime() + (days*24*60*60*1000));
-  document.cookie = name + "=" + v + ";expires=" + d.toUTCString() + ";path=/";
-}
-function getCookieJSON(name) {
-  const cookies = document.cookie.split(";");
-  for (let i = 0; i < cookies.length; i++) {
-    let c = cookies[i].trim();
-    if (c.indexOf(name + "=") === 0) {
-      try {
-        return JSON.parse(decodeURIComponent(c.substring(name.length+1)));
-      } catch(e) {
-        return null;
-      }
-    }
-  }
-  return null;
-}
-const FAV_COOKIE = "benibanabi_favs_v1";
-
-/* ------------------------
-お気に入り（Cookie）
+   お気に入り（Cookie）
 ------------------------ */
 function loadFavsFromCookie() {
-    const match = document.cookie.match(/favoriteIds=([^;]+)/);
-    if(!match) return [];
-    return decodeURIComponent(match[1]).split(",").map(v => v.trim()).filter(v=>v);
+  const match = document.cookie.match(/favoriteIds=([^;]+)/);
+  if(!match) return [];
+  return decodeURIComponent(match[1]).split(",").map(v => v.trim()).filter(v=>v);
+}
+function saveFavsToCookie(list) {
+  const unique = Array.from(new Set(list.map(String)));
+  document.cookie = "favoriteIds=" + encodeURIComponent(unique.join(",")) + "; path=/; max-age=" + (60*60*24*365);
 }
 
-// Cookieに保存
-function saveFavsToCookie(list) {
-    const unique = Array.from(new Set(list.map(String)));
-    document.cookie = "favoriteIds=" + encodeURIComponent(unique.join(",")) + "; path=/; max-age=" + (60*60*24*365);
+/* ------------------------
+   時刻ユーティリティ（★追加）
+   ------------------------ */
+function hhmmToMin(hhmm) {
+  if (!hhmm || typeof hhmm !== "string") return 0;
+  const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return 0;
+  const hh = Math.min(23, Math.max(0, parseInt(m[1], 10)));
+  const mm = Math.min(59, Math.max(0, parseInt(m[2], 10)));
+  return hh * 60 + mm;
+}
+function minToHhmm(min) {
+  let m = Number(min);
+  if (isNaN(m)) m = 0;
+  // 1日超えは表示だけ 24h+ せずに丸め（必要ならここを拡張）
+  m = ((m % (24*60)) + (24*60)) % (24*60);
+  const hh = String(Math.floor(m / 60)).padStart(2, "0");
+  const mm = String(Math.floor(m % 60)).padStart(2, "0");
+  return hh + ":" + mm;
 }
 
 /* ------------------------
@@ -628,9 +655,7 @@ async function geocodeCandidatesGSI(address) {
   const data = await res.json();
   if (!Array.isArray(data) || data.length === 0) return [];
 
-  // 先頭から最大10件（多すぎると選べないため）
   const slice = data.slice(0, 10);
-
   return slice.map((d, idx) => {
     const lng = d?.geometry?.coordinates?.[0];
     const lat = d?.geometry?.coordinates?.[1];
@@ -657,12 +682,26 @@ function createDaySection(day, startLat, startLng, startName) {
   const mapId = "mapDay" + day;
   const sidebarId = "sidebarDay" + day;
 
+  // ★Day出発時刻（day=1はstart.jspのstartTimeをデフォ、day>1は同じ値を仮置き→ユーザーが変更）
+  const defaultStartTime = (startTimesByDay[day - 1] != null) ? startTimesByDay[day - 1]
+                        : (day === 1 ? (startTime || "09:00") : (startTime || "09:00"));
+  startTimesByDay[day - 1] = defaultStartTime;
+
   const html = `
     <div class="day-section" id="${sectionId}" style="width:100%">
       <h5>Day ${day}</h5>
       <div style="display:flex; width:100%;">
         <div id="${sidebarId}" class="sidebar card p-2" style="width:30%;">
+
+          <!-- ★追加：Day出発時刻入力 -->
+          <div class="day-starttime-box">
+            <div class="label">Day${day} 出発時刻</div>
+            <input type="time" class="dayStartTimeInput" data-day="${day}" value="${defaultStartTime}">
+            <div class="small-muted mt-1">※この日のスタート地点を出発する時刻</div>
+          </div>
+
           <div class="route-history mt-3" id="routeHistoryDay${day}"></div>
+
           <button class="btn btn-primary w-100 mb-2 nextSpotBtn">次の地点へ</button>
           <button class="btn btn-warning w-100 mb-2 addMealBtn">食事スポット追加</button>
           <button class="btn btn-success w-100 mb-2 setGoalBtn">ゴール設定</button>
@@ -690,7 +729,6 @@ function createDaySection(day, startLat, startLng, startName) {
   }, 200);
 
   // スタート地点を履歴に追加
-  // （復元時はこの後に上書きされる想定なので、ここは従来通りでOK）
   addRouteHistory(day - 1, startName, startLat, startLng, "start", null, null);
 }
 
@@ -760,6 +798,55 @@ function calcDistance(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
+/* ------------------------
+   ★到着/出発時刻の計算（追加）
+   - transportは「その地点に来る移動手段」として既存仕様に合わせる
+   ------------------------ */
+ function computeTimeline(dayIndex) {
+  const list = routesByDay[dayIndex] || [];
+  if (list.length === 0) return;
+
+  const startHHMM = startTimesByDay[dayIndex] || (startTime || "09:00");
+  let t = hhmmToMin(startHHMM);
+
+  for (let i = 0; i < list.length; i++) {
+    const curr = list[i];
+    const prev = i > 0 ? list[i - 1] : null;
+
+    if (!prev) {
+      // ★start：出発時刻 = 開始時刻 + スタート滞在時間
+      const stay0 = (curr.stayTime != null) ? Number(curr.stayTime) : 0;
+
+      curr.arriveTime = minToHhmm(t);
+
+      t += (isNaN(stay0) ? 0 : stay0);
+      curr.departTime = minToHhmm(t);
+
+      continue;
+    }
+
+    // 移動時間（prev -> curr）
+    const dist = calcDistance(prev.lat, prev.lng, curr.lat, curr.lng);
+    const transport = curr.transport || "徒歩";
+    const speed = speedMap[transport] || 5;
+    const travelMin = Math.round(dist / speed * 60);
+
+    t += travelMin;
+    curr.arriveTime = minToHhmm(t);
+
+    // ゴールは出発なし
+    if (curr.type === "goal") {
+      curr.departTime = "";
+      continue;
+    }
+
+    const stay = (curr.stayTime != null) ? Number(curr.stayTime) : 0;
+    t += (isNaN(stay) ? 0 : stay);
+    curr.departTime = minToHhmm(t);
+  }
+}
+
+
 function updateEstimatedTime(dayIndex) {
   const route = routesByDay[dayIndex] || [];
   const sectionSelector = "#daySection" + (dayIndex + 1);
@@ -800,10 +887,6 @@ function updateEstimatedTime(dayIndex) {
 /* ------------------------
    履歴（ルート）管理
    ------------------------ */
-/**
- * ★修正ポイント：
- * 復元時に photoUrl / stayTime / memo / transport を渡せるように引数追加
- */
 function addRouteHistory(dayIndex, name, lat, lng, type, existingCircle, photoUrl, stayTimeOpt, memoOpt, transportOpt) {
   if (type === undefined) type = "normal";
   routesByDay[dayIndex] = routesByDay[dayIndex] || [];
@@ -829,7 +912,9 @@ function addRouteHistory(dayIndex, name, lat, lng, type, existingCircle, photoUr
     stayTime: (stayTimeOpt != null && stayTimeOpt !== "") ? Number(stayTimeOpt) : defaultStay,
     memo: (memoOpt != null) ? String(memoOpt) : "",
     transport: (transportOpt != null && transportOpt !== "") ? String(transportOpt) : "徒歩",
-    photoUrl: photoUrl || null
+    photoUrl: photoUrl || null,
+    arriveTime: "",
+    departTime: ""
   });
 
   renderRouteHistory(dayIndex);
@@ -841,6 +926,9 @@ function renderRouteHistory(dayIndex) {
   const list = routesByDay[dayIndex] || [];
   const container = $(`#routeHistoryDay${dayIndex+1}`);
   container.empty();
+
+  // ★到着/出発計算（レンダリング前）
+  computeTimeline(dayIndex);
 
   for (let i = 0; i < list.length; i++) {
     const item = list[i];
@@ -868,6 +956,16 @@ function renderRouteHistory(dayIndex) {
 
     const stayTime = item.stayTime != null ? item.stayTime : 30;
     const memo = item.memo || "";
+    const arrive = item.arriveTime || "";
+    const depart = item.departTime || "";
+
+    const timeRowHtml = `
+      <div class="time-row">
+        <b>到着</b>: <span class="arriveLabel">${arrive || "--:--"}</span>
+        <span style="margin:0 8px;">/</span>
+        <b>出発</b>: <span class="departLabel">${depart || (item.type === "goal" ? "--:--" : "--:--")}</span>
+      </div>
+    `;
 
     const cardHtml = $(`
       <div class="route-card route-item" data-index="${i}">
@@ -878,7 +976,8 @@ function renderRouteHistory(dayIndex) {
           <button class="btn btn-sm btn-danger removeBtn">×</button>
         </div>
         <div class="card-body">
-          <div>滞在時間:
+          ${timeRowHtml}
+          <div class="mt-2">滞在時間:
             <input type="number" class="stayTime" value="${stayTime}" data-index="${i}" style="width:60px"/> 分
           </div>
           <div>メモ:
@@ -897,28 +996,29 @@ function renderRouteHistory(dayIndex) {
     const target = routesByDay[dayIndex][index];
 
     if (dayIndex === 0 && target.type === "start") {
-        if (confirm("スタート地点を変更しますか？\n「OK」でスタート地点選択画面に戻ります。")) {
-            window.location.href = "start.jsp";
-        }
-        return;
+      if (confirm("スタート地点を変更しますか？\n「OK」でスタート地点選択画面に戻ります。")) {
+        window.location.href = "start.jsp";
+      }
+      return;
     }
 
     if (target.type === "start") {
-        if (confirm("この日のスタート地点を削除すると、前日のゴールとこの日以降のルートも削除されます。よろしいですか？")) {
-            const prevDayIndex = dayIndex - 1;
-            const prevRoutes = routesByDay[prevDayIndex] || [];
-            const goalIndex = prevRoutes.findIndex(r => r.type === "goal");
-            if (goalIndex >= 0) removeRoute(prevDayIndex, goalIndex);
+      if (confirm("この日のスタート地点を削除すると、前日のゴールとこの日以降のルートも削除されます。よろしいですか？")) {
+        const prevDayIndex = dayIndex - 1;
+        const prevRoutes = routesByDay[prevDayIndex] || [];
+        const goalIndex = prevRoutes.findIndex(r => r.type === "goal");
+        if (goalIndex >= 0) removeRoute(prevDayIndex, goalIndex);
 
-            for (let d = dayCount - 1; d >= dayIndex; d--) {
-                const sectionId = "#daySection" + (d + 1);
-                $(sectionId).remove();
-                routesByDay[d] = [];
-                mapsByDay[d] = null;
-            }
-            dayCount = dayIndex;
+        for (let d = dayCount - 1; d >= dayIndex; d--) {
+          const sectionId = "#daySection" + (d + 1);
+          $(sectionId).remove();
+          routesByDay[d] = [];
+          mapsByDay[d] = null;
+          startTimesByDay[d] = null;
         }
-        return;
+        dayCount = dayIndex;
+      }
+      return;
     }
 
     removeRoute(dayIndex, index);
@@ -933,37 +1033,38 @@ function renderRouteHistory(dayIndex) {
       list[idx].transport = val;
     }
 
-    const prev = idx > 0 ? list[idx - 1] : null;
-    if (prev && list[idx]) {
-      const dist = calcDistance(prev.lat, prev.lng, list[idx].lat, list[idx].lng);
-      const speed = speedMap[val] || 5;
-      const timeMin = Math.round(dist / speed * 60);
-
-      container
-        .find('.arrow-card[data-index="' + idx + '"] .estimatedTime')
-        .text(timeMin);
-    }
-
     updateEstimatedTime(dayIndex);
     redrawRouteLine(dayIndex);
     saveRoutesToLocal();
+
+    // ★時間再計算して反映
+    computeTimeline(dayIndex);
+    renderRouteHistory(dayIndex);
   });
 
   container.find(".stayTime").off("change").on("change", function(){
-    const idx = $(this).data("index");
-    const val = parseInt($(this).val(), 10);
-    const list = routesByDay[dayIndex] || [];
-    if (!isNaN(val) && list[idx]) {
-      list[idx].stayTime = val;
-      updateEstimatedTime(dayIndex);
-    }
-  });
+	  const idx = $(this).data("index");
+	  const val = parseInt($(this).val(), 10);
+	  const list = routesByDay[dayIndex] || [];
+	  if (!isNaN(val) && list[idx]) {
+	    list[idx].stayTime = val;
+
+	    // ★時間再計算 & 再描画（スタート含め反映）
+	    computeTimeline(dayIndex);
+	    renderRouteHistory(dayIndex);
+
+	    // 保存
+	    saveRoutesToLocal();
+	  }
+	});
+
 
   container.find(".memoInput").off("input").on("input", function(){
     const idx = $(this).data("index");
     const list = routesByDay[dayIndex] || [];
     if (list[idx]) {
       list[idx].memo = $(this).val();
+      saveRoutesToLocal();
     }
   });
 
@@ -1031,13 +1132,13 @@ function removeRoute(dayIndex, index) {
 /* ------------------------
    エリア・タグ（DB連動）＋スポット検索
    ------------------------ */
-function populateAreaAndTagSelects(areaContainerId, tagContainerId) {
+ function populateAreaAndTagSelects(areaContainerId, tagContainerId) {
   $.ajax({
-    url:"CourseSpotSearch.action",
-    type:"POST",
-    data:{ listOnly:"true" },
-    dataType:"json",
-    success:function(data) {
+    url: "CourseSpotSearch.action",
+    type: "POST",
+    data: { listOnly: "true" },
+    dataType: "json",
+    success: function(data) {
       const areas = data.areas || [];
       const tags  = data.tags  || [];
 
@@ -1073,12 +1174,9 @@ function populateAreaAndTagSelects(areaContainerId, tagContainerId) {
         `);
       });
     },
-    error:function(xhr, status, err) {
-      console.error("エリア・タグ一覧取得エラー", status, err);
-      alert("エリア・タグの取得に失敗しました。");
-    }
   });
 }
+
 
 function searchSpots(keyword, areas, tags, favOnly, targetSelector) {
   $.ajax({
@@ -1093,8 +1191,6 @@ function searchSpots(keyword, areas, tags, favOnly, targetSelector) {
     dataType: "json",
     success: function(data) {
       if (favOnly && (!data.spots || data.spots.length === 0)) {
-        const favIds = loadFavsFromCookie().map(Number);
-        console.log("[INFO] favOnly でサーバー返却0件、Cookieに従って描画可能なスポットは:", favIds);
         allSpots = [];
       } else {
         allSpots = data.spots || [];
@@ -1198,37 +1294,6 @@ function updateSpotCards(favOnly) {
   renderSpotCards(filtered);
 }
 
-function updateFavStars() {
-  const favs = loadFavsFromCookie().map(String);
-
-  $(".card[data-id]").each(function () {
-    const id = String($(this).data("id"));
-
-    const star = $(this).find(".favorite-star");
-    if (star.length === 0) return;
-
-    const isActive = favs.includes(id);
-
-    star
-      .text(isActive ? "★" : "☆")
-      .toggleClass("active", isActive);
-
-    star.off("click").on("click", function (e) {
-      e.stopPropagation();
-
-      let updatedFavs = loadFavsFromCookie().map(String);
-      if (updatedFavs.includes(id)) {
-        updatedFavs = updatedFavs.filter(x => x !== id);
-      } else {
-        updatedFavs.push(id);
-      }
-
-      saveFavsToCookie(updatedFavs);
-      updateFavStars();
-    });
-  });
-}
-
 /* ------------------------
    イベントハンドラ（その他）
    ------------------------ */
@@ -1236,6 +1301,21 @@ $(document).on("click", ".nextSpotBtn", function(){
   const modalEl = document.getElementById("spotModal");
   const modal = new bootstrap.Modal(modalEl);
   modal.show();
+});
+
+// ★Day出発時刻変更
+$(document).on("change", ".dayStartTimeInput", function(){
+  const day = parseInt($(this).data("day"), 10); // 1-based
+  const val = $(this).val() || "09:00";
+  if (!isNaN(day) && day >= 1) {
+    startTimesByDay[day - 1] = val;
+    saveRoutesToLocal();
+
+    // その日の表示更新
+    const dayIndex = day - 1;
+    computeTimeline(dayIndex);
+    renderRouteHistory(dayIndex);
+  }
 });
 
 $(document).on("click", ".addMealBtn", function(){
@@ -1372,7 +1452,6 @@ function showCandidatesOnMap(list) {
     });
     candidateMarkers.push(m);
 
-    // 右側リスト
     const item = $(`
       <div class="candidate-item" data-idx="${idx}">
         <div><strong>候補 ${idx + 1}</strong></div>
@@ -1388,7 +1467,6 @@ function showCandidatesOnMap(list) {
     $("#candidateList").append(item);
   });
 
-  // 画面を表示してからサイズ調整（モーダルは表示前にinvalidateするとズレる）
   setTimeout(function(){
     try { candidateMap.invalidateSize(true); } catch(e) {}
     try {
@@ -1413,6 +1491,7 @@ function applyGoalSelection(dayIndex, lat, lng, titleLabel) {
     mapsByDay[dayIndex].map.setView([lat, lng], 14);
   }
 
+  // 次の日生成
   if (dayCount < tripDays) {
     createDaySection(dayCount + 1, lat, lng, formattedAddress);
 
@@ -1420,11 +1499,12 @@ function applyGoalSelection(dayIndex, lat, lng, titleLabel) {
     if (nextDaySection) {
       nextDaySection.scrollIntoView({ behavior:"smooth", block:"start" });
     }
-
-    alert("ゴールを設定しました。次の日のスタート地点として登録されました。");
   } else {
-    alert("ゴールを設定しました。これ以上の日程はありません。");
+    // ★最終日のゴール確定後：上へスクロール（全ルート確定ボタンへ行きやすくする）
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  saveRoutesToLocal();
 }
 
 /* ------------------------
@@ -1441,21 +1521,16 @@ $("#goalAddressSubmitBtn").on("click", async function(){
   const dayIndex = window.currentGoalDayIndex;
   if (dayIndex == null) return;
 
-  // goalModal を閉じる
   const goalModalEl = document.getElementById("goalModal");
   const goalModal = bootstrap.Modal.getInstance(goalModalEl);
   if (goalModal) goalModal.hide();
 
   try {
     const normalized = normalizeAddress(address);
-    console.log("検索住所:", normalized);
 
-    // ① まずGSIで候補を取る
     let candidates = await geocodeCandidatesGSI(normalized);
 
-    // ② GSIが0件なら保険でNominatim（単発）
     if (!candidates || candidates.length === 0) {
-      console.warn("GSIで0件。Nominatimへフォールバックします。");
       const nomi = await geocodeAddressNominatim(normalized);
       if (!nomi || nomi.lat == null || nomi.lng == null) {
         alert("住所が見つかりませんでした。入力を確認してください。");
@@ -1465,21 +1540,18 @@ $("#goalAddressSubmitBtn").on("click", async function(){
       return;
     }
 
-    // ③ 候補が1件なら即採用
     if (candidates.length === 1) {
       const c = candidates[0];
       applyGoalSelection(dayIndex, c.lat, c.lng, c.title || address);
       return;
     }
 
-    // ④ 複数なら候補選択モーダルへ
     showCandidatesOnMap(candidates);
 
     const candModalEl = document.getElementById("candidateModal");
     const candModal = new bootstrap.Modal(candModalEl);
     candModal.show();
 
-    // 初期は1件目を自動選択（やめたければコメントアウト）
     setTimeout(function(){
       setCandidateSelected(0);
       try {
@@ -1488,7 +1560,6 @@ $("#goalAddressSubmitBtn").on("click", async function(){
       } catch(e) {}
     }, 300);
 
-    // 決定ボタン
     $("#candidateConfirmBtn").off("click").on("click", function(){
       if (!candidateSelected) {
         alert("候補を選択してください。");
@@ -1498,19 +1569,14 @@ $("#goalAddressSubmitBtn").on("click", async function(){
       const lng = parseFloat(candidateSelected.lng);
       const label = candidateSelected.title || address;
 
-      // 候補モーダル閉じる
       const inst = bootstrap.Modal.getInstance(candModalEl);
       if (inst) inst.hide();
 
       applyGoalSelection(dayIndex, lat, lng, label);
     });
 
-    // 戻る（候補モーダルを閉じたあと、goalModalに戻したい場合）
     candModalEl.addEventListener("hidden.bs.modal", function handler(){
-      // 選択確定済みの場合は戻さない（routeに追加されるので）
-      // 未確定で閉じた場合だけ再入力できるように戻す
       if (!candidateSelected) {
-        // もう一度入力し直したいとき用
         try {
           const gm = new bootstrap.Modal(goalModalEl);
           gm.show();
@@ -1522,7 +1588,6 @@ $("#goalAddressSubmitBtn").on("click", async function(){
   } catch(err) {
     console.error("ゴール検索エラー:", err);
     alert("住所の検索中にエラーが発生しました。");
-    // 失敗時は入力モーダルを再表示
     try {
       const gm = new bootstrap.Modal(document.getElementById("goalModal"));
       gm.show();
@@ -1537,6 +1602,10 @@ function syncRoutesFromDOM() {
   $(".day-section").each(function(dayIdx){
     const $section = $(this);
     const list = routesByDay[dayIdx] || [];
+
+    // Day出発時刻も同期
+    const t = $section.find(".dayStartTimeInput").val();
+    if (t) startTimesByDay[dayIdx] = t;
 
     $section.find(".route-item").each(function(){
       const idx = $(this).data("index");
@@ -1557,6 +1626,11 @@ function syncRoutesFromDOM() {
       }
     });
   });
+
+  // 時刻計算
+  for (let d = 0; d < dayCount; d++) {
+    computeTimeline(d);
+  }
 }
 
 function buildPdfPayload() {
@@ -1566,6 +1640,8 @@ function buildPdfPayload() {
     startPoint: startPointRaw,
     startAddress: startAddressRaw,
     startTime: startTime,
+    // ★追加：Dayごとの出発時刻
+    startTimesByDay: startTimesByDay || [],
     routes: []
   };
 
@@ -1580,7 +1656,9 @@ function buildPdfPayload() {
         stayTime: r.stayTime || 0,
         memo: r.memo || "",
         transport: r.transport || "徒歩",
-        photoUrl: r.photoUrl || ""
+        photoUrl: r.photoUrl || "",
+        arriveTime: r.arriveTime || "",
+        departTime: r.departTime || ""
       };
     });
     payload.routes.push(simpleDay);
@@ -1613,22 +1691,6 @@ $("#confirmRouteBtn").on("click", function(){
   document.body.appendChild(form);
   form.submit();
 });
-
-/* ------------------------
-   住所整形（表示用）
-   ------------------------ */
-function formatAddress(addr) {
-  if (!addr) return "";
-  const parts = [];
-  if (addr.state) parts.push(addr.state);
-  if (addr.city || addr.town || addr.municipality)
-    parts.push(addr.city || addr.town || addr.municipality);
-  if (addr.suburb || addr.neighbourhood)
-    parts.push(addr.suburb || addr.neighbourhood);
-  if (addr.road) parts.push(addr.road);
-  if (addr.house_number) parts.push(addr.house_number);
-  return parts.join("");
-}
 
 /* ------------------------
    ユーティリティ
@@ -1670,27 +1732,29 @@ $(document).ready(function(){
     mapsByDay.forEach(m => { try { m.map.invalidateSize(); } catch(e){} });
   }
 
-  // --------------------------
-  // LocalStorage から復元（★ここが写真が消える原因だったので修正）
-  // --------------------------
   const savedData = loadRoutesFromLocal();
   if (savedData && savedData.routes) {
-	  if (savedData.courseTitle !== undefined) courseTitle = savedData.courseTitle;
-	  if (savedData.tripDays !== undefined) tripDays = savedData.tripDays;
-	  if (savedData.startPoint !== undefined) startPointRaw = savedData.startPoint;
-	  if (savedData.startAddress !== undefined) startAddressRaw = savedData.startAddress;
-	  if (savedData.startTime !== undefined) startTime = savedData.startTime;
+    if (savedData.courseTitle !== undefined) courseTitle = savedData.courseTitle;
+    if (savedData.tripDays !== undefined) tripDays = savedData.tripDays;
+    if (savedData.startPoint !== undefined) startPointRaw = savedData.startPoint;
+    if (savedData.startAddress !== undefined) startAddressRaw = savedData.startAddress;
+    if (savedData.startTime !== undefined) startTime = savedData.startTime;
 
-	  applyHeaderToDom();
-	  routesByDay = savedData.routes.map(day => day.map(r => ({ ...r })));
+    // ★Day出発時刻復元
+    if (Array.isArray(savedData.startTimesByDay)) {
+      startTimesByDay = savedData.startTimesByDay.slice(0);
+    }
+
+    applyHeaderToDom();
+    routesByDay = savedData.routes.map(day => day.map(r => ({ ...r })));
     dayCount = routesByDay.length;
 
     routesByDay.forEach((dayRoute, d) => {
       dayRoute.forEach((r, i) => {
         if (i === 0) {
           initStartSection(r.lat, r.lng, r.name, d+1);
+          // Day出発時刻 input に反映（createDaySection時に startTimesByDay を参照）
         } else {
-          // ★photoUrl / stayTime / memo / transport を復元して追加
           addRouteHistory(
             d,
             r.name,
@@ -1705,6 +1769,9 @@ $(document).ready(function(){
           );
         }
       });
+      // ★時間再計算
+      computeTimeline(d);
+      renderRouteHistory(d);
     });
 
     routesByDay.forEach((dayRoute, d) => {
@@ -1714,6 +1781,9 @@ $(document).ready(function(){
     });
 
   } else {
+    // 初期：Day1開始時刻
+    startTimesByDay[0] = startTime || "09:00";
+
     if (startPointRaw === "任意の地点") {
       if (startAddressRaw && startAddressRaw.trim().length > 0) {
         geocodeAddressNominatim(startAddressRaw)
@@ -1741,7 +1811,6 @@ $(document).ready(function(){
   spotModalEl.addEventListener("show.bs.modal", function () {
     if(allSpots && allSpots.length > 0) {
       updateSpotCards($("#favOnlyCheck").prop("checked"));
-      updateFavStars();
     } else {
       $.ajax({
         url: "CourseSpotSearch.action",
@@ -1750,7 +1819,6 @@ $(document).ready(function(){
         success: function(data){
           allSpots = data.spots || [];
           updateSpotCards($("#favOnlyCheck").prop("checked"));
-          updateFavStars();
         },
         error: function(xhr, status, err){
           console.error("初期スポット取得エラー", status, err);
@@ -1761,7 +1829,6 @@ $(document).ready(function(){
 
   $(document).on("change", "#favOnlyCheck", function(){
     updateSpotCards($(this).prop("checked"));
-    setTimeout(updateFavStars, 50);
   });
 
   $(".day-section").on("change", ".stayTime, .transportSelect", function(){
@@ -1780,5 +1847,5 @@ $(document).ready(function(){
 
 </body>
 </html>
-	</c:param>
+  </c:param>
 </c:import>
