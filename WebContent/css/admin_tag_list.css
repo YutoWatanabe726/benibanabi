@@ -1,0 +1,131 @@
+/* ===== 管理者タグ一覧CSS ===== */
+
+body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    background-color: #ffffff;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+}
+
+/* ===== コンテナ ===== */
+.container {
+    position: relative;
+    margin: 80px auto 40px;
+    padding: 25px 30px;
+    background-color: #f8f8f8;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    max-width: 800px;
+    text-align: center;
+}
+
+/* ===== 見出し ===== */
+h2 {
+    font-weight: 600;
+    color: #000000;
+    border-bottom: 1px solid #cccccc;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* ===== テーブル全体（未使用でも残してOK） ===== */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    background-color: #ffffff;
+}
+
+.table th,
+.table td {
+    border: 1px solid #cccccc;
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.table th {
+    background-color: #000000;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+
+/* ===== 削除ボタン ===== */
+.btn-danger {
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    border: 1px solid #990000;
+    background-color: #ff0000;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background-color: #cc0000;
+}
+
+/* ===============================
+   タグ表示（ピル型・6個で改行）
+================================ */
+
+/* タグ全体の並び */
+.tag-container {
+    display: grid;
+    grid-template-columns: repeat(6, max-content);
+    gap: 14px;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+/* チェックボックスは非表示 */
+.tag-item input {
+    display: none;
+}
+
+/* タグ（未選択） */
+.tag-label {
+    display: inline-block;
+    padding: 10px 22px;
+    border: 2px solid #222;
+    border-radius: 999px;
+    background-color: #ffffff;
+    color: #000000;
+    font-size: 15px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+/* ホバー時 */
+.tag-label:hover {
+    background-color: #f2f2f2;
+}
+
+/* 選択中のタグ */
+.tag-item input:checked + .tag-label {
+    background-color: #000000;
+    color: #ffffff;
+    border-color: #000000;
+}
+/* ===== 戻るリンク（右上に固定） ===== */
+.container > a {
+    position: absolute;
+    right: 30px;
+    top: 25px;
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 1px solid #000000;
+    background-color: #000000;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.container > a:hover {
+    background-color: #333333;

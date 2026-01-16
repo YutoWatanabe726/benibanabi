@@ -31,7 +31,7 @@
             <!-- 説明 -->
             <div class="mb-3">
                 <label class="form-label">名産品説明</label>
-                <textarea name="souvenirContent" class="form-control" rows="4">${souvenir.souvenirContent}</textarea>
+                <textarea name="souvenirContent" class="form-control" rows="4" maxlength="50" placeholder="50文字以内で入力してください">${souvenir.souvenirContent}</textarea>
             </div>
 
             <!-- 四季 -->
