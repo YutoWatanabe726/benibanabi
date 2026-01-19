@@ -41,13 +41,16 @@
     box-shadow: 0 6px 12px rgba(217,41,41,0.25);
 }
 
-/* スポット写真 */
+/* スポット写真（レスポンシブ対応） */
 .card.detail-box img.card-img {
     display: block;
     margin: 0 auto 15px auto; /* 中央寄せ */
+    width: 100%;
     max-width: 500px;
+    height: auto;
     border-radius: 10px;
 }
+
 
 .detail-box {
     background: #fff;
@@ -134,3 +137,42 @@ textarea {
     margin-top: 15px;
 }
 
+
+
+
+/* ===============================
+   スマホ対応（768px以下）
+================================= */
+@media screen and (max-width: 768px) {
+
+
+
+    /* お気に入りボタンを absolute 解除 */
+    .favorite-star {
+        position: static;
+        margin-top: 10px;
+        width: 100%;
+        font-size: 14px;
+        padding: 12px;
+    }
+
+}
+
+/* ===============================
+   スポット詳細：ボタン行を口コミ一覧と同じ挙動に
+================================= */
+.button-row {
+    display: flex;
+    justify-content: center;   /* 中央寄せ（口コミ一覧と同じ） */
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+
+
+/* お気に入りボタンは独立挙動 */
+.button-row .favorite-star {
+    width: auto;
+    align-self: center;
+}

@@ -79,6 +79,7 @@ h2 {
     gap: 14px;
     margin-top: 20px;
     justify-content: center;
+    margin-bottom: 30px; /* ← ここでボタンとの間に余白を追加 */
 }
 
 /* チェックボックスは非表示 */
