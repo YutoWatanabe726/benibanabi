@@ -36,8 +36,7 @@
 <meta charset="UTF-8">
 <title><%= spot.getSpotName() %> の口コミ一覧</title>
 
-<!-- 共通 CSS -->
-<link rel="stylesheet" href="<%= request.getContextPath() %>/css/style.css">
+
 <!-- 口コミ一覧専用 CSS -->
 <link rel="stylesheet" href="<%= request.getContextPath() %>/css/spot_reviews.css">
 

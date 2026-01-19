@@ -4,6 +4,7 @@
 <%@ page import="bean.Tag" %>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
+
 <c:import url="/common/base.jsp">
     <c:param name="title">
         観光スポット一覧
@@ -39,11 +40,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>観光スポット一覧</title>
 
 <!-- CSS読み込み -->
-<link rel="stylesheet" href="<%= request.getContextPath() %>/css/style.css">
+
 <link rel="stylesheet" href="<%= request.getContextPath() %>/css/spotList.css">
 
 <script>

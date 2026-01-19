@@ -42,22 +42,30 @@ h1 {
     margin-bottom: 15px;
 }
 
-/* 戻るボタン */
+/* ===============================
+      ボタン統一（赤～オレンジ系グラデーション）
+================================= */
+.more-btn,
 .back-btn {
     display: inline-block;
-    margin-top: 25px;
-    background: linear-gradient(90deg, #FFB35E, #D92929);
-    color: white;
-    padding: 10px 18px;
-    text-decoration: none;
-    border-radius: 6px;
+    margin-top: 10px;
+    padding: 14px 34px;
+    font-size: 1.2rem;
+    color: #fff;
     font-weight: 700;
+    text-decoration: none;
+    border-radius: 50px;
+    background: linear-gradient(90deg, #FFB35E, #D92929);
+    box-shadow: 0 10px 22px rgba(217,41,41,0.35);
     transition: 0.3s;
 }
 
+.more-btn:hover,
 .back-btn:hover {
-    background: linear-gradient(90deg, #D92929, #FFB35E);
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(217,41,41,0.48);
 }
+
 
 /* ===============================
    ページネーション
@@ -109,4 +117,85 @@ h1 {
     border-radius: 50%;
     background: linear-gradient(90deg, #D92929, #FF7A45);
     box-shadow: 0 6px 16px rgba(217,41,41,0.45);
+}
+
+/* ===============================
+   スマホ対応（口コミ一覧）
+================================= */
+@media screen and (max-width: 768px) {
+
+    /* スポット情報を縦並びに */
+    .spot-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    /* 写真は画面幅に合わせる */
+    .spot-photo {
+        width: 100%;
+        max-width: 320px;
+        height: auto;
+    }
+
+    /* 説明文は中央寄せ＋読みやすく */
+    .spot-info p {
+        font-size: 15px;
+        line-height: 1.7;
+        text-align: left;
+        width: 100%;
+    }
+
+    /* タイトルも少し小さく */
+    h1 {
+        font-size: 20px;
+    }
+
+    /* ページネーション縮小 */
+    .pagination {
+        gap: 6px;
+    }
+
+    .pagination .nav-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+    }
+
+    .pagination .current-page {
+        min-width: 48px;
+        height: 48px;
+        line-height: 48px;
+        font-size: 18px;
+    }
+}
+
+/* ===============================
+   スマホ版：写真の下に説明文
+================================= */
+@media screen and (max-width: 768px) {
+
+    /* 横並び → 縦並び */
+    .spot-info {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* 写真を先頭に */
+    .spot-photo {
+        width: 100%;
+        max-width: 320px;
+        height: auto;
+        order: 1;
+    }
+
+    /* 説明文を写真の下へ */
+    .spot-info p {
+        order: 2;
+        width: 100%;
+        margin-top: 10px;
+        font-size: 15px;
+        line-height: 1.7;
+        text-align: left;
+    }
 }

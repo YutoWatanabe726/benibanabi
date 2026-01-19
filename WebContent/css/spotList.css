@@ -157,6 +157,7 @@ body {
 }
 
 /* スマホ対応: 列幅を調整 */
+/*
 @media (max-width: 500px) {
     .modal-content ul {
         grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
@@ -165,6 +166,7 @@ body {
         font-size: 18px;
     }
 }
+*/
 
 
 /* ===============================
