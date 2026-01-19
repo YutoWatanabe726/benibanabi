@@ -176,3 +176,19 @@ textarea {
     width: auto;
     align-self: center;
 }
+
+/* ===============================
+   口コミ入力 文字数カウンタ
+================================= */
+.char-count {
+    margin-top: 8px;
+    text-align: right;
+    font-size: 14px;
+    color: #666;
+}
+
+.char-count span {
+    font-weight: 700;
+    color: #D92929; /* 赤系で強調 */
+}
+
