@@ -353,6 +353,135 @@ h3 {
   box-shadow: 0 0 0 2px rgba(255,112,67,0.18);
 }
 
+/* ================================
+   📱 スマホ対応（600px以下）
+================================ */
+@media (max-width: 600px) {
+
+  body {
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    margin: 10px 0;
+  }
+
+  /* 上のコース情報 */
+  .container.mb-3 {
+    padding: 12px;
+  }
+
+  .container.mb-3 .row {
+    flex-direction: column;
+  }
+
+  .container.mb-3 .col-md-8,
+  .container.mb-3 .col-md-4 {
+    width: 100%;
+    text-align: left !important;
+  }
+
+  #confirmRouteBtn {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  /* Day全体 */
+  #routesContainer .day-section {
+    padding: 10px;
+  }
+
+  /* サイドバー＋マップを縦並びに */
+  #routesContainer .day-section > div {
+    flex-direction: column !important;
+  }
+
+  .sidebar {
+    width: 100% !important;
+    margin-bottom: 10px;
+  }
+
+  .map-container {
+    width: 100% !important;
+    height: 300px !important;
+    min-height: 300px;
+  }
+
+  /* ルート履歴 */
+  .route-history {
+    max-height: 300px;
+  }
+
+  /* カード */
+  .route-card, .route-item {
+    font-size: 0.95rem;
+  }
+
+  .route-card .card-header {
+    font-size: 0.95rem;
+    flex-wrap: wrap;
+  }
+
+  /* 到着/出発時間表示 */
+  .time-row {
+    font-size: 0.85rem;
+  }
+
+  /* 矢印カード */
+  .arrow-card {
+    font-size: 0.8rem;
+    padding: 6px 8px;
+    white-space: normal;
+  }
+
+  .arrow-card select {
+    font-size: 0.85rem;
+  }
+
+  /* 入力系は16px以上（iPhoneズーム防止） */
+  input, select, textarea, button {
+    font-size: 16px !important;
+  }
+
+  /* 滞在時間入力 */
+  .stayTime {
+    width: 80px;
+  }
+
+  /* モーダル内マップ */
+  #candidateMap {
+    height: 240px;
+  }
+
+  #candidateList {
+    max-height: 180px;
+  }
+
+  /* モーダルの中も縦積み */
+  .modal-body .row {
+    flex-direction: column;
+  }
+
+  .modal-body .col-md-7,
+  .modal-body .col-md-5 {
+    width: 100%;
+  }
+
+  /* ボタンを押しやすく */
+  .btn {
+    padding: 12px 20px;
+    font-size: 1rem;
+  }
+
+  .sidebar .btn {
+    font-size: 1rem;
+    padding: 14px;
+  }
+
+}
+
 </style>
 </head>
 
