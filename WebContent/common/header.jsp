@@ -124,13 +124,13 @@
 
   <!-- ロゴ -->
   <div class="logo">
-    <a href="/benibanabi/benibanabi/index.jsp"><img src="<c:url value='/images/logo_beninavi.png'/>" alt="べにばナビ ロゴ"></a>
+    <img src="<c:url value='/images/logo_beninavi.png'/>" alt="べにばナビ ロゴ">
   </div>
 
   <!-- メニュー -->
   <nav id="navMenu">
     <a href="<c:url value='/benibanabi/index.jsp'/>">トップ</a>
-    <a href="<c:url value='/benibanabi/main/start.jsp'/>" id="courseLink">コース</a>
+    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="courseLink">コース</a>
     <a href="<c:url value='/benibanabi/main/SpotList.action'/>">スポット</a>
     <a href="<c:url value='/benibanabi/main/Souvenir.action'/>">お土産紹介</a>
     <a href="<c:url value='/benibanabi/main/yamagata.jsp'/>">アクセス情報</a>
@@ -151,43 +151,30 @@ function toggleMenu() {
   document.getElementById("navMenu").classList.toggle("show");
 }
 
-/* ---- スクロールでヘッダー縮小 ---- */
-window.addEventListener("scroll", function () {
-  const header = document.querySelector(".header");
-  if (window.scrollY > 25) {
-    header.classList.add("shrink");
-  } else {
-    header.classList.remove("shrink");
-  }
-});
-
-/* ---- コースリンククリック時の LocalStorage 復元確認 ---- */
 document.addEventListener("DOMContentLoaded", function() {
-  const courseLink = document.getElementById("courseLink");
-  if (!courseLink) return;
+	  document.querySelectorAll(".courseLink").forEach(courseLink => {
 
-  courseLink.addEventListener("click", function(e) {
-    e.preventDefault();
+	    courseLink.addEventListener("click", function(e) {
+	      e.preventDefault();
 
-    const stored = localStorage.getItem("routesData");
-    if (!stored) {
-      // 保存データなし → 新規作成ページへ
-      window.location.href = "<c:url value='/benibanabi/main/start.jsp'/>";
-      return;
-    }
+	      const stored = localStorage.getItem("routesData");
+	      if (!stored) {
+	        window.location.href = "<c:url value='/benibanabi/main/start.jsp'/>";
+	        return;
+	      }
 
-    // 保存データあり → 確認
-    const proceed = confirm("前回作成途中のコースがあります。続きから開きますか？");
+	      const proceed = confirm("前回作成途中のコースがあります。続きから開きますか？");
 
-    if (!proceed) {
-      // 復元せず削除 → 新規作成ページ
-      localStorage.removeItem("routesData");
-      window.location.href = "<c:url value='/benibanabi/main/start.jsp'/>";
-      return;
-    }
+	      if (!proceed) {
+	        localStorage.removeItem("routesData");
+	        window.location.href = "<c:url value='/benibanabi/main/start.jsp'/>";
+	        return;
+	      }
 
-    // 「はい」 → course.jsp に遷移（復元処理は course.jsp 側で実施）
-    window.location.href = "<c:url value='/benibanabi/main/CourseSpot.jsp'/>";
-  });
-});
+	      window.location.href = "<c:url value='/benibanabi/main/CourseSpot.jsp'/>";
+	    });
+
+	  });
+	});
+
 </script>
