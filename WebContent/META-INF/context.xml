@@ -3,14 +3,45 @@
 <!-- 上記はEclipseの警告を消すための記述です。 -->
 
 <Context reloadable="true">
- <Resource
-  name="jdbc/benibanabi"
-  auth="Container"
-  type="javax.sql.DataSource"
-  driverClassName="org.postgresql.Driver"
-  url="jdbc:postgresql://localhost:5432/benibanabi"
-  username="postgres"
-  password="admin"
- />
-</Context>
 
+  <!-- ===== JNDI DataSource ===== -->
+  <Resource
+    name="jdbc/benibanabi"
+    auth="Container"
+    type="javax.sql.DataSource"
+    driverClassName="org.postgresql.Driver"
+    url="jdbc:postgresql://localhost:5432/benibanabi"
+    username="postgres"
+    password="admin"
+  />
+
+  <!-- ===== WAR外の画像フォルダ公開設定 ===== -->
+  <Resources className="org.apache.catalina.webresources.StandardRoot">
+
+    <!-- 共通画像 -->
+    <PreResources
+      className="org.apache.catalina.webresources.DirResourceSet"
+      base="/opt/app/images"
+      webAppMount="/images" />
+
+    <!-- スポット画像 -->
+    <PreResources
+      className="org.apache.catalina.webresources.DirResourceSet"
+      base="/opt/app/spotimages"
+      webAppMount="/spotimages" />
+
+    <!-- お土産画像 -->
+    <PreResources
+      className="org.apache.catalina.webresources.DirResourceSet"
+      base="/opt/app/souvenirimages"
+      webAppMount="/souvenirimages" />
+
+    <!-- お土産ドロップ画像 -->
+    <PreResources
+      className="org.apache.catalina.webresources.DirResourceSet"
+      base="/opt/app/souvenirdropimages"
+      webAppMount="/souvenirdropimages" />
+
+  </Resources>
+
+</Context>
