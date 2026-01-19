@@ -124,7 +124,7 @@
 
   <!-- ロゴ -->
   <div class="logo">
-    <img src="<c:url value='/images/logo_beninavi.png'/>" alt="べにばナビ ロゴ">
+    <a href="/benibanabi/benibanabi/index.jsp"><img src="<c:url value='/images/logo_beninavi.png'/>" alt="べにばナビ ロゴ"></a>
   </div>
 
   <!-- メニュー -->
