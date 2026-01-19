@@ -150,10 +150,10 @@ const slides = document.querySelectorAll(".hero-slide");
 let current = 0;
 const seasons = ["spring","summer","autumn","winter"];
 const petalImg = {
-  spring: "../images/petal_sakura.png",
-  summer: "../images/benibana.png",
-  autumn: "../images/petal_maple.png",
-  winter: "../images/petal_snow.png"
+  spring: "../souvenirdropimages/petal_sakura.png",
+  summer: "../souvenirdropimages/benibana.png",
+  autumn: "../souvenirdropimages/petal_maple.png",
+  winter: "../souvenirdropimages/petal_snow.png"
 };
 function showSlide(){
   slides[current].classList.remove("active");
