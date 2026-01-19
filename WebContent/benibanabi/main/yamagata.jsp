@@ -2,16 +2,17 @@
 <!DOCTYPE html>
 <html lang="ja">
 
-<jsp:include page="../../common/header.jsp" />
+
 
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>山形への行き方｜べにばナビ</title>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 
 <body>
-
+<jsp:include page="../../common/header.jsp" />
 <div class="tab-container">
   <button class="tab active">山形への行き方</button>
   <button class="tab" onclick="location.href='local.jsp'">現地移動手段</button>

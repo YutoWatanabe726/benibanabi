@@ -25,7 +25,7 @@
 <meta charset="UTF-8">
 <title><%= spot.getSpotName() %> の詳細</title>
 
-<link rel="stylesheet" href="<%= request.getContextPath() %>/css/style.css">
+
 <link rel="stylesheet" href="<%= request.getContextPath() %>/css/spot_detail.css">
 
 <script>

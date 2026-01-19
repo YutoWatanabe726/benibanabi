@@ -419,6 +419,57 @@ main p {
   transform: translate(0,0) scale(1);
 }
 
+/* ===== スマホ対応 ===== */
+@media (max-width: 768px) {
 
+  /* タブを横スクロール可能に */
+  .tab-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .tab {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    padding: 8px 14px;
+  }
+
+  /* 見出し余白調整 */
+  main {
+    padding: 16px;
+  }
+
+  main h2 {
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  main p {
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  /* カードを1列表示 */
+  .souvenir-list {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .souvenir-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+  }
+
+  .souvenir-item h3 {
+    font-size: 1.1rem;
+  }
+
+  .souvenir-item p {
+    font-size: 0.9rem;
+  }
+}
 
 
