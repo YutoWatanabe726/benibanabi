@@ -118,6 +118,9 @@ public class SpotSearchAction extends Action {
         req.setAttribute("currentPage", currentPage);
         req.setAttribute("totalPages", totalPages);
 
+        req.setAttribute("totalCount", totalCount);  // ★ 総ヒット件数
+
+
         /* ===============================
          * 8. forward
          * =============================== */

@@ -34,6 +34,10 @@
         if (currentPage == null) currentPage = 1;
         Integer totalPages = (Integer) request.getAttribute("totalPages");
         if (totalPages == null) totalPages = 1;
+
+        Integer totalCount = (Integer) request.getAttribute("totalCount");
+        if (totalCount == null) totalCount = spotList.size();
+
     %>
 
 <!DOCTYPE html>
@@ -165,8 +169,9 @@ window.addEventListener("click", function(e) {
 </div>
 
 <div class="result-count">
-    <%= spotList.size() %> 件表示
+    <%= totalCount %> 件表示
 </div>
+
 
 <div class="card-container">
 <% for (Spot s : spotList) { %>

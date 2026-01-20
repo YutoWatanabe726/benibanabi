@@ -3,21 +3,31 @@
 ================================= */
 
 /* スポットヘッダー：タイトルを中央 */
+/* スポットヘッダー：タイトルを中央 */
 .spot-header {
-    position: relative;       /* ボタンを絶対配置するため */
-    text-align: center;       /* タイトル中央 */
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* 左余白 / タイトル / お気に入り */
+    align-items: center;
     margin-bottom: 15px;
+    gap: 10px;
 }
 
+/* タイトル */
 .spot-header h1 {
-    margin-bottom: 10px;
+    grid-column: 2;            /* 真ん中固定 */
+    text-align: center;
+    margin: 0;
+
+    overflow-wrap: break-word;
+    word-break: break-all;
 }
 
-/* お気に入りボタン：右上に固定 */
+/* お気に入りボタン：右側に固定 */
 .favorite-star {
-    position: absolute;
-    top: 0;
-    right: 0;
+    position: static;         /* absolute をやめる */
+    grid-column: 3;           /* 右列に固定 */
+    justify-self: end;
+
     padding: 12px 20px;
     font-size: 14px;
     font-weight: 700;
@@ -26,9 +36,10 @@
     transition: 0.3s;
     text-align: center;
     background: #fff;
-    color: #D92929; /* 赤文字 */
+    color: #D92929;
     border: 2px solid #D92929;
 }
+
 
 .favorite-star.active {
     background: linear-gradient(90deg, #FFB35E, #D92929);
@@ -64,6 +75,9 @@
     font-size: 16px;
     line-height: 1.6;
     margin-top: 10px;
+
+    overflow-wrap: break-word;  /* ★ 追加 */
+    word-break: break-all;      /* ★ 追加 */
 }
 
 .tag-container .tag {
@@ -97,6 +111,13 @@
     font-weight: bold;
 }
 
+.review-content {
+    overflow-wrap: break-word;  /* ★ 追加 */
+    word-break: break-all;      /* ★ 追加 */
+    white-space: pre-wrap;      /* ★ 改行をそのまま表示 */
+}
+
+
 /* ===============================
       ボタン統一（赤～オレンジ系グラデーション）
 ================================= */
@@ -121,7 +142,6 @@
     box-shadow: 0 14px 28px rgba(217,41,41,0.48);
 }
 
-/* textarea */
 textarea {
     width: 100%;
     padding: 10px;
@@ -129,7 +149,13 @@ textarea {
     border-radius: 6px;
     border: 1px solid #ccc;
     resize: vertical;
+
+    box-sizing: border-box;
+
+    overflow-wrap: break-word;  /* ★ 追加 */
+    word-break: break-all;      /* ★ 追加 */
 }
+
 
 /* Google Maps iframe */
 .map-frame {
