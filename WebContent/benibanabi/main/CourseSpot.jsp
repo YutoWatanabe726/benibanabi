@@ -1896,16 +1896,20 @@ function updateNextDayStart(dayIndex, lat, lng, name) {
 	  const list = routesByDay[nextDay];
 	  if (!list || !list[0]) return;
 
-	  const start = list[0]; // ★既存オブジェクトを使う
+	  const start = list[0];
 
 	  start.name = name;
 	  start.lat = lat;
 	  start.lng = lng;
 	  start.type = "start";
-
 	  start.needsReconfirm = false;
-	  // マーカーがある場合は位置更新
-	  if (start.marker) {
+
+	  // ★ マーカーが無ければ作る
+	  if (!start.marker && mapsByDay[nextDay]?.map) {
+	    start.marker = L.marker([lat, lng]).addTo(mapsByDay[nextDay].map);
+	  }
+	  // ★ 既にあれば位置更新
+	  else if (start.marker) {
 	    start.marker.setLatLng([lat, lng]);
 	  }
 
@@ -1919,7 +1923,8 @@ function updateNextDayStart(dayIndex, lat, lng, name) {
 	  if (list.length >= 2) {
 	    redrawRouteLine(nextDay);
 	  }
-}
+	}
+
 
 //------------------------
 //LocalStorage 保存・復元
