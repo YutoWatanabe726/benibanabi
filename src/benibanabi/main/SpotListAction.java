@@ -63,6 +63,8 @@ public class SpotListAction extends Action {
 
         req.setAttribute("currentPage", currentPage);
         req.setAttribute("totalPages", totalPages);
+        req.setAttribute("totalCount", totalCount);  // ★ 総件数も渡す
+
 
         // 検索条件初期値
         req.setAttribute("keyword", "");

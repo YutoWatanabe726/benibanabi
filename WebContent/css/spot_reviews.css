@@ -31,6 +31,9 @@ h1 {
     line-height: 1.6;
     text-align: left;
     flex: 1; /* 説明文に横幅を割り当て */
+
+    overflow-wrap: break-word;  /* ★ 追加 */
+    word-break: break-all;      /* ★ 追加 */
 }
 
 /* 口コミボックス */

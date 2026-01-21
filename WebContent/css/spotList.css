@@ -210,6 +210,34 @@ body {
     color:#555;
 }
 
+/* 英数字でも強制改行させる（スポット名） */
+.card-content h3 {
+    font-size:18px;
+    margin:6px 0;
+    color:#D92929;
+
+    overflow-wrap: break-word;  /* ★ 追加 */
+    word-break: break-all;      /* ★ 追加 */
+}
+
+/* 英数字でも強制改行させる（説明文）＋ 2行省略 */
+.card-content p {
+    font-size:14px;
+    color:#555;
+
+    overflow: hidden;                 /* はみ出し隠す */
+    display: -webkit-box;             /* 行数制限用 */
+    -webkit-line-clamp: 2;            /* ★ 表示する行数 */
+    -webkit-box-orient: vertical;
+
+    overflow-wrap: break-word;
+    word-break: break-all;
+
+    text-overflow: ellipsis;
+}
+
+
+
 /* タイトル行 */
 .title-row {
     display: flex;

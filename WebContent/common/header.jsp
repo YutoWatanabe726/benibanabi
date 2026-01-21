@@ -116,6 +116,75 @@
     display: flex;
   }
 }
+/* ===============================
+   秘密モーダル（仰々しい演出）
+================================ */
+.secret-modal {
+  background: radial-gradient(circle at top, #2b0000, #000);
+  color: #fff;
+  border-radius: 18px;
+  box-shadow: 0 0 40px rgba(255,0,0,0.45);
+}
+
+.secret-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #ff4d4d;
+}
+
+.secret-text {
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
+.secret-input {
+  margin-top: 18px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid #ff4d4d;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.25em;
+}
+
+.secret-input:focus {
+  background: #000;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(255,77,77,0.9);
+  border-color: #ff4d4d;
+}
+
+#secretCodeModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.85);
+}
+#secretCodeModal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* × 閉じるボタン */
+.secret-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #ff4d4d;
+  font-size: 1.6rem;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.secret-close:hover {
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255,77,77,0.9);
+}
 
 </style>
 
@@ -124,7 +193,7 @@
 
   <!-- ロゴ -->
   <div class="logo">
-    <img src="<c:url value='/images/logo_beninavi.png'/>" alt="べにばナビ ロゴ">
+   <a href="#" id="secretLogo"><img src="<c:url value='/images/logo_beninavi.png'/>" alt="べにばナビ ロゴ"></a>
   </div>
 
   <!-- メニュー -->
@@ -143,7 +212,24 @@
   </div>
 
 </header>
+<!-- 秘密コード入力モーダル -->
+<div id="secretCodeModal">
+  <div class="secret-modal p-4">
+  	<button id="secretCloseBtn" class="secret-close">×</button>
+    <h5 class="secret-title">⚠ 認証プロトコル起動 ⚠</h5>
+    <p class="secret-text">
+      選ばれし者のみが<br>次の領域へ進むことを許可されます
+    </p>
 
+    <input type="password" id="secretCodeInput"
+           class="form-control secret-input"
+           placeholder="認証コードを入力">
+
+    <button id="secretConfirmBtn" class="btn btn-danger mt-3">
+      認証を実行
+    </button>
+  </div>
+</div>
 
 <script>
 /* ---- ハンバーガーメニュー制御 ---- */
@@ -176,5 +262,55 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	  });
 	});
+
+const logo = document.getElementById("secretLogo");
+let clickCount = 0;
+let lastClickTime = 0;
+
+const CLICK_LIMIT = 10;
+const CLICK_TIMEOUT = 2000;
+const SECRET_CODE = "open-sesame";
+
+const secretCodeInput = document.getElementById("secretCodeInput");
+
+function showSecretModal() {
+	  document.getElementById("secretCodeModal").classList.add("show");
+	  setTimeout(() => document.getElementById("secretCodeInput").focus(), 100);
+	}
+
+	function hideSecretModal() {
+	  document.getElementById("secretCodeModal").classList.remove("show");
+	}
+
+	logo.addEventListener("click", function(e) {
+	  e.preventDefault();
+
+	  const now = Date.now();
+	  if (now - lastClickTime > CLICK_TIMEOUT) clickCount = 0;
+	  lastClickTime = now;
+
+	  if (++clickCount === CLICK_LIMIT) {
+	    clickCount = 0;
+	    showSecretModal();
+	  }
+	});
+
+	document.getElementById("secretConfirmBtn").addEventListener("click", () => {
+	  if (secretCodeInput.value === SECRET_CODE) {
+	    hideSecretModal();
+	    alert("✔ 認証成功");
+	  } else {
+	    alert("✖ 認証失敗");
+	  }
+	});
+	document.getElementById("secretCloseBtn").addEventListener("click", () => {
+		  hideSecretModal();
+		});
+
+	document.addEventListener("keydown", e => {
+		  if (e.key === "Escape") {
+		    hideSecretModal();
+		  }
+		});
 
 </script>

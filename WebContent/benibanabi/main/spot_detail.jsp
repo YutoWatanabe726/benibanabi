@@ -91,7 +91,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
 <div class="container">
 
-    <a href="SpotList.action" class="back-btn">一覧へ戻る</a>
+    <a href="SpotSearch.action?page=${page}" class="back-btn">一覧へ戻る</a>
 
     <div class="spot-header">
         <h1><%= spot.getSpotName() %></h1>
@@ -149,12 +149,12 @@ window.addEventListener("DOMContentLoaded", function () {
         <textarea id="reviewText"
           name="review_text"
           rows="4"
-          placeholder="ここに口コミを入力してください...（500文字以内）"
-          maxlength="500"
+          placeholder="ここに口コミを入力してください...（300文字以内）"
+          maxlength="300"
           required></textarea>
 
 <div class="char-count">
-    <span id="currentCount">0</span> / 500 文字
+    <span id="currentCount">0</span> / 300 文字
 </div>
 
 
@@ -163,7 +163,7 @@ window.addEventListener("DOMContentLoaded", function () {
 </div>
 
 
-    <a href="SpotList.action" class="back-btn">一覧へ戻る</a>
+    <a href="SpotSearch.action?page=${page}" class="back-btn">一覧へ戻る</a>
 
 </div>
 
