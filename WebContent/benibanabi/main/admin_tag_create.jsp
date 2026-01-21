@@ -27,7 +27,7 @@
 
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">登録</button>
-                    <a href="AdminTagSetting.action" class="btn btn-secondary">戻る</a>
+                    <a href="AdminTagList.action" class="btn btn-secondary">戻る</a>
                 </div>
             </form>
         </div>

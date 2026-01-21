@@ -14,10 +14,10 @@
 <div>ログイン中のアカウント<c:out value='${admin_id}'/></div>
 <h1>管理者メニュー</h1>
 
-<a href="AdminSpotSetting.action" class="menu-item">観光スポットの追加・編集・削除</a>
-<a href="AdminTagSetting.action" class="menu-item">タグの追加・削除</a>
-<a href="AdminTopicsSetting.action" class="menu-item">トピックスの追加、編集</a>
-<a href="AdminSouvenirSetting.action" class="menu-item">名産品の追加、編集</a>
+<a href="AdminSpotList.action" class="menu-item">観光スポットの追加・編集・削除</a>
+<a href="AdminTagList.action" class="menu-item">タグの追加・削除</a>
+<a href="AdminTopicsList.action" class="menu-item">トピックスの追加、編集</a>
+<a href="AdminSouvenirList.action" class="menu-item">名産品の追加、編集</a>
 <a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action" class="menu-item">観光スポットの口コミ管理</a>
 <a href="AdminPasswordUpdate.action" class="menu-item">パスワード変更</a>
 <a href="AdminDelete.action" class="menu-item">アカウント削除</a>

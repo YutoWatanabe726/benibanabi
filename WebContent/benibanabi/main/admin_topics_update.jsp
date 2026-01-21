@@ -42,7 +42,7 @@
         <!-- トピックス内容 -->
         <div class="mb-3">
             <label class="form-label">トピックス内容（必須）</label>
-            <textarea name="topicsContent" class="form-control" rows="4" required>${topics.topicsContent}</textarea>
+            <textarea name="topicsContent" class="form-control" rows="4" maxlength="20" placeholder="20文字以内で入力してください" required>${topics.topicsContent}</textarea>
         </div>
 
         <!-- 地区選択 -->

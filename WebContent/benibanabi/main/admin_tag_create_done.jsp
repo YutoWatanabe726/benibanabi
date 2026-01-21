@@ -16,7 +16,7 @@
             <p>タグの作成が完了しました。</p>
 
             <div class="button-group">
-                <a href="AdminTagSetting.action">タグ機能一覧へ</a>
+                <a href="AdminTagList.action">タグ一覧へ</a>
                 <a href="AdminMenu.action">管理者メニューへ</a>
             </div>
         </div>

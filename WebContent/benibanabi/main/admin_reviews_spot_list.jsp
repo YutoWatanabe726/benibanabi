@@ -7,14 +7,15 @@
 
     <c:param name="content">
 
-        <!-- CSS 共通 -->
+        <!-- CSS 共通（変更なし） -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_spot_topics_souvenir_list.css">
 
         <div class="container mt-4">
-            <h2>観光スポット一覧</h2>
 
-            <!-- 右上戻るボタン -->
-            <a href="AdminMenu.action">戻る</a>
+			<!-- ← この戻るだけ右上 -->
+			<a href="AdminMenu.action" class="btn-back-only">戻る</a>
+
+            <h2>観光スポット一覧</h2>
 
             <!-- 左寄せ検索バー -->
             <div class="search-box">
@@ -45,7 +46,8 @@
                                     <td>${sp.spotName}</td>
                                     <td>${sp.area}</td>
                                     <td>
-                                        <a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviews.action?spotId=${sp.spotId}" class="btn btn-sm btn-primary">
+                                        <a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviews.action?spotId=${sp.spotId}"
+                                           class="btn btn-sm btn-primary">
                                             口コミを見る
                                         </a>
                                     </td>

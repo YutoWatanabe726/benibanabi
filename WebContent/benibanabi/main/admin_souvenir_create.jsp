@@ -50,7 +50,7 @@
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary px-4">登録</button>
-                <a href="AdminSouvenirSetting.action" class="btn btn-link">戻る</a>
+                <a href="AdminSouvenirList.action" class="btn btn-link">戻る</a>
             </div>
         </form>
     </div>
