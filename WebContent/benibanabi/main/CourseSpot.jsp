@@ -1096,14 +1096,26 @@ function renderRouteHistory(dayIndex) {
       </div>
     `;
 
+    let title = escapeHtml(item.name);
+	let typeLabel = "";
+
+if (item.type === "start") {
+  typeLabel = "(スタート地点)";
+  if (item.needsReconfirm) {
+    title = "⚠ " + title;
+    typeLabel = "(再確認が必要)";
+  }
+} else if (item.type === "goal") {
+  typeLabel = "(ゴール地点)";
+}
+
     const cardHtml = $(`
       <div class="route-card route-item" data-index="${i}">
-        <div class="card-header">
-          [${escapeHtml(item.name)}]
-          ${item.type === "start" ? "(スタート地点)" :
-            item.type === "goal" ? "(ゴール地点)" : ""}
-          <button class="btn btn-sm btn-danger removeBtn">×</button>
-        </div>
+      <div class="card-header">
+      [${title}] ${typeLabel}
+      <button class="btn btn-sm btn-danger removeBtn">×</button>
+    </div>
+
         <div class="card-body">
           ${timeRowHtml}
           <div class="mt-2">滞在時間:
@@ -1119,39 +1131,50 @@ function renderRouteHistory(dayIndex) {
     container.append(cardHtml);
   }
 
-  container.find(".removeBtn").off("click").on("click", function(){
-    const $item = $(this).closest(".route-item");
-    const index = $item.data("index");
-    const target = routesByDay[dayIndex][index];
+  container.find(".removeBtn").off("click").on("click", function () {
+	  const $item = $(this).closest(".route-item");
+	  const index = $item.data("index");
+	  const target = routesByDay[dayIndex][index];
 
-    if (dayIndex === 0 && target.type === "start") {
-      if (confirm("スタート地点を変更しますか？\n「OK」でスタート地点選択画面に戻ります。")) {
-        window.location.href = "start.jsp";
-      }
-      return;
-    }
+	  // 1日目スタート特例
+	  if (dayIndex === 0 && target.type === "start") {
+	    if (confirm("スタート地点を変更しますか？\n「OK」でスタート地点選択画面に戻ります。")) {
+	      window.location.href = "start.jsp";
+	    }
+	    return;
+	  }
 
-    if (target.type === "start") {
-      if (confirm("この日のスタート地点を削除すると、前日のゴールとこの日以降のルートも削除されます。よろしいですか？")) {
-        const prevDayIndex = dayIndex - 1;
-        const prevRoutes = routesByDay[prevDayIndex] || [];
-        const goalIndex = prevRoutes.findIndex(r => r.type === "goal");
-        if (goalIndex >= 0) removeRoute(prevDayIndex, goalIndex);
+	  // ★ start 削除時（既存仕様：前日のゴール＋以降の日を削除）
+	  if (target.type === "start") {
+	    if (confirm("この日のスタート地点を削除すると、前日のゴールとこの日以降のルートも削除されます。よろしいですか？")) {
+	      const prevDayIndex = dayIndex - 1;
+	      const prevRoutes = routesByDay[prevDayIndex] || [];
+	      const goalIndex = prevRoutes.findIndex(r => r.type === "goal");
+	      if (goalIndex >= 0) removeRoute(prevDayIndex, goalIndex);
 
-        for (let d = dayCount - 1; d >= dayIndex; d--) {
-          const sectionId = "#daySection" + (d + 1);
-          $(sectionId).remove();
-          routesByDay[d] = [];
-          mapsByDay[d] = null;
-          startTimesByDay[d] = null;
-        }
-        dayCount = dayIndex;
-      }
-      return;
-    }
+	      for (let d = dayCount - 1; d >= dayIndex; d--) {
+	        const sectionId = "#daySection" + (d + 1);
+	        $(sectionId).remove();
+	        routesByDay[d] = [];
+	        mapsByDay[d] = null;
+	        startTimesByDay[d] = null;
+	      }
+	      dayCount = dayIndex;
+	    }
+	    return;
+	  }
 
-    removeRoute(dayIndex, index);
-  });
+	  // ★ goal 削除時（新仕様：翌日の start を再確認状態に）
+	  if (target.type === "goal") {
+	    removeRoute(dayIndex, index);
+	    markNextDayStartNeedsReconfirm(dayIndex);
+	    return;
+	  }
+
+	  // その他（通常スポット）
+	  removeRoute(dayIndex, index);
+	});
+
 
   container.find(".transportSelect").off("change").on("change", function () {
     const idx = $(this).data("index");
@@ -1608,33 +1631,52 @@ function showCandidatesOnMap(list) {
 
 // ゴール確定（選ばれた lat/lng/title をここに集約）
 function applyGoalSelection(dayIndex, lat, lng, titleLabel) {
+  const list = routesByDay[dayIndex] || [];
+
+  // 既存ゴールがあれば確認
+  const hasGoal = list.some(r => r.type === "goal");
+  if (hasGoal) {
+    const ok = confirm(`Day${dayIndex + 1} のゴールを上書きしますか？`);
+    if (!ok) return;
+
+    // 既存ゴール削除
+    removeExistingGoal(dayIndex);
+  }
+
   const formattedAddress = titleLabel || "ゴール地点";
 
+  // ゴール追加
   addRouteHistory(dayIndex, formattedAddress, lat, lng, "goal", null, null);
 
   if (routesByDay[dayIndex].length >= 2) {
     redrawRouteLine(dayIndex);
   }
 
-  if (mapsByDay[dayIndex] && mapsByDay[dayIndex].map) {
+  if (mapsByDay[dayIndex]?.map) {
     mapsByDay[dayIndex].map.setView([lat, lng], 14);
   }
 
-  // 次の日生成
+  // 翌日のスタートを更新
+  updateNextDayStart(dayIndex, lat, lng, formattedAddress);
+
+  // 次の日生成（従来通り）
   if (dayCount < tripDays) {
     createDaySection(dayCount + 1, lat, lng, formattedAddress);
 
-    const nextDaySection = document.getElementById("daySection" + (dayCount));
+    const nextDaySection = document.getElementById(
+      "daySection" + dayCount
+    );
     if (nextDaySection) {
-      nextDaySection.scrollIntoView({ behavior:"smooth", block:"start" });
+      nextDaySection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   } else {
-    // ★最終日のゴール確定後：上へスクロール（全ルート確定ボタンへ行きやすくする）
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   saveRoutesToLocal();
 }
+
+
 
 /* ------------------------
    ゴール住所決定：GSIで候補取得→複数なら地図選択
@@ -1832,6 +1874,51 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function removeExistingGoal(dayIndex) {
+	  if (!routesByDay[dayIndex]) return;
+
+	  routesByDay[dayIndex] = routesByDay[dayIndex].filter(r => r.type !== "goal");
+	}
+function markNextDayStartNeedsReconfirm(dayIndex) {
+	  const nextDay = dayIndex + 1;
+	  const list = routesByDay[nextDay];
+	  if (!list || !list[0]) return;
+
+	  list[0].needsReconfirm = true;
+
+	  renderRouteHistory(nextDay);
+	}
+
+function updateNextDayStart(dayIndex, lat, lng, name) {
+	  const nextDay = dayIndex + 1;
+	  const list = routesByDay[nextDay];
+	  if (!list || !list[0]) return;
+
+	  const start = list[0]; // ★既存オブジェクトを使う
+
+	  start.name = name;
+	  start.lat = lat;
+	  start.lng = lng;
+	  start.type = "start";
+
+	  start.needsReconfirm = false;
+	  // マーカーがある場合は位置更新
+	  if (start.marker) {
+	    start.marker.setLatLng([lat, lng]);
+	  }
+
+	  // 地図中心更新
+	  if (mapsByDay[nextDay]?.map) {
+	    mapsByDay[nextDay].map.setView([lat, lng], 13);
+	  }
+
+	  renderRouteHistory(nextDay);
+
+	  if (list.length >= 2) {
+	    redrawRouteLine(nextDay);
+	  }
 }
 
 //------------------------
