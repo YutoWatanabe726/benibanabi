@@ -85,8 +85,10 @@ function initFavorites() {
             star.classList.toggle("active", nowActive);
         };
         card.onclick = function() {
-            location.href = "SpotDetail.action?spot_id=" + id;
+            location.href =
+                "SpotDetail.action?spot_id=" + id + "&page=<%= currentPage %>";
         };
+
     });
 }
 

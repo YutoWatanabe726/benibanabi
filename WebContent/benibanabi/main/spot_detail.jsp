@@ -91,7 +91,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
 <div class="container">
 
-    <a href="SpotList.action" class="back-btn">一覧へ戻る</a>
+    <a href="SpotSearch.action?page=${page}" class="back-btn">一覧へ戻る</a>
 
     <div class="spot-header">
         <h1><%= spot.getSpotName() %></h1>
@@ -163,7 +163,7 @@ window.addEventListener("DOMContentLoaded", function () {
 </div>
 
 
-    <a href="SpotList.action" class="back-btn">一覧へ戻る</a>
+    <a href="SpotSearch.action?page=${page}" class="back-btn">一覧へ戻る</a>
 
 </div>
 
