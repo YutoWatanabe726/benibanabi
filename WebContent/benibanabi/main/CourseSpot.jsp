@@ -805,7 +805,9 @@ function createDaySection(day, startLat, startLng, startName) {
   if (startLat === undefined) startLat = 38.2404;
   if (startLng === undefined) startLng = 140.3633;
   if (!startName) startName = "スタート";
-
+  if (mapsByDay[day - 1]) {
+	    return;
+	  }
   dayCount = Math.max(dayCount, day);
   const sectionId = "daySection" + day;
   const mapId = "mapDay" + day;
@@ -864,26 +866,34 @@ function createDaySection(day, startLat, startLng, startName) {
 /* ------------------------
    マップ関連
    ------------------------ */
-function addMarker(dayIndex, name, lat, lng, type) {
-  if (type === undefined) type = "normal";
-  if (!mapsByDay[dayIndex]) return;
+   function addMarker(dayIndex, name, lat, lng, type) {
+	   if (type === undefined) type = "normal";
 
-  let iconUrl;
-  if (type === "start") iconUrl = "https://cdn-icons-png.flaticon.com/512/25/25694.png";
-  else if (type === "goal") iconUrl = "https://illust8.com/wp-content/uploads/2018/06/checker-flag_illust_79.png";
-  else if (type === "meal") iconUrl = "https://cdn-icons-png.flaticon.com/512/3075/3075977.png";
-  else iconUrl = "https://cdn-icons-png.flaticon.com/512/252/252025.png";
+	   const mapObj = mapsByDay[dayIndex];
+	   if (!mapObj || !mapObj.markers) return null;
 
-  const icon = L.icon({
-    iconUrl,
-    iconSize:[32,32],
-    iconAnchor:[16,32]
-  });
-  const marker = L.marker([lat, lng], { icon })
-    .bindPopup("<strong>" + escapeHtml(name) + "</strong>");
-  mapsByDay[dayIndex].markers.addLayer(marker);
-  updateEstimatedTime(dayIndex);
-}
+	   let iconUrl;
+	   if (type === "start") iconUrl = "https://cdn-icons-png.flaticon.com/512/25/25694.png";
+	   else if (type === "goal") iconUrl = "https://illust8.com/wp-content/uploads/2018/06/checker-flag_illust_79.png";
+	   else if (type === "meal") iconUrl = "https://cdn-icons-png.flaticon.com/512/3075/3075977.png";
+	   else iconUrl = "https://cdn-icons-png.flaticon.com/512/252/252025.png";
+
+	   const icon = L.icon({
+	     iconUrl,
+	     iconSize: [32, 32],
+	     iconAnchor: [16, 32]
+	   });
+
+	   const marker = L.marker([lat, lng], {
+	     icon,
+	     _markerType: type
+	   }).bindPopup("<strong>" + escapeHtml(name) + "</strong>");
+
+	   mapObj.markers.addLayer(marker);
+	   updateEstimatedTime(dayIndex);
+
+	   return marker;
+	 }
 
 async function redrawRouteLine(dayIndex) {
   const mapObj = mapsByDay[dayIndex];
@@ -1639,8 +1649,15 @@ function applyGoalSelection(dayIndex, lat, lng, titleLabel) {
     const ok = confirm(`Day${dayIndex + 1} のゴールを上書きしますか？`);
     if (!ok) return;
 
-    // 既存ゴール削除
+ // 既存ゴール削除
     removeExistingGoal(dayIndex);
+
+    // ★ 翌日の start マーカーを全削除
+    removeAllStartMarkers(dayIndex);
+
+    // ★ 翌日の start 再設定
+    updateNextDayStart(dayIndex, lat, lng, titleLabel);
+
   }
 
   const formattedAddress = titleLabel || "ゴール地点";
@@ -1877,10 +1894,31 @@ function escapeHtml(str) {
 }
 
 function removeExistingGoal(dayIndex) {
-	  if (!routesByDay[dayIndex]) return;
+	  const list = routesByDay[dayIndex];
+	  if (!list) return;
 
-	  routesByDay[dayIndex] = routesByDay[dayIndex].filter(r => r.type !== "goal");
+	  for (let i = list.length - 1; i >= 0; i--) {
+	    const r = list[i];
+	    if (r.type === "goal") {
+
+	      // ★ marker を地図から削除
+	      if (r.marker && mapsByDay[dayIndex]?.markers) {
+	        mapsByDay[dayIndex].markers.removeLayer(r.marker);
+	      }
+
+	      // ★ データから削除
+	      list.splice(i, 1);
+	    }
+	  }
+
+	  // ★ 表示更新
+	  renderRouteHistory(dayIndex);
+
+	  if (list.length >= 2) {
+	    redrawRouteLine(dayIndex);
+	  }
 	}
+
 function markNextDayStartNeedsReconfirm(dayIndex) {
 	  const nextDay = dayIndex + 1;
 	  const list = routesByDay[nextDay];
@@ -1896,34 +1934,37 @@ function updateNextDayStart(dayIndex, lat, lng, name) {
 	  const list = routesByDay[nextDay];
 	  if (!list || !list[0]) return;
 
-	  const start = list[0];
+	  // ★ 地図上を一度リセット
+	  clearNextDayMarkers(dayIndex);
 
+	  const start = list[0];
 	  start.name = name;
 	  start.lat = lat;
 	  start.lng = lng;
 	  start.type = "start";
 	  start.needsReconfirm = false;
 
-	  // ★ マーカーが無ければ作る
-	  if (!start.marker && mapsByDay[nextDay]?.map) {
-	    start.marker = L.marker([lat, lng]).addTo(mapsByDay[nextDay].map);
-	  }
-	  // ★ 既にあれば位置更新
-	  else if (start.marker) {
-	    start.marker.setLatLng([lat, lng]);
-	  }
+	  const marker = addMarker(nextDay, name, lat, lng, "start");
+	  if (marker) start.marker = marker;
 
-	  // 地図中心更新
 	  if (mapsByDay[nextDay]?.map) {
 	    mapsByDay[nextDay].map.setView([lat, lng], 13);
 	  }
 
 	  renderRouteHistory(nextDay);
-
-	  if (list.length >= 2) {
-	    redrawRouteLine(nextDay);
-	  }
+	  if (list.length >= 2) redrawRouteLine(nextDay);
 	}
+
+
+
+function clearNextDayMarkers(dayIndex) {
+	  const nextDay = dayIndex + 1;
+	  const mapObj = mapsByDay[nextDay];
+	  if (!mapObj?.markers) return;
+
+	  mapObj.markers.clearLayers(); // ★ 全削除
+	}
+
 
 
 //------------------------
