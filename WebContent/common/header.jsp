@@ -186,6 +186,26 @@
   text-shadow: 0 0 8px rgba(255,77,77,0.9);
 }
 
+@keyframes explode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+  60% {
+    transform: scale(1.3) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+    filter: blur(12px);
+  }
+}
+.secret-modal.exploding {
+  animation: explode 0.6s ease-out forwards;
+}
+
 </style>
 
 
@@ -224,6 +244,19 @@
     <input type="password" id="secretCodeInput"
            class="form-control secret-input"
            placeholder="認証コードを入力">
+<p id="secretMessage" style="
+  margin-top:12px;
+  color:#ffaaaa;
+  letter-spacing:0.08em;
+  min-height:1.2em;
+"></p>
+
+<p id="countdownMessage" style="
+  margin-top:6px;
+  color:#ff7777;
+  letter-spacing:0.12em;
+  min-height:1.2em;
+"></p>
 
     <button id="secretConfirmBtn" class="btn btn-danger mt-3">
       認証を実行
@@ -269,48 +302,114 @@ let lastClickTime = 0;
 
 const CLICK_LIMIT = 10;
 const CLICK_TIMEOUT = 2000;
-const SECRET_CODE = "open-sesame";
+const SECRET_CODE = "open-sasaki";
 
 const secretCodeInput = document.getElementById("secretCodeInput");
+const secretMessage = document.getElementById("secretMessage");
+const countdownMessage = document.getElementById("countdownMessage");
+
+
+let failCount = 0;
+const MAX_FAIL = 3;
+let isExploding = false;
+
 
 function showSecretModal() {
 	  document.getElementById("secretCodeModal").classList.add("show");
 	  setTimeout(() => document.getElementById("secretCodeInput").focus(), 100);
 	}
 
-	function hideSecretModal() {
+function hideSecretModal() {
 	  document.getElementById("secretCodeModal").classList.remove("show");
+
+	  const modal = document.querySelector(".secret-modal");
+	  modal.classList.remove("exploding");
+
+	  secretCodeInput.disabled = false;
+	  secretCodeInput.value = "";
+
+	  secretMessage.textContent = "";
+	  countdownMessage.textContent = "";
+
+	  failCount = 0;
+	  isExploding = false;
 	}
 
-	logo.addEventListener("click", function(e) {
+
+	function playExplosionEffect() {
+		  const modal = document.querySelector(".secret-modal");
+		  modal.classList.add("exploding");
+		}
+
+	let explosionTimer = null;
+
+	function startExplosionCountdown(seconds) {
+	  if (isExploding) return;
+	  isExploding = true;
+
+	  let remaining = seconds;
+
+	  countdownMessage.textContent = `爆発まで ${remaining} 秒`;
+
+	  explosionTimer = setInterval(() => {
+	    remaining--;
+	    countdownMessage.textContent = `爆発まで ${remaining} 秒`;
+
+	    if (remaining <= 0) {
+	      clearInterval(explosionTimer);
+	      playExplosionEffect();
+
+	      setTimeout(() => {
+	        hideSecretModal();
+	      }, 700);
+	    }
+	  }, 1000);
+	}
+
+
+	document.getElementById("secretConfirmBtn").addEventListener("click", () => {
+		  if (isExploding) return;
+
+		  if (secretCodeInput.value === SECRET_CODE) {
+		    window.location.href =
+		      "<c:url value='/benibanabi/main/AdminMenu.action'/>";
+		    return;
+		  }
+
+		  failCount++;
+
+		  if (failCount >= MAX_FAIL) {
+		    secretCodeInput.disabled = true;
+		    secretMessage.textContent = "✖ 認証試行回数超過";
+		    startExplosionCountdown(3);
+		  } else {
+		    secretMessage.textContent =
+		      `✖ 認証失敗（残り ${MAX_FAIL - failCount} 回）`;
+		    secretCodeInput.value = "";
+		    secretCodeInput.focus();
+		  }
+		});
+
+logo.addEventListener("click", (e) => {
 	  e.preventDefault();
 
+	  // 爆発中は無効
+	  if (isExploding) return;
+
 	  const now = Date.now();
-	  if (now - lastClickTime > CLICK_TIMEOUT) clickCount = 0;
+
+	  if (now - lastClickTime > CLICK_TIMEOUT) {
+	    clickCount = 0;
+	  }
+
+	  clickCount++;
 	  lastClickTime = now;
 
-	  if (++clickCount === CLICK_LIMIT) {
+	  if (clickCount >= CLICK_LIMIT) {
 	    clickCount = 0;
 	    showSecretModal();
 	  }
 	});
 
-	document.getElementById("secretConfirmBtn").addEventListener("click", () => {
-	  if (secretCodeInput.value === SECRET_CODE) {
-	    hideSecretModal();
-	    alert("✔ 認証成功");
-	  } else {
-	    alert("✖ 認証失敗");
-	  }
-	});
-	document.getElementById("secretCloseBtn").addEventListener("click", () => {
-		  hideSecretModal();
-		});
-
-	document.addEventListener("keydown", e => {
-		  if (e.key === "Escape") {
-		    hideSecretModal();
-		  }
-		});
 
 </script>
