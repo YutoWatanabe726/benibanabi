@@ -12,6 +12,13 @@
         <div class="container mt-4">
             <h2 class="mb-4">タグ新規作成</h2>
 
+            <!-- エラーメッセージ表示 -->
+            <c:if test="${not empty error}">
+                <div class="alert alert-danger">
+                    ${error}
+                </div>
+            </c:if>
+
             <form action="AdminTagCreateExecute.action" method="post">
                 <div class="mb-3">
                     <label for="tagName" class="form-label">タグ名</label>
@@ -22,6 +29,7 @@
                         class="form-control"
                         required
                         maxlength="50"
+                        value="${tagName}"
                     >
                 </div>
 
