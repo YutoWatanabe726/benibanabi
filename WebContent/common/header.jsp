@@ -17,16 +17,25 @@
   background: rgba(255,255,255,0.55);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  position: sticky;
+
+  position: fixed;          /* ★ sticky → fixed */
   top: 0;
-  z-index: 1000;
+  left: 0;
+
+  z-index: 1500;
   transition: 0.35s ease;
   border-bottom: 1px solid rgba(255,255,255,0.4);
   box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+}
+
+/* ヘッダー分の余白（必須） */
+body {
+  padding-top: 72px;        /* ヘッダー高さ */
 }
 
 /* ===============================
-      NAVIGATION
+      NAVIGATION（PC）
 ================================= */
 .header nav {
   display: flex;
@@ -88,79 +97,115 @@
   position: relative;
 }
 
-.secret-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: #ff4d4d;
+/* ===============================
+   レスポンシブ（スマホ）
+================================= */
+@media screen and (max-width: 768px) {
+
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .header {
+    padding: 14px 20px;
+  }
+
+  /* スマホ用余白調整 */
+  body {
+    padding-top: 64px;
+  }
+
+  /* ナビ（スマホ・固定） */
+  .header nav {
+    position: fixed;
+    top: 64px;               /* ヘッダー直下 */
+    left: 0;
+    right: 0;
+    width: 100%;
+
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    padding: 20px 0;
+    box-sizing: border-box;
+
+    transform: translateY(-20px);
+    opacity: 0;
+    pointer-events: none;
+
+    transition: all 0.35s ease;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    z-index: 1400;
+  }
+
+  .header nav.show {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .header nav a {
+    font-size: 1rem;
+    padding: 8px 24px;
+  }
+
+  /* ハンバーガー最前面 */
+  .menu-btn {
+    display: flex;
+    margin-left: auto;
+    position: relative;
+    z-index: 2000;
+  }
+
+  .secret-modal {
+    width: 90%;
+    max-width: 360px;
+    padding: 20px;
+  }
 }
 
-.secret-text {
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
-  opacity: 0.9;
+/* ===============================
+   超小型スマホ
+================================= */
+@media screen and (max-width: 400px) {
+
+  .header {
+    padding: 12px 16px;
+  }
+
+  body {
+    padding-top: 56px;
+  }
+
+  .header nav a {
+    font-size: 0.95rem;
+  }
 }
 
-.secret-input {
-  margin-top: 18px;
-  background: rgba(0,0,0,0.6);
-  border: 1px solid #ff4d4d;
-  color: #fff;
-  text-align: center;
-  letter-spacing: 0.25em;
-}
-
-.secret-input:focus {
-  background: #000;
-  box-shadow: 0 0 12px rgba(255,77,77,0.9);
-}
-
+/* ===============================
+   秘密モーダル表示制御
+================================= */
 #secretCodeModal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  background: rgba(0,0,0,0.85);
+  display: none !important;
 }
+
 #secretCodeModal.show {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.secret-close {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  background: none;
-  border: none;
-  color: #ff4d4d;
-  font-size: 1.6rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* 数字表示対策 */
-#secretMessage,
-#countdownMessage {
-  font-family: inherit, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-}
-
-.secret-number {
-  letter-spacing: normal !important;
-  font-family: monospace !important;
-}
-
-@keyframes explode {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0); opacity: 0; filter: blur(12px); }
-}
-
-.secret-modal.exploding {
-  animation: explode 0.6s ease-out forwards;
+  display: flex !important;
 }
 
 </style>
+
+
+
 
 <header class="header">
   <div class="logo">
