@@ -111,7 +111,12 @@ window.addEventListener("DOMContentLoaded", function () {
 
     <h2 class="section-title">所在地</h2>
     <div class="card detail-box">
-        <p><strong>住所：</strong> <%= spot.getAddress() %></p>
+        <p>
+  			<strong>住所：</strong>
+  			<%= (spot.getArea() != null ? spot.getArea() : "") %>
+  			<%= (spot.getAddress() != null ? " " + spot.getAddress() : "") %>
+		</p>
+
         <iframe width="100%" height="350" class="map-frame"
             loading="lazy" allowfullscreen
             referrerpolicy="no-referrer-when-downgrade"
