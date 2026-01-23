@@ -155,18 +155,23 @@ const petalImg = {
   autumn: "../souvenirdropimages/petal_maple.png",
   winter: "../souvenirdropimages/petal_snow.png"
 };
+
 function showSlide(){
   slides[current].classList.remove("active");
   current = (current + 1) % slides.length;
   slides[current].classList.add("active");
   changeSeason(seasons[current]);
 }
+
 function changeSeason(season){
   document.querySelectorAll(".petal").forEach(p=>p.src = petalImg[season]);
 }
+
 changeSeason(seasons[0]);
 setInterval(showSlide, 4500);
+
 </script>
+
 
 
 <!-- ================= 最新トピックス（DBから取得） ================= -->
@@ -186,10 +191,6 @@ setInterval(showSlide, 4500);
 <c:if test="${empty topTopics}">
   <p>最新トピックスはありません。</p>
 </c:if>
-
-
-
-
 
   </c:param>
 </c:import>

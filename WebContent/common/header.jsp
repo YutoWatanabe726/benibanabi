@@ -171,7 +171,7 @@
 
   <nav id="navMenu">
     <a href="<c:url value='/benibanabi/index.jsp'/>">トップ</a>
-    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="courseLink">コース</a>
+    <a href="#" class="courseLink">コース</a>
     <a href="<c:url value='/benibanabi/main/SpotList.action'/>">スポット</a>
     <a href="<c:url value='/benibanabi/main/Souvenir.action'/>">お土産紹介</a>
     <a href="<c:url value='/benibanabi/main/yamagata.jsp'/>">アクセス情報</a>
@@ -290,4 +290,45 @@ closeBtn.addEventListener("click", hideSecretModal);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") hideSecretModal();
 });
+
+document.addEventListener("DOMContentLoaded", function(){
+	  document.querySelectorAll(".courseLink").forEach(link => {
+
+	    link.addEventListener("click", function(e){
+	      e.preventDefault();
+
+	      const dataStr = localStorage.getItem("routesData");
+
+	      // データなし → 通常スタート
+	      if (!dataStr) {
+	        window.location.href = "<c:url value='/benibanabi/main/start.jsp'/>";
+	        return;
+	      }
+
+	      let data;
+	      try {
+	        data = JSON.parse(dataStr);
+	      } catch(e) {
+	        localStorage.removeItem("routesData");
+	        window.location.href = "<c:url value='/benibanabi/main/start.jsp'/>";
+	        return;
+	      }
+
+	      const ok = confirm(
+	        "コース作成途中のものがあります。\n続きから作成しますか？"
+	      );
+
+	      if (ok) {
+	        window.location.href =
+	          "<c:url value='/benibanabi/main/CourseSpot.jsp'/>";
+	      } else {
+	        localStorage.removeItem("routesData");
+	        window.location.href =
+	          "<c:url value='/benibanabi/main/start.jsp'/>";
+	      }
+	    });
+
+	  });
+	});
+
 </script>
