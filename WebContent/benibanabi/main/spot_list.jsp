@@ -96,10 +96,10 @@ function initFavorites() {
 function updateSelectedCounts() {
     const areaCount = document.querySelectorAll('input[name="area"]:checked').length;
     const areaBtn = document.getElementById("areaBtn");
-    if (areaBtn) areaBtn.textContent = areaCount === 0 ? "エリア選択 ▼" : `エリア (${areaCount}) ▼`;
+    if (areaBtn) areaBtn.textContent = areaCount === 0 ? "エリア選択 ▼" : `エリア選択 ▼`;
     const tagCount = document.querySelectorAll('input[name="tag"]:checked').length;
     const tagBtn = document.getElementById("tagBtn");
-    if (tagBtn) tagBtn.textContent = tagCount === 0 ? "タグ選択 ▼" : `タグ (${tagCount}) ▼`;
+    if (tagBtn) tagBtn.textContent = tagCount === 0 ? "タグ選択 ▼" : `タグ選択 ▼`;
 }
 
 // 検索条件クリア
