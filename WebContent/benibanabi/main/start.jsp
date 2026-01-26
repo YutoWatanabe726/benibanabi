@@ -15,7 +15,7 @@
 
 <style>
 body{font-family:Arial,sans-serif;background:#f5f7fa;margin:0;padding:0;}
-header{background:linear-gradient(90deg,#FFAA47,#E6483E);color:#fff;text-align:center;padding:16px;font-size:1.4rem;}
+h1{background:linear-gradient(90deg,#FFAA47,#E6483E);color:#fff;text-align:center;padding:16px;font-size:1.4rem;}
 main{max-width:500px;margin:2rem auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
 label{display:block;margin-top:1rem;font-weight:bold;}
 .input-like{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;background:#fff;}
@@ -40,7 +40,7 @@ button.primary-btn:hover{opacity:0.85;}
 </head>
 <body>
 
-<header>スタート地点設定</header>
+<h1>スタート地点設定</h1>
 
 <main>
 <form id="startForm" action="Course.action" method="post">

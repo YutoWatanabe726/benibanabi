@@ -10,6 +10,7 @@ body {
   color: #333;
 }
 
+
 /* ===============================
       ヘッダー（左寄せ）
 ================================= */
@@ -333,31 +334,31 @@ main p {
 /* ===============================
       スマホ最適化
 ================================= */
-@media (max-width: 600px) {
-  .tab-container {
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 70px;
-  }
+/* @media (max-width: 600px) { */
+/*   .tab-container { */
+/*     flex-direction: column; */
+/*     gap: 12px; */
+/*     margin-top: 70px; */
+/*   } */
 
-  .tab {
-    font-size: 1rem;
-  }
+/*   .tab { */
+/*     font-size: 1rem; */
+/*   } */
 
-  main h2 {
-    margin: 35px 20px 15px;
-    font-size: 1.7rem;
-  }
+/*   main h2 { */
+/*     margin: 35px 20px 15px; */
+/*     font-size: 1.7rem; */
+/*   } */
 
-  main p {
-    margin: 0 20px 25px;
-    font-size: 1.05rem;
-  }
+/*   main p { */
+/*     margin: 0 20px 25px; */
+/*     font-size: 1.05rem; */
+/*   } */
 
-  .souvenir-list {
-    padding: 0 20px 50px;
-  }
-}
+/*   .souvenir-list { */
+/*     padding: 0 20px 50px; */
+/*   } */
+/* } */
 
 /* ===============================
       カードをリンク化する場合
@@ -377,8 +378,8 @@ main p {
 
 .page-container {
   max-width: 1200px;
-  margin: 0 auto;    /* ←中央寄せ */
-  padding: 40px 20px;
+  margin: 0 auto;
+  padding: 86px 20px 40px; /* 上だけヘッダー分を確保 */
 }
 
 

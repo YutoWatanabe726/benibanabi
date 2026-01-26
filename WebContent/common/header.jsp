@@ -202,6 +202,14 @@ body {
   display: flex !important;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
 </style>
 
 
