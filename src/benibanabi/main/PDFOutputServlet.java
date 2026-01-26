@@ -373,14 +373,8 @@ public class PDFOutputServlet extends HttpServlet {
                 PDImageXObject cherry = loadImageAny(doc, req, "/images/sakuranbo.jpg");
                 if (cherry != null) cs.drawImage(cherry, 120, h / 2 + 60, 60, 60);
 
-                PDImageXObject soba = loadImageAny(doc, req, "/images/110_銀山温泉4.jpg");
-                if (soba != null) cs.drawImage(soba, w - 200, h / 2 + 20, 60, 60);
-
                 PDImageXObject zao = loadImageAny(doc, req, "/images/zao_ski.jpg");
                 if (zao != null) cs.drawImage(zao, 140, h / 2 - 80, 60, 60);
-
-                PDImageXObject crane = loadImageAny(doc, req, "/images/芋煮会.jpg");
-                if (crane != null) cs.drawImage(crane, w - 180, h / 2 - 100, 60, 60);
 
                 // ===== フッター =====
                 drawText(cs, font, 12, w / 2 - 40, 80, "TRAVEL NOTE", 160, 160, 160);
