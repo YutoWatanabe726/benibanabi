@@ -330,3 +330,37 @@ body {
 }
 
 
+/* ===============================
+   ページタイトル（横いっぱいの帯）
+================================= */
+.page-title {
+    width: 100%;
+    margin: 0 0 30px;
+    padding: 20px 0;
+
+    text-align: center;
+
+    /* 配色はそのまま */
+    background: linear-gradient(90deg, #FFAA47, #E6483E);
+
+    /* 帯なので角丸は消す */
+    border-radius: 0;
+
+    /* 影は下方向だけにして帯感 */
+    box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+
+    cursor: default;
+    user-select: none;
+}
+
+/* 中身を中央寄せ */
+.page-title h1 {
+    max-width: 720px;
+    margin: 0 auto;
+
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+}
