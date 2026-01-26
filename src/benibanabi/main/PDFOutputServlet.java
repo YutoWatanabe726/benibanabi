@@ -722,10 +722,48 @@ public class PDFOutputServlet extends HttpServlet {
             doc.save(res.getOutputStream());
             res.getOutputStream().flush();
 
-        } catch (Exception e) {
-            res.setContentType("text/plain; charset=UTF-8");
+        } catch (OutOfMemoryError ome) {
+            log("メモリ不足エラー user=" + req.getRemoteAddr() + " size=" +
+                (req.getContentLengthLong() / 1024) + "KB", ome);
+
+            String type = "out_of_memory";
+            String message = "サーバーのメモリが不足しています。スポットを減らしてください。";
+
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            res.setContentType("application/json; charset=UTF-8");
+
             try (PrintWriter out = res.getWriter()) {
-                out.println("PDF生成中にエラーが発生しました: " + e.getMessage());
+                out.print("{");
+                out.print("\"status\":\"error\",");
+                out.print("\"type\":\"" + type + "\",");
+                out.print("\"message\":\"" + message.replace("\"", "\\\"") + "\"");
+                out.print("}");
+            }
+        } catch (Exception e) {
+            log("PDF生成エラー user=" + req.getRemoteAddr() + " size=" +
+                (req.getContentLengthLong() / 1024) + "KB", e);
+
+            String type = "unknown";
+            String message = e.getMessage() != null ? e.getMessage() : "不明なエラー";
+
+            // フォント関連エラーなどの追加分岐（必要に応じて）
+            if (message.contains("font") || message.contains("NotoSansJP")) {
+                type = "font_error";
+                message = "日本語フォントの読み込みに失敗しました。サーバー管理者に連絡してください。";
+            } else if (req.getContentLengthLong() > 10_000_000) { // 10MB超え
+                type = "payload_too_large";
+                message = "データ量が多すぎます（" + (req.getContentLengthLong()/1024/1024) + "MB）。スポットを減らしてください。";
+            }
+
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            res.setContentType("application/json; charset=UTF-8");
+
+            try (PrintWriter out = res.getWriter()) {
+                out.print("{");
+                out.print("\"status\":\"error\",");
+                out.print("\"type\":\"" + type + "\",");
+                out.print("\"message\":\"" + message.replace("\"", "\\\"") + "\"");
+                out.print("}");
             }
         }
     }

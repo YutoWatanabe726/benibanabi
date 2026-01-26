@@ -621,7 +621,7 @@ function renderRouteListForDay(dayIndex) {
 function getIconByType(type) {
   let iconUrl;
   if (type === "start") iconUrl = "https://cdn-icons-png.flaticon.com/512/25/25694.png";
-  else if (type === "goal") iconUrl = "https://cdn-icons-png.flaticon.com/512/60/60993.png";
+  else if (type === "goal") iconUrl = "https://illust8.com/wp-content/uploads/2018/06/checker-flag_illust_79.png";
   else if (type === "meal") iconUrl = "https://cdn-icons-png.flaticon.com/512/3075/3075977.png";
   else iconUrl = "https://cdn-icons-png.flaticon.com/512/252/252025.png";
 
@@ -1052,11 +1052,43 @@ function setupPdfButton() {
       btn.disabled = false;
 
     } catch (e) {
-      console.error("PDF生成処理エラー:", e);
-      setPdfStatus("danger", "PDF生成に失敗しました", "もう一度お試しください。コンソールも確認してください。", 100);
-      switchButtonToGenerateMode(btn);
-      btn.disabled = false;
-    }
+        console.error("PDF生成処理エラー:", e);
+
+        let title = "PDF生成に失敗しました";
+        let desc = "原因不明のエラーが発生しました。";
+        let showAlert = true;
+
+        // 通信エラー（一番多いパターン）
+        if (e.name === "TypeError" && (e.message.includes("Failed to fetch") || e.message.includes("NetworkError"))) {
+          title = "通信エラー";
+          desc = "サーバーとの接続が切れました。\n\n【よくある原因】\n・スポットが多すぎる（画像が重い）\n・サーバーが一時的に混雑している\n\n【対処法】\n・スポットを減らして再度試す\n・少し待ってからもう一度押す";
+        }
+        // サーバーからエラーJSONが返ってきた場合
+        else if (e.message && e.message.includes("HTTPエラー")) {
+          title = "サーバーエラー";
+          desc = e.message;
+        }
+        // その他のエラー
+        else {
+          desc = "予期しないエラーが発生しました。\n\nエラー内容： " + (e.message || "不明") + "\n\n管理者に連絡する場合はこのメッセージを伝えてください。";
+        }
+
+        setPdfStatus("danger", title, desc, 100);
+
+        if (showAlert) {
+          alert(title + "\n\n" + desc);
+        }
+
+        // ボタンを元に戻す
+        switchButtonToGenerateMode(btn);
+        btn.disabled = false;
+
+        // 生成済みのPDFがあれば破棄
+        if (generatedPdfObjectUrl) {
+          URL.revokeObjectURL(generatedPdfObjectUrl);
+          generatedPdfObjectUrl = null;
+        }
+      }
   });
 }
 
