@@ -112,7 +112,7 @@ window.addEventListener("DOMContentLoaded", function () {
     <h2 class="section-title">所在地</h2>
     <div class="card detail-box">
         <p>
-  			<strong>住所：</strong>
+  			<strong>住所：山形県</strong>
   			<%= (spot.getArea() != null ? spot.getArea() : "") %>
   			<%= (spot.getAddress() != null ? " " + spot.getAddress() : "") %>
 		</p>
