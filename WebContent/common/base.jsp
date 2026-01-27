@@ -7,7 +7,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${param.title}</title>
-
+  <style>
+  .page-container {
+  padding-top: 80px;
+}</style>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 

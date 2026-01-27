@@ -4,9 +4,9 @@
   <c:param name="title">コース作成</c:param>
 
   <c:param name="content">
-<!DOCTYPE html>
-<html lang="ja">
-<head>
+<!-- <!DOCTYPE html> -->
+<!-- <html lang="ja"> -->
+<!-- <head> -->
 <meta charset="UTF-8">
 <title>スタート地点設定</title>
 
@@ -37,8 +37,8 @@ button.primary-btn:hover{opacity:0.85;}
 .address-actions{display:flex;gap:8px;align-items:center;}
 .address-actions .btn{white-space:nowrap;}
 </style>
-</head>
-<body>
+<!-- </head> -->
+<!-- <body> -->
 
 <h1>スタート地点設定</h1>
 
@@ -407,7 +407,7 @@ document.getElementById("startForm").addEventListener("submit", function(event){
 });
 </script>
 
-</body>
-</html>
+<!-- </body> -->
+<!-- </html> -->
   </c:param>
 </c:import>
