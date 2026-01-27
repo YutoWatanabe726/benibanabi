@@ -96,6 +96,49 @@ body {
   box-shadow: 0 0 40px rgba(255,0,0,0.45);
   position: relative;
 }
+/* ===== モーダル内UI（Bootstrap代替） ===== */
+.secret-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 12px;
+}
+
+.secret-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  color: #ff6b6b;
+  cursor: pointer;
+}
+
+.secret-title {
+  color: #ff4d4d;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.secret-text {
+  color: #ffb3b3;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.secret-modal .btn {
+  width: 100%;
+  background: linear-gradient(90deg, #c40000, #ff3b3b);
+  border: none;
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 
 /* ===============================
    レスポンシブ（スマホ）
@@ -195,12 +238,21 @@ body {
    秘密モーダル表示制御
 ================================= */
 #secretCodeModal {
+  position: fixed;
+  inset: 0;                       /* top/right/bottom/left = 0 */
   display: none !important;
+
+  align-items: center;            /* 中央寄せ */
+  justify-content: center;
+
+  background: rgba(0,0,0,0.55);   /* 背景暗転 */
+  z-index: 3000;                  /* headerより前 */
 }
 
 #secretCodeModal.show {
   display: flex !important;
 }
+
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -274,6 +326,17 @@ const SECRET_CODE = "open-sasaki";
 const secretCodeInput = document.getElementById("secretCodeInput");
 const secretMessage = document.getElementById("secretMessage");
 const countdownMessage = document.getElementById("countdownMessage");
+
+const remainingTime = document.getElementById("remainingTime");
+if (remainingTime && typeof remainingTimeValue !== "undefined") {
+  remainingTime.textContent = remainingTimeValue;
+}
+
+const failCount = document.getElementById("failCount");
+if (failCount && typeof failCountValue !== "undefined") {
+  failCount.innerText = failCountValue;
+}
+
 
 let isExploding = false;
 
