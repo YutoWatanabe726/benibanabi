@@ -225,7 +225,7 @@ html, body {
   <nav id="navMenu">
     <a href="<c:url value='/benibanabi/index.jsp'/>">トップ</a>
     <a href="#" class="courseLink">コース</a>
-    <a href="<c:url value='/benibanabi/main/SpotList.action'/>">スポット</a>
+    <a href="<c:url value='/benibanabi/main/SpotSearch.action'/>">スポット</a>
     <a href="<c:url value='/benibanabi/main/Souvenir.action'/>">お土産紹介</a>
     <a href="<c:url value='/benibanabi/main/yamagata.jsp'/>">アクセス情報</a>
     <a href="<c:url value='/benibanabi/main/reservation.jsp'/>">宿泊・レンタカー</a>
