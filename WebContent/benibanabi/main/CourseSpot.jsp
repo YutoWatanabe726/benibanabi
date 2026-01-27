@@ -487,10 +487,11 @@ h3 {
 
 <body>
 
-<h3 class="text-center">日別ルート作成</h3>
+
 
 <!-- コース情報表示（start.jspから渡された属性） -->
 <div class="container mb-3">
+<h3 class="text-center">日別ルート作成</h3>
   <div class="row">
     <div class="col-md-8">
       <div><strong>コース：</strong>
