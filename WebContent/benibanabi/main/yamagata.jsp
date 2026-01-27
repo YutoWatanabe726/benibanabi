@@ -1,4 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<c:set var="pageContent">
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -58,3 +61,8 @@
 
 </body>
 </html>
+</c:set>
+<c:import url="/common/base.jsp">
+  <c:param name="title" value="四季の名産品｜べにばナビ" />
+  <c:param name="content" value="${pageContent}" />
+</c:import>

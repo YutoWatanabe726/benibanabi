@@ -2,7 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <c:set var="pageContent">
-
+<jsp:include page="../../common/header.jsp" />
   <style>
   /* ===== 動く背景 ===== */
   .season-wrapper {
