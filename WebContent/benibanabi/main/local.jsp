@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>現地移動手段｜べにばナビ</title>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-<jsp:include page="../../common/header.jsp" />
+
 </head>
 
 <body>

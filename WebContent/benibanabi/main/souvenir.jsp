@@ -2,12 +2,11 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <c:set var="pageContent">
-<jsp:include page="../../common/header.jsp" />
   <style>
   /* ===== 動く背景 ===== */
   .season-wrapper {
     position: relative;
-    margin: 40px auto;
+    margin: 24px auto;
     max-width: 1200px;
     border-radius: 24px;
     overflow: hidden;
