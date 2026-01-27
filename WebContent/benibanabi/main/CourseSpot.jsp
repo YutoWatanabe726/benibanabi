@@ -487,11 +487,10 @@ h3 {
 
 <body>
 
-
+<h3 class="text-center">日別ルート作成</h3>
 
 <!-- コース情報表示（start.jspから渡された属性） -->
 <div class="container mb-3">
-<h3 class="text-center">日別ルート作成</h3>
   <div class="row">
     <div class="col-md-8">
       <div><strong>コース：</strong>
@@ -706,7 +705,7 @@ let osrmLinesByDay = [];
 let startTimesByDay = []; // ★追加：Dayごとの出発時刻（"HH:MM"）
 
 /* 移動手段速度（km/h） */
-const speedMap = { "徒歩":5, "車":40, "電車":60 };
+const speedMap = { "徒歩":5, "車":40, "電車":70 };
 
 /* ------------------------
    お気に入り（Cookie）
@@ -945,7 +944,6 @@ function calcDistance(lat1, lng1, lat2, lng2) {
  function computeTimeline(dayIndex) {
   const list = routesByDay[dayIndex] || [];
   if (list.length === 0) return;
-
   const startHHMM = startTimesByDay[dayIndex] || (startTime || "09:00");
   let t = hhmmToMin(startHHMM);
 
@@ -954,27 +952,35 @@ function calcDistance(lat1, lng1, lat2, lng2) {
     const prev = i > 0 ? list[i - 1] : null;
 
     if (!prev) {
-      // ★start：出発時刻 = 開始時刻 + スタート滞在時間
+      // スタート地点
       const stay0 = (curr.stayTime != null) ? Number(curr.stayTime) : 0;
-
       curr.arriveTime = minToHhmm(t);
-
       t += (isNaN(stay0) ? 0 : stay0);
       curr.departTime = minToHhmm(t);
-
       continue;
     }
 
-    // 移動時間（prev -> curr）
-    const dist = calcDistance(prev.lat, prev.lng, curr.lat, curr.lng);
+    // 移動時間計算
+    let dist = calcDistance(prev.lat, prev.lng, curr.lat, curr.lng);
     const transport = curr.transport || "徒歩";
+
+    // ★ 電車区間は距離を1.3倍補正（曲がりくねった線路を考慮）
+    if (transport === "電車") {
+      dist *= 1.3;  // ← これで直線より長い距離として計算
+    }
+
     const speed = speedMap[transport] || 5;
     const travelMin = Math.round(dist / speed * 60);
 
-    t += travelMin;
+    // ★ 電車区間には最低10分の乗り換え・駅間徒歩を追加
+    let extraMin = 0;
+    if (transport === "電車") {
+      extraMin = 10 + Math.round(dist * 0.5);  // 距離に応じて追加（駅間移動）
+    }
+
+    t += travelMin + extraMin;
     curr.arriveTime = minToHhmm(t);
 
-    // ゴールは出発なし
     if (curr.type === "goal") {
       curr.departTime = "";
       continue;
@@ -1075,24 +1081,30 @@ function renderRouteHistory(dayIndex) {
     const prev = i > 0 ? list[i-1] : null;
 
     if (prev) {
-      const dist = calcDistance(prev.lat, prev.lng, item.lat, item.lng).toFixed(1);
-      const transport = item.transport || "徒歩";
-      const speed = speedMap[transport] || 5;
-      const timeMin = Math.round(dist / speed * 60);
+    	  const dist = calcDistance(prev.lat, prev.lng, item.lat, item.lng).toFixed(1);
+    	  const transport = item.transport || "徒歩";
+    	  const speed = speedMap[transport] || 5;
+    	  const timeMin = Math.round(dist / speed * 60);
 
-      const arrowHtml = $(`
-        <div class="arrow-card small-muted" data-index="${i}">
-          移動手段:
-          <select class="form-select form-select-sm transportSelect" data-index="${i}" style="width:100px; display:inline-block;">
-            <option ${transport === "徒歩" ? "selected" : ""}>徒歩</option>
-            <option ${transport === "車" ? "selected" : ""}>車</option>
-            <option ${transport === "電車" ? "selected" : ""}>電車</option>
-          </select>
-          予測時間: <span class="estimatedTime">${timeMin}</span>分 / 概算距離: ${dist}km
-        </div>
-      `);
-      container.append(arrowHtml);
-    }
+    	  let note = "";
+    	  if (transport === "電車") {
+    	    note = '<span class="small-muted" style="color:#e74c3c; margin-left:10px;">※電車ルートは簡易表示・計算です</span>';
+    	  }
+
+    	  const arrowHtml = $(`
+    	    <div class="arrow-card small-muted" data-index="${i}">
+    	      移動手段:
+    	      <select class="form-select form-select-sm transportSelect" data-index="${i}" style="width:100px; display:inline-block;">
+    	        <option ${transport === "徒歩" ? "selected" : ""}>徒歩</option>
+    	        <option ${transport === "車" ? "selected" : ""}>車</option>
+    	        <option ${transport === "電車" ? "selected" : ""}>電車</option>
+    	      </select>
+    	      予測時間: <span class="estimatedTime">${timeMin}</span>分 / 概算距離: ${dist}km
+    	      ${note}
+    	    </div>
+    	  `);
+    	  container.append(arrowHtml);
+    	}
 
     const stayTime = item.stayTime != null ? item.stayTime : 30;
     const memo = item.memo || "";
@@ -1837,48 +1849,101 @@ function buildPdfPayload() {
   for (let d = 0; d < dayCount; d++) {
     const dayRoute = routesByDay[d] || [];
     const simpleDay = dayRoute.map(function(r){
-      return {
-        name: r.name,
-        lat: r.lat,
-        lng: r.lng,
-        type: r.type,
-        stayTime: r.stayTime || 0,
-        memo: r.memo || "",
-        transport: r.transport || "徒歩",
-        photoUrl: r.photoUrl || "",
-        arriveTime: r.arriveTime || "",
-        departTime: r.departTime || ""
-      };
-    });
+    	  const simple = {
+    	    name: r.name,
+    	    lat: r.lat,
+    	    lng: r.lng,
+    	    type: r.type,
+    	    stayTime: r.stayTime || 0,
+    	    memo: r.memo || "",
+    	    transport: r.transport || "徒歩",
+    	    photoUrl: r.photoUrl || "",
+    	    arriveTime: r.arriveTime || "",
+    	    departTime: r.departTime || ""
+    	  };
+
+    	  // ★ 電車区間には注記をメモに追加（既存メモがあれば改行して追記）
+    	  if (simple.transport === "電車") {
+  			simple.memo = (simple.memo ? simple.memo + "\n\n" : "") +
+                 "【重要】この区間は電車ですが、マップと計算は簡易（道路経由）です。\n実際の乗換・所要時間は時刻表で確認してください。";
+}
+
+    	  return simple;
+    	});
     payload.routes.push(simpleDay);
   }
   return payload;
 }
 
+//全ルート確定ボタン（ゴールチェック付き・安全版）
 $("#confirmRouteBtn").on("click", function(){
-  if (!routesByDay[0] || routesByDay[0].length === 0) {
-    alert("ルートが未設定です。スポットやゴールを追加してください。");
-    return;
-  }
+  // ルートが空の場合
+	if (!routesByDay || routesByDay.length === 0 || !routesByDay[0] || routesByDay[0].length === 0) {
+	    alert("ルートが未設定です。スポットやゴールを追加してください。");
+	    return;
+	  }
 
-  syncRoutesFromDOM();
+	  console.log("routesByDay:", routesByDay);  // ← ここで構造を確認
 
-  const payload = buildPdfPayload();
-  const jsonStr = JSON.stringify(payload);
+	  // 全日のゴールチェック
+	  let missingGoalDays = [];
+	  try {
+	    for (let dayIndex = 0; dayIndex < routesByDay.length; dayIndex++) {
+	      let dayRoute = routesByDay[dayIndex] || [];
+	      console.log(`Day ${dayIndex + 1}:`, dayRoute);  // ← 各日の内容を確認
 
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = "pdf_output.jsp";
-  form.style.display = "none";
+	      let hasGoal = false;
+	      for (let j = 0; j < dayRoute.length; j++) {
+	        let r = dayRoute[j];
+	        if (r && r.type === "goal") {
+	          hasGoal = true;
+	          console.log(`Day ${dayIndex + 1} にゴール発見:`, r.name);
+	          break;
+	        }
+	      }
 
-  const input = document.createElement("input");
-  input.type = "hidden";
-  input.name = "routeData";
-  input.value = jsonStr;
-  form.appendChild(input);
+	      if (!hasGoal) {
+	        missingGoalDays.push(dayIndex + 1);
+	        console.log(`Day ${dayIndex + 1} にゴールなし`);
+	      }
+	    }
 
-  document.body.appendChild(form);
-  form.submit();
+	    if (missingGoalDays.length > 0) {
+	      let daysStr = missingGoalDays.join("日目、") + "日目";
+	      alert("以下の日のゴール地点が設定されていません：\n" +
+	            "Day " + daysStr + "\n\n" +
+	            "各日のゴール地点を設定してから「全ルート確定」を押してください。\n" +
+	            "（各日の「ゴール設定」ボタンで住所を入力できます）");
+
+	      // 最初の未設定日にスクロール
+	      let firstMissingDay = missingGoalDays[0];
+	      let section = $("#daySection" + firstMissingDay);
+	      if (section && section.length > 0) {
+	        section[0].scrollIntoView({ behavior: "smooth", block: "center" });
+	      }
+	      return;
+	    } else {
+	      console.log("全日ゴール設定済み");
+	    }
+	  } catch (err) {
+	    console.error("ゴールチェックエラー:", err);
+	  }
+
+	  // 確定処理
+	  syncRoutesFromDOM();
+	  const payload = buildPdfPayload();
+	  const jsonStr = JSON.stringify(payload);
+	  const form = document.createElement("form");
+	  form.method = "POST";
+	  form.action = "pdf_output.jsp";
+	  form.style.display = "none";
+	  const input = document.createElement("input");
+	  input.type = "hidden";
+	  input.name = "routeData";
+	  input.value = jsonStr;
+	  form.appendChild(input);
+	  document.body.appendChild(form);
+	  form.submit();
 });
 
 /* ------------------------
