@@ -218,3 +218,35 @@ textarea {
     color: #D92929; /* 赤系で強調 */
 }
 
+/* ===============================
+   スマホ版：お気に入りボタンを丸＋星のみ
+================================= */
+@media screen and (max-width: 768px) {
+
+    .favorite-star {
+        width: 52px;
+        height: 52px;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 0;              /* テキスト非表示 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 星アイコン表示（中央ズレ対策） */
+    .favorite-star::before {
+        content: "★";
+        display: flex;             /* ★ 重要 */
+        align-items: center;       /* ★ 縦中央 */
+        justify-content: center;   /* ★ 横中央 */
+        line-height: 1;            /* ★ ベースラインずれ防止 */
+        font-size: 26px;
+        color: #D92929;
+        transition: 0.3s;
+    }
+
+    .favorite-star.active::before {
+        color: #fff;
+    }
+}
