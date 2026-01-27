@@ -40,9 +40,10 @@ button.primary-btn:hover{opacity:0.85;}
 <!-- </head> -->
 <!-- <body> -->
 
-<h1>スタート地点設定</h1>
+
 
 <main>
+<h1>スタート地点設定</h1>
 <form id="startForm" action="Course.action" method="post">
 
   <label for="courseTitle">コースタイトル</label>
