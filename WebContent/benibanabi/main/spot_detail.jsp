@@ -57,7 +57,8 @@ function initFavorite() {
 
 function updateFavoriteButton(btn, isFav) {
     btn.classList.toggle("active", isFav);
-    btn.textContent = isFav ? "★ お気に入り解除" : "☆ お気に入り追加";
+    btn.querySelector(".fav-text").textContent =
+        isFav ? "お気に入り解除" : "お気に入り追加";
 }
 
 window.addEventListener("DOMContentLoaded", initFavorite);
@@ -94,9 +95,17 @@ window.addEventListener("DOMContentLoaded", function () {
     <a href="SpotSearch.action?page=${page}" class="back-btn">一覧へ戻る</a>
 
     <div class="spot-header">
-        <h1><%= spot.getSpotName() %></h1>
-        <button id="favoriteBtn" data-id="<%= spot.getSpotId() %>" class="favorite-star">☆ お気に入り追加</button>
-    </div>
+    	<h1><%= spot.getSpotName() %></h1>
+
+    	<button
+      	id="favoriteBtn"
+      	data-id="<%= spot.getSpotId() %>"
+      	class="favorite-star">
+
+      	<span class="fav-text">お気に入り追加</span>
+    	</button>
+	</div>
+
 
     <div class="card detail-box">
         <img src="<%= request.getContextPath() + spot.getSpotPhoto() %>" class="card-img" alt="spot image">

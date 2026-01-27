@@ -223,27 +223,27 @@ textarea {
 ================================= */
 @media screen and (max-width: 768px) {
 
+    /* テキストは完全に消す */
+    .favorite-star .fav-text {
+        display: none;
+    }
+
     .favorite-star {
         width: 52px;
         height: 52px;
         padding: 0;
         border-radius: 50%;
-        font-size: 0;              /* テキスト非表示 */
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    /* 星アイコン表示（中央ズレ対策） */
+    /* ★表示 */
     .favorite-star::before {
         content: "★";
-        display: flex;             /* ★ 重要 */
-        align-items: center;       /* ★ 縦中央 */
-        justify-content: center;   /* ★ 横中央 */
-        line-height: 1;            /* ★ ベースラインずれ防止 */
         font-size: 26px;
+        line-height: 1;
         color: #D92929;
-        transition: 0.3s;
     }
 
     .favorite-star.active::before {
