@@ -134,6 +134,16 @@
       grid-template-columns: 1fr;
     }
   }
+  @media (max-width: 600px) {
+  .sound-toggle {
+    top: auto;
+    bottom: 16px;
+    right: 16px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+}
+
   </style>
 
   <!-- 上部タブ -->
