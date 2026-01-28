@@ -1,6 +1,11 @@
 package benibanabi.main;
 
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -144,8 +149,39 @@ public class PDFOutputServlet extends HttpServlet {
             int comma = b64.indexOf(',');
             if (comma >= 0) b64 = b64.substring(comma + 1);
             byte[] bytes = Base64.getDecoder().decode(b64);
-            return PDImageXObject.createFromByteArray(doc, bytes, "image-b64");
+
+            BufferedImage original = ImageIO.read(new ByteArrayInputStream(bytes));
+            if (original == null) {
+                System.err.println("Base64画像読み込み失敗: null");
+                return null;
+            }
+
+            // ★ 常にリサイズ（幅800px以下に強制）
+            int maxWidth = 800;
+            int width = original.getWidth();
+            int height = original.getHeight();
+
+            if (width > maxWidth) {
+                double ratio = (double) maxWidth / width;
+                int newHeight = (int) (height * ratio);
+                BufferedImage resized = new BufferedImage(maxWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g2d = resized.createGraphics();
+                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);  // 高品質リサイズ
+                g2d.drawImage(original.getScaledInstance(maxWidth, newHeight, Image.SCALE_SMOOTH), 0, 0, null);
+                g2d.dispose();
+                original = resized;
+            }
+
+            // ★ JPEGとして圧縮して保存（品質0.75）
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(original, "jpeg", baos);
+            byte[] compressedBytes = baos.toByteArray();
+
+            return PDImageXObject.createFromByteArray(doc, compressedBytes, "compressed-jpeg");
+
         } catch (Exception e) {
+            System.err.println("Base64画像処理エラー: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
