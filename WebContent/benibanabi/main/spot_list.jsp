@@ -95,22 +95,30 @@ function initFavorites() {
 // エリア・タグ選択数を更新
 function updateSelectedCounts() {
     const areaCount = document.querySelectorAll('input[name="area"]:checked').length;
-    const areaBtn = document.getElementById("areaBtn");
-    if (areaBtn) areaBtn.textContent = areaCount === 0 ? "エリア選択 ▼" : `エリア選択 ▼`;
-    const tagCount = document.querySelectorAll('input[name="tag"]:checked').length;
-    const tagBtn = document.getElementById("tagBtn");
-    if (tagBtn) tagBtn.textContent = tagCount === 0 ? "タグ選択 ▼" : `タグ選択 ▼`;
+    const tagCount  = document.querySelectorAll('input[name="tag"]:checked').length;
+
+    document.getElementById("areaCount").textContent = areaCount;
+    document.getElementById("tagCount").textContent  = tagCount;
 }
+
 
 // 検索条件クリア
 function clearConditions() {
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);
+    // チェックボックス全解除
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+    // キーワードクリア
     const keywordInput = document.querySelector('input[name="keyword"]');
-    if(keywordInput) keywordInput.value="";
-    const fav = document.querySelector('input[name="favoriteOnly"]');
-    if(fav) fav.checked=false;
-    document.querySelector('#searchMenu form').submit();
+    if (keywordInput) keywordInput.value = "";
+
+    // ページ番号を削除（重要）
+    const pageInput = document.querySelector('input[name="page"]');
+    if (pageInput) pageInput.remove();
+
+    // フォーム送信（検索実行）
+    document.getElementById("searchForm").submit();
 }
+
 
 // モーダル表示
 function openModal(id) { document.getElementById(id).style.display="flex"; }
@@ -156,19 +164,36 @@ window.addEventListener("click", function(e) {
 
 <form id="searchForm" action="SpotSearch.action" method="post">
 <div id="searchMenu">
-    <button type="button" id="areaBtn" onclick="openModal('areaModal')">エリア選択 ▼</button>
-    <button type="button" id="tagBtn" onclick="openModal('tagModal')">タグ選択 ▼</button>
 
-    <input type="text" name="keyword" value="<%= keyword %>" placeholder="キーワードを入力">
+    <!-- 上段：キーワード -->
+    <div class="search-row keyword-row">
+        <input type="text" name="keyword" value="<%= keyword %>" placeholder="スポット名・説明で検索">
+    </div>
 
-    <label class="favorite-label">
-        <input type="checkbox" name="favoriteOnly" value="on" <%= favoriteFlag ? "checked" : "" %>>
-        お気に入り
-    </label>
+    <!-- 中段：条件ボタン -->
+    <div class="search-row condition-row">
+        <button type="button" id="areaBtn" onclick="openModal('areaModal')">
+            エリア (<span id="areaCount">0</span>)
+        </button>
 
-    <button type="submit" onclick="setTimeout(initFavorites,50)">検索</button>
-    <button type="button" onclick="clearConditions()">検索条件クリア</button>
+        <button type="button" id="tagBtn" onclick="openModal('tagModal')">
+            タグ (<span id="tagCount">0</span>)
+        </button>
+
+        <label class="favorite-toggle">
+            <input type="checkbox" name="favoriteOnly" value="on" <%= favoriteFlag ? "checked" : "" %>>
+            <span>★ お気に入りのみ</span>
+        </label>
+    </div>
+
+    <!-- 下段：実行 -->
+    <div class="search-row action-row">
+        <button type="submit" class="search-btn">🔍 検索</button>
+        <button type="button" class="clear-btn" onclick="clearConditions()">条件クリア</button>
+    </div>
+
 </div>
+
 
 <div class="result-count">
     <%= totalCount %> 件表示
