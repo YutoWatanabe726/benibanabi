@@ -12,6 +12,7 @@
   padding-top: 80px;
 }</style>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+  <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico">
 </head>
 
 <body>
