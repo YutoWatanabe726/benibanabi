@@ -134,14 +134,14 @@ body {
     position: absolute;
     top: 12px;
     right: 18px;
-    font-size: 22px;
+    font-size: 26px;
     color: #fff;
     background: linear-gradient(90deg, #FFB35E, #D92929);
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 45px;
+    height: 45px;
     text-align: center;
-    line-height: 28px;
+    line-height: 45px;
     cursor: pointer;
     transition: 0.2s;
 }
