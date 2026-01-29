@@ -126,6 +126,8 @@ function openModal(id) {
   if (!modal) return;
 
   modal.style.display = "flex";
+  document.documentElement.classList.add("modal-open");
+  document.body.classList.add("modal-open");
   setHeaderHide(true);
 }
 
@@ -134,6 +136,8 @@ function closeModal(id) {
   if (!modal) return;
 
   modal.style.display = "none";
+  document.documentElement.classList.add("modal-open");
+  document.body.classList.remove("modal-open");
   setHeaderHide(false);
 }
 
@@ -165,6 +169,7 @@ window.addEventListener("click", function(e) {
   document.querySelectorAll(".modal").forEach(modal => {
     if (e.target === modal) {
       modal.style.display = "none";
+      document.body.classList.remove("modal-open");
       setHeaderHide(false);
     }
   });

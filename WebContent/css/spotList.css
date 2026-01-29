@@ -134,7 +134,7 @@ body {
     position: absolute;
     top: 12px;
     right: 18px;
-    font-size: 26px;
+    font-size: 28px;
     color: #fff;
     background: linear-gradient(90deg, #FFB35E, #D92929);
     border-radius: 50%;
@@ -552,5 +552,19 @@ body {
 
 .modal-content ul {
     margin-top: 8px;
+}
+
+/* ===============================
+   モーダル表示中：背景スクロール禁止
+================================= */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* モーダル表示中：背景スクロール完全禁止 */
+html.modal-open,
+body.modal-open {
+    overflow: hidden;
+    height: 100%;
 }
 
