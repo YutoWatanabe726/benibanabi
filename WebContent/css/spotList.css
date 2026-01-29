@@ -554,13 +554,6 @@ body {
     margin-top: 8px;
 }
 
-/* ===============================
-   モーダル表示中：背景スクロール禁止
-================================= */
-body.modal-open {
-    overflow: hidden;
-}
-
 /* モーダル表示中：背景スクロール完全禁止 */
 html.modal-open,
 body.modal-open {
