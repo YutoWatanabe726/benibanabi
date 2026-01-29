@@ -119,13 +119,16 @@ body {
     background: #fff;
     width: 90%;
     max-width: 800px;
-    max-height: 75vh; /* 画面高さの75%まで */
+    max-height: 75vh;
     overflow-y: auto;
-    padding: 25px;
+
+    padding: 0 25px 25px; /* ★ 上だけ0にする */
+
     border-radius: 12px;
     position: relative;
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
+
 
 .modal-close {
     position: absolute;
@@ -515,3 +518,39 @@ body {
 
     box-shadow: 0 3px 10px rgba(217,41,41,0.18);
 }
+
+
+/* ===============================
+   モーダル固定ヘッダー
+================================= */
+.modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    background: #fff;
+    padding: 16px 40px;
+
+    border-bottom: 1px solid #eee;
+}
+
+
+/* タイトル */
+.modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #D92929;
+    text-align: center;
+}
+
+/* 閉じるボタン（固定ヘッダー内用） */
+.modal-header .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+}
+
+.modal-content ul {
+    margin-top: 8px;
+}
+

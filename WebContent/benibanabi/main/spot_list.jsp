@@ -121,8 +121,21 @@ function clearConditions() {
 
 
 // モーダル表示
-function openModal(id) { document.getElementById(id).style.display="flex"; }
-function closeModal(id) { document.getElementById(id).style.display="none"; }
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  modal.style.display = "flex";
+  setHeaderHide(true);
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  modal.style.display = "none";
+  setHeaderHide(false);
+}
 
 // ページネーションジャンプ
 function goPage(page) {
@@ -149,9 +162,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
 // モーダル外クリックで閉じる
 window.addEventListener("click", function(e) {
-    document.querySelectorAll(".modal").forEach(modal => {
-        if (e.target === modal) modal.style.display = "none";
-    });
+  document.querySelectorAll(".modal").forEach(modal => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+      setHeaderHide(false);
+    }
+  });
 });
 </script>
 </head>
@@ -256,8 +272,13 @@ window.addEventListener("click", function(e) {
 <!-- モーダル: エリア選択 -->
 <div id="areaModal" class="modal">
     <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('areaModal')">×</span>
-        <h2>エリア選択</h2>
+
+    	<!-- ★ 固定ヘッダー -->
+        <div class="modal-header">
+            <h2>エリア選択</h2>
+            <span class="modal-close" onclick="closeModal('areaModal')">×</span>
+        </div>
+
         <ul>
             <!-- 庄内 -->
             <li class="area-group-title">庄内</li>
@@ -308,8 +329,13 @@ window.addEventListener("click", function(e) {
 <!-- モーダル: タグ選択 -->
 <div id="tagModal" class="modal">
     <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('tagModal')">×</span>
-        <h2>タグ選択</h2>
+
+    <!-- ★ 固定ヘッダー -->
+        <div class="modal-header">
+            <h2>タグ選択</h2>
+            <span class="modal-close" onclick="closeModal('tagModal')">×</span>
+        </div>
+
         <ul>
             <% for(Tag t : tagAllList) { %>
                 <li><label>
@@ -320,6 +346,7 @@ window.addEventListener("click", function(e) {
                 </label></li>
             <% } %>
         </ul>
+    </div>
     </div>
 </div>
 
