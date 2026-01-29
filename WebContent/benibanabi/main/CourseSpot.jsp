@@ -875,7 +875,7 @@ function createDaySection(day, startLat, startLng, startName) {
 
 	   let iconUrl;
 	   if (type === "start") iconUrl = "https://cdn-icons-png.flaticon.com/512/25/25694.png";
-	   else if (type === "goal") iconUrl = "https://illust8.com/wp-content/uploads/2018/06/checker-flag_illust_79.png";
+	   else if (type === "goal") iconUrl = "https://cdn-icons-png.flaticon.com/128/2164/2164609.png";
 	   else if (type === "meal") iconUrl = "https://cdn-icons-png.flaticon.com/512/3075/3075977.png";
 	   else iconUrl = "https://cdn-icons-png.flaticon.com/512/252/252025.png";
 
