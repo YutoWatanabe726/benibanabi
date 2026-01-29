@@ -27,7 +27,7 @@
   <div class="souvenir-list">
 
     <!-- レンタカー -->
-    <a href="http://localhost:8080/benibanabi/benibanabi/main/reservation.jsp"
+
        target="_blank" class="link-card">
       <div class="souvenir-item">
         <img src="../../images/NSX.jpg" alt="レンタカー">
