@@ -262,6 +262,25 @@ html, body {
   overflow-x: hidden;
 }
 
+/* ===============================
+   モーダル表示中：ヘッダー退避
+================================= */
+.header {
+  transition: transform 0.35s ease, opacity 0.25s ease;
+  will-change: transform;
+}
+
+/* モーダルON */
+body.header-hide .header {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+/* header が消えている間は余白も消す */
+body.header-hide {
+  padding-top: 0 !important;
+}
+
 </style>
 
 
@@ -446,5 +465,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
 	  });
 	});
+function setHeaderHide(enable) {
+	  document.body.classList.toggle("header-hide", enable);
+	}
 
 </script>

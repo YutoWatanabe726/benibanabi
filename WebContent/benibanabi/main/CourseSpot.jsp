@@ -2169,6 +2169,21 @@ $(document).ready(function(){
     saveRoutesToLocal();
   });
 });
+document.addEventListener("DOMContentLoaded", function () {
+
+	  document.querySelectorAll(".modal").forEach(modal => {
+
+	    modal.addEventListener("show.bs.modal", () => {
+	      setHeaderHide(true);
+	    });
+
+	    modal.addEventListener("hidden.bs.modal", () => {
+	      setHeaderHide(false);
+	    });
+
+	  });
+
+	});
 </script>
 
 <!-- Bootstrap JS（Bundle：Popper 同梱） -->
