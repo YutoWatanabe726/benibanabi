@@ -481,6 +481,43 @@ h3 {
   }
 
 }
+/* ================================
+   スポット選択モーダル 高さ固定
+================================ */
+
+/* モーダル全体の高さを固定 */
+#spotModal .modal-dialog {
+  height: 80vh;              /* ★ ここが肝 */
+  max-height: 80vh;
+  display: flex;
+}
+
+/* modal-content を縦flexに */
+#spotModal .modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* header / footer は固定 */
+#spotModal .modal-header,
+#spotModal .modal-footer {
+  flex-shrink: 0;
+}
+
+/* body だけスクロール */
+#spotModal .modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+  #spotModal .modal-dialog {
+    height: 90vh;
+    max-height: 90vh;
+    margin: 0;
+  }
+}
 
 </style>
 </head>
@@ -570,7 +607,18 @@ h3 {
         </div>
 
         <!-- カード一覧 -->
-        <div class="row" id="spotCards"></div>
+<!-- カード一覧 -->
+<div class="row" id="spotCards">
+
+  <!-- ★ 検索結果なしプレースホルダー -->
+  <div id="spotNoResult"
+       class="col-12 text-center text-muted py-4"
+       style="display:none;">
+    該当するスポットがありません
+  </div>
+
+</div>
+
       </div>
 
       <div class="modal-footer">
@@ -669,6 +717,9 @@ let startPointRaw = '<%= request.getAttribute("startPoint") != null ? request.ge
 let startAddressRaw = '<%= request.getAttribute("address") != null ? request.getAttribute("address").toString().replace("'", "\\'") : "" %>';
 let startTime = '<%= request.getAttribute("startTime") != null ? request.getAttribute("startTime").toString().replace("'", "\\'") : "09:00" %>';
 let allSpots = []; // モーダルで表示する全スポットを保持
+const $spotCards = $("#spotCards");
+const $spotNoResult = $("#spotNoResult");
+
 
 applyHeaderToDom();
 
@@ -1389,43 +1440,46 @@ $(document).on("click", "#searchSpotBtn", function() {
 });
 
 function renderSpotCards(spots) {
-  $("#spotCards").empty();
-  const favs = loadFavsFromCookie().map(String);
-  const contextPath = "<%= request.getContextPath() %>";
 
-  spots.forEach(function(s){
-    const spotIdStr = String(s.spotId);
-    const isFav = favs.includes(spotIdStr) || s.fav === true;
+	  // ★ いったん全消し
+	  $spotCards.empty();
 
-    const favClass = isFav ? "active" : "";
-    const imgUrl = s.spotPhoto ? contextPath + s.spotPhoto
-                               : contextPath + "/images/placeholder.jpg";
-    s.fullPhotoUrl = imgUrl;
+	  // ★ 検索結果0件
+	  if (!spots || spots.length === 0) {
+	    $spotNoResult.show();
+	    return; // ← ここで終了
+	  }
 
-    const card = $(`
-      <div class="col-md-4">
-        <div class="modal-card" data-id="${spotIdStr}">
-          <span class="favorite ${favClass}" data-id="${spotIdStr}">★</span>
-          <img src="${imgUrl}" class="img-fluid mb-2" alt="${escapeHtml(s.spotName)}"/>
-          <h6 class="mb-0">${escapeHtml(s.spotName)}</h6>
-          <div class="small-muted">${escapeHtml(s.area || "")}</div>
-        </div>
-      </div>
-    `);
+	  // ★ 結果あり
+	  $spotNoResult.hide();
 
-    card.find(".modal-card").on("click", function(e){
-      if ($(e.target).hasClass("favorite")) return;
-      selectSpot(s.spotId, s.spotName, parseFloat(s.lat), parseFloat(s.lng), s.fullPhotoUrl || null);
-    });
+	  const favs = loadFavsFromCookie().map(String);
+	  const contextPath = "<%= request.getContextPath() %>";
 
-    card.find(".favorite").on("click", function(e){
-      e.stopPropagation();
-      toggleFavCookie($(this).data("id"), this);
-    });
+	  spots.forEach(function(s){
+	    const spotIdStr = String(s.spotId);
+	    const isFav = favs.includes(spotIdStr) || s.fav === true;
 
-    $("#spotCards").append(card);
-  });
-}
+	    const favClass = isFav ? "active" : "";
+	    const imgUrl = s.spotPhoto
+	      ? contextPath + s.spotPhoto
+	      : contextPath + "/images/placeholder.jpg";
+
+	    const card = $(`
+	      <div class="col-md-4">
+	        <div class="modal-card" data-id="${spotIdStr}">
+	          <span class="favorite ${favClass}" data-id="${spotIdStr}">★</span>
+	          <img src="${imgUrl}" class="img-fluid mb-2" alt="${escapeHtml(s.spotName)}"/>
+	          <h6 class="mb-0">${escapeHtml(s.spotName)}</h6>
+	          <div class="small-muted">${escapeHtml(s.area || "")}</div>
+	        </div>
+	      </div>
+	    `);
+
+	    $spotCards.append(card);
+	  });
+	}
+
 
 /* スポット選択 */
 function selectSpot(id, name, lat, lng, photoUrl) {
@@ -1458,17 +1512,21 @@ function toggleFavCookie(spotId, elem) {
 }
 
 function updateSpotCards(favOnly) {
-  if (!allSpots || !Array.isArray(allSpots)) return;
-  const favs = loadFavsFromCookie().map(String);
+	  const $container = $("#spotCards");
+	  $container.empty();
 
-  const filtered = allSpots.filter(s => {
-    const idStr = String(s.spotId);
-    const isFav = favs.includes(idStr) || s.fav === true;
-    return !favOnly || isFav;
-  });
+	  if (!allSpots || allSpots.length === 0) {
+	    $container.append(`
+	      <div class="col-12 text-center text-muted py-4">
+	        検索結果がありません
+	      </div>
+	    `);
+	    return;
+	  }
 
-  renderSpotCards(filtered);
-}
+	  renderSpotCards(allSpots);
+	}
+
 
 /* ------------------------
    イベントハンドラ（その他）
