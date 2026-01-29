@@ -28,7 +28,6 @@
 
     <!-- レンタカー -->
 
-       target="_blank" class="link-card">
       <div class="souvenir-item">
         <img src="../../images/NSX.jpg" alt="レンタカー">
         <h3>🚗 レンタカー</h3>
