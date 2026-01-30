@@ -211,20 +211,60 @@ h3 {
   box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
-/* お気に入り星 */
-.favorite {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  cursor: pointer;
-  color: #ccc;
-  user-select: none;
-  transition: 0.2s;
+.spot-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.favorite.active {
-  color: gold;
+.spot-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
 }
+
+.favorite {
+	position:static;
+    font-size: 30px;              /* 見た目を少し大きく */
+    width: 40px;                  /* ★ タップ領域を確保 */
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+
+    cursor: pointer;
+    color: #d0d0d0;
+    user-select: none;
+
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9); /* 白背景で独立感 */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        background 0.2s,
+        color 0.2s;
+}
+
+.favorite:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    background: #fff4ee;
+}
+
+/* お気に入りON */
+.favorite.active {
+    color: #D92929;
+    background: linear-gradient(135deg, #FFEEE4, #FFD2C2);
+    box-shadow: 0 0 10px rgba(217,41,41,0.45);
+}
+
+/* クリック時（押した感） */
+.favorite:active {
+    transform: scale(0.95);
+}
+
 
 /* ================================
    Day セクション
@@ -483,6 +523,13 @@ h3 {
 }
 #spotCards {
   min-height: 200px;   /* ★ これが効く */
+}
+
+.modal-card img {
+  width: 100%;
+  height: 160px;        /* ← 固定 */
+  object-fit: cover;   /* トリミング */
+  border-radius: 12px;
 }
 
 </style>
@@ -1406,15 +1453,22 @@ function renderSpotCards(spots) {
     s.fullPhotoUrl = imgUrl;
 
     const card = $(`
-      <div class="col-md-4">
-        <div class="modal-card" data-id="${spotIdStr}">
-          <span class="favorite ${favClass}" data-id="${spotIdStr}">★</span>
-          <img src="${imgUrl}" class="img-fluid mb-2" alt="${escapeHtml(s.spotName)}"/>
-          <h6 class="mb-0">${escapeHtml(s.spotName)}</h6>
-          <div class="small-muted">${escapeHtml(s.area || "")}</div>
-        </div>
-      </div>
-    `);
+    		  <div class="col-md-4">
+    		    <div class="modal-card" data-id="${spotIdStr}">
+    		      <img src="${imgUrl}" loading="lazy"
+    		           class="img-fluid mb-2"
+    		           alt="${escapeHtml(s.spotName)}"/>
+
+    		      <div class="spot-title-row">
+    		        <h6 class="mb-0 spot-title">${escapeHtml(s.spotName)}</h6>
+    		        <span class="favorite ${favClass}" data-id="${spotIdStr}">★</span>
+    		      </div>
+
+    		      <div class="small-muted">${escapeHtml(s.area || "")}</div>
+    		    </div>
+    		  </div>
+    		`);
+
 
     card.find(".modal-card").on("click", function(e){
       if ($(e.target).hasClass("favorite")) return;

@@ -470,7 +470,14 @@ main p {
 
   .souvenir-item p {
     font-size: 0.9rem;
-  }
+  }.modal-card img {
+  width: 100%;
+  height: 160px;        /* ← 固定 */
+  object-fit: cover;   /* トリミング */
+  border-radius: 12px;
+}
+
+
 }
 
 
