@@ -481,6 +481,9 @@ h3 {
   }
 
 }
+#spotCards {
+  min-height: 200px;   /* ★ これが効く */
+}
 
 </style>
 </head>
@@ -1458,17 +1461,45 @@ function toggleFavCookie(spotId, elem) {
 }
 
 function updateSpotCards(favOnly) {
-  if (!allSpots || !Array.isArray(allSpots)) return;
-  const favs = loadFavsFromCookie().map(String);
+	  const $spotCards = $("#spotCards");
+	  $spotCards.empty();
 
-  const filtered = allSpots.filter(s => {
-    const idStr = String(s.spotId);
-    const isFav = favs.includes(idStr) || s.fav === true;
-    return !favOnly || isFav;
-  });
+	  // ★ allSpots が無い場合もメッセージ表示
+	  if (!allSpots || !Array.isArray(allSpots)) {
+	    $spotCards.html(`
+	      <div class="col-12">
+	        <div class="alert alert-secondary text-center my-3">
+	          該当するスポットがありません。
+	        </div>
+	      </div>
+	    `);
+	    return;
+	  }
 
-  renderSpotCards(filtered);
-}
+	  const favs = loadFavsFromCookie().map(String);
+
+	  const filtered = allSpots.filter(s => {
+	    const idStr = String(s.spotId);
+	    const isFav = favs.includes(idStr) || s.fav === true;
+	    return !favOnly || isFav;
+	  });
+
+	  // ★ フィルタ後 0件
+	  if (filtered.length === 0) {
+	    $spotCards.html(`
+	      <div class="col-12">
+	        <div class="alert alert-secondary text-center my-3">
+	          該当するスポットがありません。<br>
+	          検索条件を変更してみてください。
+	        </div>
+	      </div>
+	    `);
+	    return;
+	  }
+
+	  renderSpotCards(filtered);
+	}
+
 
 /* ------------------------
    イベントハンドラ（その他）
