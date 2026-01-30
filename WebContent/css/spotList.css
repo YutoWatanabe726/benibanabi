@@ -289,9 +289,9 @@ body {
 /* 星マーク（お気に入り）改良版 */
 .favorite-star {
     font-size: 30px;              /* 見た目を少し大きく */
-    width: 42px;                  /* ★ タップ領域を確保 */
-    height: 42px;
-    line-height: 42px;
+    width: 44px;                  /* ★ タップ領域を確保 */
+    height: 44px;
+    line-height: 44px;
     text-align: center;
 
     cursor: pointer;
