@@ -286,20 +286,48 @@ body {
     margin-bottom: 6px;
 }
 
-/* 星マーク */
+/* 星マーク（お気に入り）改良版 */
 .favorite-star {
-    font-size: 28px;       /* 押しやすいサイズ */
+    font-size: 30px;              /* 見た目を少し大きく */
+    width: 42px;                  /* ★ タップ領域を確保 */
+    height: 42px;
+    line-height: 42px;
+    text-align: center;
+
     cursor: pointer;
     color: #d0d0d0;
     user-select: none;
-    transition: 0.2s;
-    padding: 2px;           /* クリック範囲を少し広げる */
+
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9); /* 白背景で独立感 */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        background 0.2s,
+        color 0.2s;
 }
 
+/* ホバー時 */
+.favorite-star:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    background: #fff4ee;
+}
+
+/* お気に入りON */
 .favorite-star.active {
     color: #D92929;
-    text-shadow: 0 0 6px #FF7A45;
+    background: linear-gradient(135deg, #FFEEE4, #FFD2C2);
+    box-shadow: 0 0 10px rgba(217,41,41,0.45);
 }
+
+/* クリック時（押した感） */
+.favorite-star:active {
+    transform: scale(0.95);
+}
+
 
 
 /* ===============================
