@@ -20,7 +20,7 @@
             <!-- 観光スポット名 -->
             <div class="mb-3">
                 <label class="form-label">観光スポット名（必須）</label>
-                <input type="text" name="spotName" class="form-control" required placeholder="例:○○温泉">
+                <input type="text" name="spotName" class="form-control"maxlength=15 required placeholder="例:○○温泉">
             </div>
 
             <!-- 説明 -->
@@ -74,7 +74,7 @@
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary px-4">登録</button>
-                <a href="AdminSpotSetting.action">戻る</a>
+                <a href="AdminSpotList.action">戻る</a>
             </div>
         </form>
     </div>

@@ -2,12 +2,11 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <c:set var="pageContent">
-
   <style>
   /* ===== 動く背景 ===== */
   .season-wrapper {
     position: relative;
-    margin: 40px auto;
+    margin: 24px auto;
     max-width: 1200px;
     border-radius: 24px;
     overflow: hidden;
@@ -135,6 +134,16 @@
       grid-template-columns: 1fr;
     }
   }
+  @media (max-width: 600px) {
+  .sound-toggle {
+    top: auto;
+    bottom: 16px;
+    right: 16px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+}
+
   </style>
 
   <!-- 上部タブ -->

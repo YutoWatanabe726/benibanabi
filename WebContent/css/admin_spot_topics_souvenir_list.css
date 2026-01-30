@@ -10,7 +10,7 @@ body {
 
 /* ===== コンテナ ===== */
 .container {
-    position: relative; /* ← 右配置のために追加 */
+    position: relative;
     margin: 80px auto 40px;
     padding: 25px 30px;
     background-color: #f8f8f8;
@@ -20,20 +20,18 @@ body {
     text-align: center;
 }
 
-/* ===== 見出し ===== */
-h2 {
-    font-weight: 600;
-    color: #000000;
-    border-bottom: 1px solid #cccccc;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+/* ===== 上部操作ボタン（左：新規作成 / 右：戻る） ===== */
+.top-actions {
+    position: absolute;
+    top: 25px;
+    left: 30px;
+    right: 30px;
+    display: flex;
+    justify-content: space-between;
 }
 
-/* ===== 戻るリンク（右上に固定） ===== */
-.container > a {
-    position: absolute;
-    right: 30px;
-    top: 25px;
+/* 上部ボタン共通 */
+.top-actions a {
     display: inline-block;
     padding: 10px 20px;
     border-radius: 6px;
@@ -45,8 +43,17 @@ h2 {
     transition: all 0.2s;
 }
 
-.container > a:hover {
+.top-actions a:hover {
     background-color: #333333;
+}
+
+/* ===== 見出し ===== */
+h2 {
+    font-weight: 600;
+    color: #000000;
+    border-bottom: 1px solid #cccccc;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 /* ===== ▼ 絞り込みプルダウン 共通 ===== */
@@ -72,13 +79,11 @@ h2 {
     transition: all 0.2s;
 }
 
-/* フォーカス時 */
 .container form select:focus {
     outline: none;
     box-shadow: 0 0 5px rgba(0,0,0,0.3);
 }
 
-/* ホバー時 */
 .container form select:hover {
     background-color: #f0f0f0;
 }
@@ -87,7 +92,7 @@ h2 {
 .search-box {
     margin-top: 20px;
     display: flex;
-    justify-content: flex-start; /* 左寄せ */
+    justify-content: flex-start;
 }
 
 .search-box form {
@@ -97,7 +102,7 @@ h2 {
     max-width: 500px;
 }
 
-.search-box input[type="text"] {;
+.search-box input[type="text"] {
     padding: 10px 12px;
     font-size: 1rem;
     border: 1px solid #000000;
@@ -129,7 +134,7 @@ h2 {
 .table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 30px; /* 戻るボタンと被らないよう余白UP */
+    margin-top: 30px;
     background-color: #ffffff;
 }
 
@@ -194,11 +199,15 @@ h2 {
         padding: 15px;
     }
 
-    .container > a {
+    .top-actions {
         position: static;
-        display: block;
-        width: 100%;
+        flex-direction: column;
+        gap: 12px;
         margin-bottom: 15px;
+    }
+
+    .top-actions a {
+        width: 100%;
     }
 
     .container form {
@@ -237,5 +246,36 @@ h2 {
     .btn-primary,
     .btn-danger {
         width: 100%;
+    }
+
+}
+
+/* ===== 口コミ一覧：戻るボタンだけ右上（追記） ===== */
+.container .btn-back-only {
+    position: absolute;
+    top: 25px;
+    right: 30px;
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 1px solid #000000;
+    background-color: #000000;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.container .btn-back-only:hover {
+    background-color: #333333;
+}
+
+/* スマホ対応（既存方針に合わせる） */
+@media (max-width: 576px) {
+    .container .btn-back-only {
+        position: static;
+        display: block;
+        width: 100%;
+        margin-bottom: 15px;
     }
 }

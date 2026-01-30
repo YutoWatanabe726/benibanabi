@@ -16,7 +16,7 @@
             <p>トピックスの編集が完了しました。</p>
 
             <div class="button-group">
-                <a href="AdminTopicsSetting.action">トピックス<br>機能一覧へ</a>
+                <a href="AdminTopicsList.action">トピックス一覧へ</a>
                 <a href="AdminMenu.action">管理者機能一覧へ</a>
             </div>
         </div>

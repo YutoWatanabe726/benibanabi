@@ -25,7 +25,7 @@
 <meta charset="UTF-8">
 <title><%= spot.getSpotName() %> の詳細</title>
 
-<link rel="stylesheet" href="<%= request.getContextPath() %>/css/style.css">
+
 <link rel="stylesheet" href="<%= request.getContextPath() %>/css/spot_detail.css">
 
 <script>
@@ -57,10 +57,34 @@ function initFavorite() {
 
 function updateFavoriteButton(btn, isFav) {
     btn.classList.toggle("active", isFav);
-    btn.textContent = isFav ? "★ お気に入り解除" : "☆ お気に入り追加";
+    btn.querySelector(".fav-text").textContent =
+        isFav ? "お気に入り解除" : "お気に入り追加";
 }
 
 window.addEventListener("DOMContentLoaded", initFavorite);
+
+/* ===== ここから口コミカウンタ ===== */
+function initReviewCounter() {
+    const textarea = document.getElementById("reviewText");
+    const countSpan = document.getElementById("currentCount");
+
+    if (!textarea || !countSpan) return;
+
+    const update = () => {
+        countSpan.textContent = textarea.value.length;
+    };
+
+    textarea.addEventListener("input", update);
+    update(); // 初期表示
+}
+/* ================================ */
+
+window.addEventListener("DOMContentLoaded", function () {
+    initFavorite();
+    initReviewCounter();
+});
+</script>
+
 </script>
 
 </head>
@@ -68,12 +92,20 @@ window.addEventListener("DOMContentLoaded", initFavorite);
 
 <div class="container">
 
-    <a href="SpotList.action" class="back-btn">一覧へ戻る</a>
+    <a href="SpotSearch.action?page=${page}" class="back-btn">一覧へ戻る</a>
 
     <div class="spot-header">
-        <h1><%= spot.getSpotName() %></h1>
-        <button id="favoriteBtn" data-id="<%= spot.getSpotId() %>" class="favorite-star">☆ お気に入り追加</button>
-    </div>
+    	<h1><%= spot.getSpotName() %></h1>
+
+    	<button
+      	id="favoriteBtn"
+      	data-id="<%= spot.getSpotId() %>"
+      	class="favorite-star">
+
+      	<span class="fav-text">お気に入り追加</span>
+    	</button>
+	</div>
+
 
     <div class="card detail-box">
         <img src="<%= request.getContextPath() + spot.getSpotPhoto() %>" class="card-img" alt="spot image">
@@ -88,7 +120,12 @@ window.addEventListener("DOMContentLoaded", initFavorite);
 
     <h2 class="section-title">所在地</h2>
     <div class="card detail-box">
-        <p><strong>住所：</strong> <%= spot.getAddress() %></p>
+        <p>
+  			<strong>住所：山形県</strong>
+  			<%= (spot.getArea() != null ? spot.getArea() : "") %>
+  			<%= (spot.getAddress() != null ? " " + spot.getAddress() : "") %>
+		</p>
+
         <iframe width="100%" height="350" class="map-frame"
             loading="lazy" allowfullscreen
             referrerpolicy="no-referrer-when-downgrade"
@@ -119,15 +156,28 @@ window.addEventListener("DOMContentLoaded", initFavorite);
     <% } %>
 
     <h2 class="section-title">口コミ投稿</h2>
-    <div class="card detail-box">
-        <form action="ReviewsPost.action" method="post">
-            <input type="hidden" name="spot_id" value="<%= spot.getSpotId() %>">
-            <textarea name="review_text" rows="4" placeholder="ここに口コミを入力してください..." required></textarea>
-            <button type="submit" class="more-btn">投稿する</button>
-        </form>
-    </div>
+<div class="card detail-box">
+    <form action="ReviewsPost.action" method="post" onsubmit="return checkReviewLength();">
+        <input type="hidden" name="spot_id" value="<%= spot.getSpotId() %>">
 
-    <a href="SpotList.action" class="back-btn">一覧へ戻る</a>
+        <textarea id="reviewText"
+          name="review_text"
+          rows="4"
+          placeholder="ここに口コミを入力してください...（300文字以内）"
+          maxlength="300"
+          required></textarea>
+
+<div class="char-count">
+    <span id="currentCount">0</span> / 300 文字
+</div>
+
+
+        <button type="submit" class="more-btn">投稿する</button>
+    </form>
+</div>
+
+
+    <a href="SpotSearch.action?page=${page}" class="back-btn">一覧へ戻る</a>
 
 </div>
 

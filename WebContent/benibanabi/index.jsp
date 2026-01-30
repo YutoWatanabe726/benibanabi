@@ -132,7 +132,7 @@
   <div class="hero-content fade-left">
     <h1>紅花が彩る、山形の旅。</h1>
     <p>伝統 × 自然 × 食 × 温泉 —— もう一歩ふかく。</p>
-    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="hero-btn">コースを作成する</a>
+    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="hero-btn courseLink">コースを作成する</a>
   </div>
 
   <!-- 花びら -->
@@ -150,23 +150,28 @@ const slides = document.querySelectorAll(".hero-slide");
 let current = 0;
 const seasons = ["spring","summer","autumn","winter"];
 const petalImg = {
-  spring: "../images/petal_sakura.png",
-  summer: "../images/benibana.png",
-  autumn: "../images/petal_maple.png",
-  winter: "../images/petal_snow.png"
+  spring: "../souvenirdropimages/petal_sakura.png",
+  summer: "../souvenirdropimages/benibana.png",
+  autumn: "../souvenirdropimages/petal_maple.png",
+  winter: "../souvenirdropimages/petal_snow.png"
 };
+
 function showSlide(){
   slides[current].classList.remove("active");
   current = (current + 1) % slides.length;
   slides[current].classList.add("active");
   changeSeason(seasons[current]);
 }
+
 function changeSeason(season){
   document.querySelectorAll(".petal").forEach(p=>p.src = petalImg[season]);
 }
+
 changeSeason(seasons[0]);
 setInterval(showSlide, 4500);
+
 </script>
+
 
 
 <!-- ================= 最新トピックス（DBから取得） ================= -->
@@ -186,10 +191,6 @@ setInterval(showSlide, 4500);
 <c:if test="${empty topTopics}">
   <p>最新トピックスはありません。</p>
 </c:if>
-
-
-
-
 
   </c:param>
 </c:import>

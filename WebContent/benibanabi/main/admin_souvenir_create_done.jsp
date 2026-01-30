@@ -16,7 +16,7 @@
             <p>名産品の作成が完了しました。</p>
 
             <div class="button-group">
-                <a href="AdminSouvenirSetting.action">名産品機能一覧へ</a>
+                <a href="AdminSouvenirList.action">名産品一覧へ</a>
                 <a href="AdminMenu.action">管理者メニューへ</a>
             </div>
         </div>

@@ -1,13 +1,14 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<c:set var="pageContent">
 <!DOCTYPE html>
 <html lang="ja">
-
-<jsp:include page="../../common/header.jsp" />
-
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>山形への行き方｜べにばナビ</title>
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+
 </head>
 
 <body>
@@ -57,3 +58,8 @@
 
 </body>
 </html>
+</c:set>
+<c:import url="/common/base.jsp">
+  <c:param name="title" value="四季の名産品｜べにばナビ" />
+  <c:param name="content" value="${pageContent}" />
+</c:import>

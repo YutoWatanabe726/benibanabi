@@ -1,4 +1,4 @@
-<%-- 管理者トピックス一覧JSP --%>
+<%-- 管理者トピックス一覧JSP（新規作成・編集） --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
@@ -7,16 +7,19 @@
 
     <c:param name="content">
 
-        <!-- ✅ 一覧専用CSS 読み込み（戻るボタン右配置対応） -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin_spot_topics_souvenir_list.css">
 
         <div class="container mt-4">
+
+            <!-- 上部操作ボタン -->
+            <div class="top-actions">
+                <a href="AdminTopicsCreate.action" class="btn-create">新規作成</a>
+                <a href="AdminMenu.action" class="btn-back">戻る</a>
+            </div>
+
             <h2>管理者トピックス一覧</h2>
 
-            <!-- ✅ 右上配置される戻るボタン -->
-            <a href="AdminTopicsSetting.action">戻る</a>
-
-            <!-- ▼ 年選択プルダウン -->
+            <!-- 年度選択 -->
             <form method="get" class="mt-3">
                 <label for="yearSelect">年度指定：</label>
                 <select name="year" id="yearSelect" onchange="this.form.submit()">
@@ -28,7 +31,7 @@
                 </select>
             </form>
 
-            <!-- ▼ 現在掲載中 -->
+            <!-- 現在掲載中 -->
             <h4 class="mt-4">現在掲載中のトピックス</h4>
             <c:if test="${not empty ongoingTopics}">
                 <table class="table table-bordered mt-2">
@@ -51,7 +54,8 @@
                                 <td>${t.topicsContent}</td>
                                 <td>${t.topicsArea}</td>
                                 <td>
-                                    <a href="AdminTopicsUpdate.action?id=${t.topicsId}" class="btn btn-sm btn-primary">編集</a>
+                                    <a href="AdminTopicsUpdate.action?id=${t.topicsId}"
+                                       class="btn btn-sm btn-primary">編集</a>
                                 </td>
                             </tr>
                         </c:forEach>
@@ -63,7 +67,7 @@
                 <p>現在掲載中のトピックスはありません。</p>
             </c:if>
 
-            <!-- ▼ 掲載期間外 -->
+            <!-- 掲載期間外 -->
             <h4 class="mt-5">掲載期間外のトピックス</h4>
             <c:if test="${not empty expiredTopics}">
                 <table class="table table-bordered mt-2">
@@ -86,7 +90,8 @@
                                 <td>${t.topicsContent}</td>
                                 <td>${t.topicsArea}</td>
                                 <td>
-                                    <a href="AdminTopicsUpdate.action?id=${t.topicsId}" class="btn btn-sm btn-primary">編集</a>
+                                    <a href="AdminTopicsUpdate.action?id=${t.topicsId}"
+                                       class="btn btn-sm btn-primary">編集</a>
                                 </td>
                             </tr>
                         </c:forEach>

@@ -21,7 +21,7 @@
             <!-- 観光スポット名 -->
             <div class="mb-3">
                 <label class="form-label">観光スポット名（必須）</label>
-                <input type="text" name="spotName" class="form-control" required placeholder="例:○○温泉"
+                <input type="text" name="spotName" class="form-control" maxlength=15 required placeholder="例:○○温泉"
                        value="${spot.spotName}">
             </div>
 

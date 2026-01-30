@@ -1,6 +1,11 @@
 package benibanabi.main;
 
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,11 +87,6 @@ public class PDFOutputServlet extends HttpServlet {
         "/images/defaults/meal3.jpg",
         "/images/defaults/meal4.jpg"
     };
-    private static final String[] TOPPAGE_IMAGES = {
-        "/images/defaults/toppage1.jpg",
-        "/images/defaults/toppage2.png",
-        "/images/defaults/toppage3.png"
-    };
 
     private String formatDurationMinutes(int minutes) {
         int m = Math.max(0, minutes);
@@ -149,8 +149,39 @@ public class PDFOutputServlet extends HttpServlet {
             int comma = b64.indexOf(',');
             if (comma >= 0) b64 = b64.substring(comma + 1);
             byte[] bytes = Base64.getDecoder().decode(b64);
-            return PDImageXObject.createFromByteArray(doc, bytes, "image-b64");
+
+            BufferedImage original = ImageIO.read(new ByteArrayInputStream(bytes));
+            if (original == null) {
+                System.err.println("Base64画像読み込み失敗: null");
+                return null;
+            }
+
+            // ★ 常にリサイズ（幅800px以下に強制）
+            int maxWidth = 800;
+            int width = original.getWidth();
+            int height = original.getHeight();
+
+            if (width > maxWidth) {
+                double ratio = (double) maxWidth / width;
+                int newHeight = (int) (height * ratio);
+                BufferedImage resized = new BufferedImage(maxWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g2d = resized.createGraphics();
+                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);  // 高品質リサイズ
+                g2d.drawImage(original.getScaledInstance(maxWidth, newHeight, Image.SCALE_SMOOTH), 0, 0, null);
+                g2d.dispose();
+                original = resized;
+            }
+
+            // ★ JPEGとして圧縮して保存（品質0.75）
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(original, "jpeg", baos);
+            byte[] compressedBytes = baos.toByteArray();
+
+            return PDImageXObject.createFromByteArray(doc, compressedBytes, "compressed-jpeg");
+
         } catch (Exception e) {
+            System.err.println("Base64画像処理エラー: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
@@ -311,12 +342,6 @@ public class PDFOutputServlet extends HttpServlet {
             String pickedStartPath = pickRandom(START_DEFAULTS, rnd);
             String pickedGoalPath  = pickRandom(GOAL_DEFAULTS, rnd);
 
-            List<PDImageXObject> topImages = new ArrayList<>();
-            for (String tp : TOPPAGE_IMAGES) {
-                PDImageXObject im = loadImageAny(doc, req, tp);
-                if (im != null) topImages.add(im);
-            }
-
             PDPage coverPage = new PDPage(PDRectangle.A4);
             doc.addPage(coverPage);
 
@@ -325,72 +350,73 @@ public class PDFOutputServlet extends HttpServlet {
                 float w = mb.getWidth();
                 float h = mb.getHeight();
 
-                drawFilledRoundRect(cs, 0, 0, w, h, 255, 250, 245);
-                drawFilledRoundRect(cs, 0, h - 230, w, 230, 255, 236, 215);
+             // ===== 高級感ある背景（2トーンレイヤー）=====
+                drawFilledRoundRect(cs, 0, 0, w, h, 245, 240, 232);      // ベース
+                drawFilledRoundRect(cs, 0, h * 0.55f, w, h * 0.45f, 235, 228, 218); // 上レイヤー
 
-                drawFilledRoundRect(cs, 60, h - 190, w - 120, 90, 255, 255, 255);
-                drawBorderRect(cs, 60, h - 190, w - 120, 90, 230, 126, 34, 2f);
+                // ===== 中央カード =====
+                float cardM = 60;
+                float cardW = w - cardM * 2;
+                float cardH = h - cardM * 2;
+                drawFilledRoundRect(cs, cardM, cardM, cardW, cardH, 255, 255, 255);
+                drawBorderRect(cs, cardM, cardM, cardW, cardH, 200, 190, 170, 1.4f);
 
-                String mainTitle = (payload.courseTitle != null && !payload.courseTitle.trim().isEmpty())
-                        ? payload.courseTitle.trim()
-                        : "旅行しおり";
-                float titleFontSize = 32f;
-                float titleWidth = font.getStringWidth(mainTitle) / 1000f * titleFontSize;
-                float titleX = (w - titleWidth) / 2f;
-                float titleY = h - 145;
-                drawText(cs, font, titleFontSize, titleX, titleY, mainTitle, 40, 40, 40);
+                // ===== 内側ゴールド枠 =====
+                drawBorderRect(cs, cardM + 12, cardM + 12, cardW - 24, cardH - 24, 190, 160, 110, 1.2f);
 
-                float cardX = 70;
-                float cardY = h - 380;
-                float cardW = w - 140;
-                float cardH = 170;
-
-                drawFilledRoundRect(cs, cardX, cardY, cardW, cardH, 255, 255, 255);
-                drawBorderRect(cs, cardX, cardY, cardW, cardH, 230, 126, 34, 1.5f);
-
+                // ===== タイトル =====
                 String title = (payload.courseTitle != null && !payload.courseTitle.isEmpty())
-                        ? payload.courseTitle : "タイトル未設定";
-                String startPoint = payload.startPoint != null ? payload.startPoint : "";
-                String startAddr  = payload.startAddress != null ? payload.startAddress : "";
-                String startTime  = payload.startTime != null ? payload.startTime : "";
+                        ? payload.courseTitle
+                        : "Yamagata Travel Plan";
 
-                float tx = cardX + 18;
-                float ty = cardY + cardH - 35;
+                drawText(cs, font, 34, cardM + 70, h - 170, title, 40, 40, 40);
 
-                drawText(cs, font, 16, tx, ty, "コースタイトル： " + title, 20, 20, 20); ty -= 28;
-                drawText(cs, font, 14, tx, ty, "旅行日数： " + payload.tripDays + " 日", 20, 20, 20); ty -= 24;
-                drawText(cs, font, 14, tx, ty, "開始地点： " + startPoint + " " + startAddr, 20, 20, 20); ty -= 24;
-                drawText(cs, font, 14, tx, ty, "開始時間： " + startTime, 20, 20, 20); ty -= 24;
+                // ===== サブタイトル =====
+                drawText(cs, font, 16, cardM + 72, h - 210,
+                        payload.tripDays + " Days Travel in Yamagata", 120, 120, 120);
 
-                String nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"));
-                drawText(cs, font, 11, tx, cardY + 16, "作成日時： " + nowStr, 80, 80, 80);
+                // ===== 区切りライン =====
+                cs.setStrokingColor(190, 160, 110);
+                cs.setLineWidth(1.4f);
+                cs.moveTo(cardM + 70, h - 230);
+                cs.lineTo(w - cardM - 70, h - 230);
+                cs.stroke();
 
-                if (!topImages.isEmpty()) {
-                    float areaX = 70;
-                    float areaW = w - 140;
-                    float areaY = 80;
-                    float areaH = cardY - 20 - areaY;
+                // ===== 山形地図（メイン）=====
+                PDImageXObject map = loadImageAny(doc, req, "/images/defaults/yamagata.jpg");
+                if (map != null) {
+                    float imgMaxW = 380;
+                    float imgMaxH = 380;
 
-                    int n = topImages.size();
-                    float gap = 14f;
-                    float cellW = (areaW - gap * (n - 1)) / n;
-                    float cellH = Math.min(areaH, 240f);
-                    float imgY = areaY + (areaH - cellH) / 2f;
+                    float iw = map.getWidth();
+                    float ih = map.getHeight();
+                    float scale = Math.min(imgMaxW / iw, imgMaxH / ih);
 
-                    float x = areaX;
-                    for (int i = 0; i < n; i++) {
-                        PDImageXObject im = topImages.get(i);
+                    float dw = iw * scale;
+                    float dh = ih * scale;
 
-                        drawFilledRoundRect(cs, x - 3, imgY - 3, cellW + 6, cellH + 6, 255, 255, 255);
-                        drawBorderRect(cs, x - 3, imgY - 3, cellW + 6, cellH + 6, 230, 126, 34, 1.2f);
+                    float cx = w / 2 - dw / 2;
+                    float cy = h / 2 - dh / 2 - 20;
 
-                        cs.drawImage(im, x, imgY, cellW, cellH);
-                        x += cellW + gap;
-                    }
+                    cs.drawImage(map, cx, cy, dw, dh);
                 }
 
-                drawText(cs, font, 10, 60, 40, "Generated by Benibanabi Route Maker", 120, 120, 120);
+                // ===== フッター =====
+                drawText(cs, font, 11, w / 2 - 70, cardM + 32, "TRAVEL GUIDE BOOK", 150, 150, 150);
+
+
+                // ===== アイコン配置 =====
+                PDImageXObject cherry = loadImageAny(doc, req, "/images/sakuranbo.jpg");
+                if (cherry != null) cs.drawImage(cherry, 120, h / 2 + 60, 60, 60);
+
+                PDImageXObject zao = loadImageAny(doc, req, "/images/zao_ski.jpg");
+                if (zao != null) cs.drawImage(zao, 140, h / 2 - 80, 60, 60);
+
+                // ===== フッター =====
+                drawText(cs, font, 12, w / 2 - 40, 80, "TRAVEL NOTE", 160, 160, 160);
             }
+
+
 
             List<PDPage> overviewPages = new ArrayList<>();
             List<List<PDPage>> detailPagesByDay = new ArrayList<>();
@@ -657,6 +683,59 @@ public class PDFOutputServlet extends HttpServlet {
                 }
             }
 
+         // ==========================
+         // 裏表紙（インフォメーションページ）
+         // ==========================
+         PDPage backPage = new PDPage(PDRectangle.A4);
+         doc.addPage(backPage);
+
+         try (PDPageContentStream cs = new PDPageContentStream(doc, backPage)) {
+             PDRectangle mb = backPage.getMediaBox();
+             float w = mb.getWidth();
+             float h = mb.getHeight();
+
+             // 背景
+             drawFilledRoundRect(cs, 0, 0, w, h, 245, 240, 232);
+
+             // 中央カード
+             float m = 60;
+             drawFilledRoundRect(cs, m, m, w - m * 2, h - m * 2, 255, 255, 255);
+             drawBorderRect(cs, m, m, w - m * 2, h - m * 2, 200, 190, 170, 1.2f);
+
+             // タイトル
+             drawText(cs, font, 24, m + 40, h - 140, "旅行中の緊急連絡先", 40, 40, 40);
+
+             // テキスト
+             float tx = m + 40;
+             float ty = h - 200;
+
+             drawText(cs, font, 14, tx, ty, "警察 : 110", 30, 30, 30); ty -= 28;
+             drawText(cs, font, 14, tx, ty, "火事・救急車 : 119", 30, 30, 30); ty -= 28;
+             drawText(cs, font, 14, tx, ty, "海上の事故 : 118", 30, 30, 30); ty -= 28;
+             drawText(cs, font, 14, tx, ty, "JNTO ( 観光案内・災害相談 ):", 30, 30, 30); ty -= 24;
+             drawText(cs, font, 14, tx + 20, ty, "050-3816-2787", 30, 30, 30);
+
+             // 山形画像（右側）
+             PDImageXObject map = loadImageAny(doc, req, "/images/defaults/yamagata.jpg");
+             if (map != null) {
+                 float iw = map.getWidth();
+                 float ih = map.getHeight();
+                 float scale = Math.min(250 / iw, 250 / ih);
+
+                 float dw = iw * scale;
+                 float dh = ih * scale;
+
+                 float x = w - m - dw - 40;
+                 float y = h / 2 - dh / 2;
+
+                 cs.drawImage(map, x, y, dw, dh);
+             }
+
+             // フッター
+             drawText(cs, font, 11, w / 2 - 90, m + 30, "Have a nice trip in Yamagata", 150, 150, 150);
+         }
+
+
             // =========================
             // ★ここが重要：PDFを「表示」させる（inline）
             // =========================
@@ -679,10 +758,48 @@ public class PDFOutputServlet extends HttpServlet {
             doc.save(res.getOutputStream());
             res.getOutputStream().flush();
 
-        } catch (Exception e) {
-            res.setContentType("text/plain; charset=UTF-8");
+        } catch (OutOfMemoryError ome) {
+            log("メモリ不足エラー user=" + req.getRemoteAddr() + " size=" +
+                (req.getContentLengthLong() / 1024) + "KB", ome);
+
+            String type = "out_of_memory";
+            String message = "サーバーのメモリが不足しています。スポットを減らしてください。";
+
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            res.setContentType("application/json; charset=UTF-8");
+
             try (PrintWriter out = res.getWriter()) {
-                out.println("PDF生成中にエラーが発生しました: " + e.getMessage());
+                out.print("{");
+                out.print("\"status\":\"error\",");
+                out.print("\"type\":\"" + type + "\",");
+                out.print("\"message\":\"" + message.replace("\"", "\\\"") + "\"");
+                out.print("}");
+            }
+        } catch (Exception e) {
+            log("PDF生成エラー user=" + req.getRemoteAddr() + " size=" +
+                (req.getContentLengthLong() / 1024) + "KB", e);
+
+            String type = "unknown";
+            String message = e.getMessage() != null ? e.getMessage() : "不明なエラー";
+
+            // フォント関連エラーなどの追加分岐（必要に応じて）
+            if (message.contains("font") || message.contains("NotoSansJP")) {
+                type = "font_error";
+                message = "日本語フォントの読み込みに失敗しました。サーバー管理者に連絡してください。";
+            } else if (req.getContentLengthLong() > 10_000_000) { // 10MB超え
+                type = "payload_too_large";
+                message = "データ量が多すぎます（" + (req.getContentLengthLong()/1024/1024) + "MB）。スポットを減らしてください。";
+            }
+
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            res.setContentType("application/json; charset=UTF-8");
+
+            try (PrintWriter out = res.getWriter()) {
+                out.print("{");
+                out.print("\"status\":\"error\",");
+                out.print("\"type\":\"" + type + "\",");
+                out.print("\"message\":\"" + message.replace("\"", "\\\"") + "\"");
+                out.print("}");
             }
         }
     }

@@ -37,8 +37,7 @@
             <h2>「<%= spot.getSpotName() %>」の口コミ一覧</h2>
 
             <!-- 右上戻るボタン -->
-            <a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action">← スポット一覧に戻る</a>
-
+          	<a href="${pageContext.request.contextPath}/benibanabi/main/AdminReviewsSpotList.action" class="btn-back-only">戻る</a>
             <c:choose>
                 <c:when test="${reviews == null || reviews.isEmpty()}">
                     <p class="mt-3">このスポットにはまだ口コミがありません。</p>

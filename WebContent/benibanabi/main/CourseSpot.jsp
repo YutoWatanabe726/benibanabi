@@ -353,15 +353,148 @@ h3 {
   box-shadow: 0 0 0 2px rgba(255,112,67,0.18);
 }
 
+/* ================================
+   📱 スマホ対応（600px以下）
+================================ */
+@media (max-width: 600px) {
+
+  body {
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    margin: 10px 0;
+  }
+
+  /* 上のコース情報 */
+  .container.mb-3 {
+    padding: 12px;
+  }
+
+  .container.mb-3 .row {
+    flex-direction: column;
+  }
+
+  .container.mb-3 .col-md-8,
+  .container.mb-3 .col-md-4 {
+    width: 100%;
+    text-align: left !important;
+  }
+
+  #confirmRouteBtn {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  /* Day全体 */
+  #routesContainer .day-section {
+    padding: 10px;
+  }
+
+  /* サイドバー＋マップを縦並びに */
+  #routesContainer .day-section > div {
+    flex-direction: column !important;
+  }
+
+  .sidebar {
+    width: 100% !important;
+    margin-bottom: 10px;
+  }
+
+  .map-container {
+    width: 100% !important;
+    height: 300px !important;
+    min-height: 300px;
+  }
+
+  /* ルート履歴 */
+  .route-history {
+    max-height: 300px;
+  }
+
+  /* カード */
+  .route-card, .route-item {
+    font-size: 0.95rem;
+  }
+
+  .route-card .card-header {
+    font-size: 0.95rem;
+    flex-wrap: wrap;
+  }
+
+  /* 到着/出発時間表示 */
+  .time-row {
+    font-size: 0.85rem;
+  }
+
+  /* 矢印カード */
+  .arrow-card {
+    font-size: 0.8rem;
+    padding: 6px 8px;
+    white-space: normal;
+  }
+
+  .arrow-card select {
+    font-size: 0.85rem;
+  }
+
+  /* 入力系は16px以上（iPhoneズーム防止） */
+  input, select, textarea, button {
+    font-size: 16px !important;
+  }
+
+  /* 滞在時間入力 */
+  .stayTime {
+    width: 80px;
+  }
+
+  /* モーダル内マップ */
+  #candidateMap {
+    height: 240px;
+  }
+
+  #candidateList {
+    max-height: 180px;
+  }
+
+  /* モーダルの中も縦積み */
+  .modal-body .row {
+    flex-direction: column;
+  }
+
+  .modal-body .col-md-7,
+  .modal-body .col-md-5 {
+    width: 100%;
+  }
+
+  /* ボタンを押しやすく */
+  .btn {
+    padding: 12px 20px;
+    font-size: 1rem;
+  }
+
+  .sidebar .btn {
+    font-size: 1rem;
+    padding: 14px;
+  }
+
+}
+#spotCards {
+  min-height: 200px;   /* ★ これが効く */
+}
+
 </style>
 </head>
 
 <body>
 
-<h3 class="text-center">日別ルート作成</h3>
+
 
 <!-- コース情報表示（start.jspから渡された属性） -->
 <div class="container mb-3">
+<h3 class="text-center">日別ルート作成</h3>
   <div class="row">
     <div class="col-md-8">
       <div><strong>コース：</strong>
@@ -576,7 +709,7 @@ let osrmLinesByDay = [];
 let startTimesByDay = []; // ★追加：Dayごとの出発時刻（"HH:MM"）
 
 /* 移動手段速度（km/h） */
-const speedMap = { "徒歩":5, "車":40, "電車":60 };
+const speedMap = { "徒歩":5, "車":40, "電車":70 };
 
 /* ------------------------
    お気に入り（Cookie）
@@ -676,7 +809,9 @@ function createDaySection(day, startLat, startLng, startName) {
   if (startLat === undefined) startLat = 38.2404;
   if (startLng === undefined) startLng = 140.3633;
   if (!startName) startName = "スタート";
-
+  if (mapsByDay[day - 1]) {
+	    return;
+	  }
   dayCount = Math.max(dayCount, day);
   const sectionId = "daySection" + day;
   const mapId = "mapDay" + day;
@@ -735,26 +870,34 @@ function createDaySection(day, startLat, startLng, startName) {
 /* ------------------------
    マップ関連
    ------------------------ */
-function addMarker(dayIndex, name, lat, lng, type) {
-  if (type === undefined) type = "normal";
-  if (!mapsByDay[dayIndex]) return;
+   function addMarker(dayIndex, name, lat, lng, type) {
+	   if (type === undefined) type = "normal";
 
-  let iconUrl;
-  if (type === "start") iconUrl = "https://cdn-icons-png.flaticon.com/512/25/25694.png";
-  else if (type === "goal") iconUrl = "https://cdn-icons-png.flaticon.com/512/60/60993.png";
-  else if (type === "meal") iconUrl = "https://cdn-icons-png.flaticon.com/512/3075/3075977.png";
-  else iconUrl = "https://cdn-icons-png.flaticon.com/512/252/252025.png";
+	   const mapObj = mapsByDay[dayIndex];
+	   if (!mapObj || !mapObj.markers) return null;
 
-  const icon = L.icon({
-    iconUrl,
-    iconSize:[32,32],
-    iconAnchor:[16,32]
-  });
-  const marker = L.marker([lat, lng], { icon })
-    .bindPopup("<strong>" + escapeHtml(name) + "</strong>");
-  mapsByDay[dayIndex].markers.addLayer(marker);
-  updateEstimatedTime(dayIndex);
-}
+	   let iconUrl;
+	   if (type === "start") iconUrl = "https://cdn-icons-png.flaticon.com/512/25/25694.png";
+	   else if (type === "goal") iconUrl = "https://cdn-icons-png.flaticon.com/128/2164/2164609.png";
+	   else if (type === "meal") iconUrl = "https://cdn-icons-png.flaticon.com/512/3075/3075977.png";
+	   else iconUrl = "https://cdn-icons-png.flaticon.com/512/252/252025.png";
+
+	   const icon = L.icon({
+	     iconUrl,
+	     iconSize: [32, 32],
+	     iconAnchor: [16, 32]
+	   });
+
+	   const marker = L.marker([lat, lng], {
+	     icon,
+	     _markerType: type
+	   }).bindPopup("<strong>" + escapeHtml(name) + "</strong>");
+
+	   mapObj.markers.addLayer(marker);
+	   updateEstimatedTime(dayIndex);
+
+	   return marker;
+	 }
 
 async function redrawRouteLine(dayIndex) {
   const mapObj = mapsByDay[dayIndex];
@@ -805,7 +948,6 @@ function calcDistance(lat1, lng1, lat2, lng2) {
  function computeTimeline(dayIndex) {
   const list = routesByDay[dayIndex] || [];
   if (list.length === 0) return;
-
   const startHHMM = startTimesByDay[dayIndex] || (startTime || "09:00");
   let t = hhmmToMin(startHHMM);
 
@@ -814,27 +956,35 @@ function calcDistance(lat1, lng1, lat2, lng2) {
     const prev = i > 0 ? list[i - 1] : null;
 
     if (!prev) {
-      // ★start：出発時刻 = 開始時刻 + スタート滞在時間
+      // スタート地点
       const stay0 = (curr.stayTime != null) ? Number(curr.stayTime) : 0;
-
       curr.arriveTime = minToHhmm(t);
-
       t += (isNaN(stay0) ? 0 : stay0);
       curr.departTime = minToHhmm(t);
-
       continue;
     }
 
-    // 移動時間（prev -> curr）
-    const dist = calcDistance(prev.lat, prev.lng, curr.lat, curr.lng);
+    // 移動時間計算
+    let dist = calcDistance(prev.lat, prev.lng, curr.lat, curr.lng);
     const transport = curr.transport || "徒歩";
+
+    // ★ 電車区間は距離を1.3倍補正（曲がりくねった線路を考慮）
+    if (transport === "電車") {
+      dist *= 1.3;  // ← これで直線より長い距離として計算
+    }
+
     const speed = speedMap[transport] || 5;
     const travelMin = Math.round(dist / speed * 60);
 
-    t += travelMin;
+    // ★ 電車区間には最低10分の乗り換え・駅間徒歩を追加
+    let extraMin = 0;
+    if (transport === "電車") {
+      extraMin = 10 + Math.round(dist * 0.5);  // 距離に応じて追加（駅間移動）
+    }
+
+    t += travelMin + extraMin;
     curr.arriveTime = minToHhmm(t);
 
-    // ゴールは出発なし
     if (curr.type === "goal") {
       curr.departTime = "";
       continue;
@@ -935,24 +1085,30 @@ function renderRouteHistory(dayIndex) {
     const prev = i > 0 ? list[i-1] : null;
 
     if (prev) {
-      const dist = calcDistance(prev.lat, prev.lng, item.lat, item.lng).toFixed(1);
-      const transport = item.transport || "徒歩";
-      const speed = speedMap[transport] || 5;
-      const timeMin = Math.round(dist / speed * 60);
+    	  const dist = calcDistance(prev.lat, prev.lng, item.lat, item.lng).toFixed(1);
+    	  const transport = item.transport || "徒歩";
+    	  const speed = speedMap[transport] || 5;
+    	  const timeMin = Math.round(dist / speed * 60);
 
-      const arrowHtml = $(`
-        <div class="arrow-card small-muted" data-index="${i}">
-          移動手段:
-          <select class="form-select form-select-sm transportSelect" data-index="${i}" style="width:100px; display:inline-block;">
-            <option ${transport === "徒歩" ? "selected" : ""}>徒歩</option>
-            <option ${transport === "車" ? "selected" : ""}>車</option>
-            <option ${transport === "電車" ? "selected" : ""}>電車</option>
-          </select>
-          予測時間: <span class="estimatedTime">${timeMin}</span>分 / 概算距離: ${dist}km
-        </div>
-      `);
-      container.append(arrowHtml);
-    }
+    	  let note = "";
+    	  if (transport === "電車") {
+    	    note = '<span class="small-muted" style="color:#e74c3c; margin-left:10px;">※電車ルートは簡易表示・計算です</span>';
+    	  }
+
+    	  const arrowHtml = $(`
+    	    <div class="arrow-card small-muted" data-index="${i}">
+    	      移動手段:
+    	      <select class="form-select form-select-sm transportSelect" data-index="${i}" style="width:100px; display:inline-block;">
+    	        <option ${transport === "徒歩" ? "selected" : ""}>徒歩</option>
+    	        <option ${transport === "車" ? "selected" : ""}>車</option>
+    	        <option ${transport === "電車" ? "selected" : ""}>電車</option>
+    	      </select>
+    	      予測時間: <span class="estimatedTime">${timeMin}</span>分 / 概算距離: ${dist}km
+    	      ${note}
+    	    </div>
+    	  `);
+    	  container.append(arrowHtml);
+    	}
 
     const stayTime = item.stayTime != null ? item.stayTime : 30;
     const memo = item.memo || "";
@@ -967,14 +1123,26 @@ function renderRouteHistory(dayIndex) {
       </div>
     `;
 
+    let title = escapeHtml(item.name);
+	let typeLabel = "";
+
+if (item.type === "start") {
+  typeLabel = "(スタート地点)";
+  if (item.needsReconfirm) {
+    title = "⚠ " + title;
+    typeLabel = "(再確認が必要)";
+  }
+} else if (item.type === "goal") {
+  typeLabel = "(ゴール地点)";
+}
+
     const cardHtml = $(`
       <div class="route-card route-item" data-index="${i}">
-        <div class="card-header">
-          [${escapeHtml(item.name)}]
-          ${item.type === "start" ? "(スタート地点)" :
-            item.type === "goal" ? "(ゴール地点)" : ""}
-          <button class="btn btn-sm btn-danger removeBtn">×</button>
-        </div>
+      <div class="card-header">
+      [${title}] ${typeLabel}
+      <button class="btn btn-sm btn-danger removeBtn">×</button>
+    </div>
+
         <div class="card-body">
           ${timeRowHtml}
           <div class="mt-2">滞在時間:
@@ -990,39 +1158,50 @@ function renderRouteHistory(dayIndex) {
     container.append(cardHtml);
   }
 
-  container.find(".removeBtn").off("click").on("click", function(){
-    const $item = $(this).closest(".route-item");
-    const index = $item.data("index");
-    const target = routesByDay[dayIndex][index];
+  container.find(".removeBtn").off("click").on("click", function () {
+	  const $item = $(this).closest(".route-item");
+	  const index = $item.data("index");
+	  const target = routesByDay[dayIndex][index];
 
-    if (dayIndex === 0 && target.type === "start") {
-      if (confirm("スタート地点を変更しますか？\n「OK」でスタート地点選択画面に戻ります。")) {
-        window.location.href = "start.jsp";
-      }
-      return;
-    }
+	  // 1日目スタート特例
+	  if (dayIndex === 0 && target.type === "start") {
+	    if (confirm("スタート地点を変更しますか？\n「OK」でスタート地点選択画面に戻ります。")) {
+	      window.location.href = "start.jsp";
+	    }
+	    return;
+	  }
 
-    if (target.type === "start") {
-      if (confirm("この日のスタート地点を削除すると、前日のゴールとこの日以降のルートも削除されます。よろしいですか？")) {
-        const prevDayIndex = dayIndex - 1;
-        const prevRoutes = routesByDay[prevDayIndex] || [];
-        const goalIndex = prevRoutes.findIndex(r => r.type === "goal");
-        if (goalIndex >= 0) removeRoute(prevDayIndex, goalIndex);
+	  // ★ start 削除時（既存仕様：前日のゴール＋以降の日を削除）
+	  if (target.type === "start") {
+	    if (confirm("この日のスタート地点を削除すると、前日のゴールとこの日以降のルートも削除されます。よろしいですか？")) {
+	      const prevDayIndex = dayIndex - 1;
+	      const prevRoutes = routesByDay[prevDayIndex] || [];
+	      const goalIndex = prevRoutes.findIndex(r => r.type === "goal");
+	      if (goalIndex >= 0) removeRoute(prevDayIndex, goalIndex);
 
-        for (let d = dayCount - 1; d >= dayIndex; d--) {
-          const sectionId = "#daySection" + (d + 1);
-          $(sectionId).remove();
-          routesByDay[d] = [];
-          mapsByDay[d] = null;
-          startTimesByDay[d] = null;
-        }
-        dayCount = dayIndex;
-      }
-      return;
-    }
+	      for (let d = dayCount - 1; d >= dayIndex; d--) {
+	        const sectionId = "#daySection" + (d + 1);
+	        $(sectionId).remove();
+	        routesByDay[d] = [];
+	        mapsByDay[d] = null;
+	        startTimesByDay[d] = null;
+	      }
+	      dayCount = dayIndex;
+	    }
+	    return;
+	  }
 
-    removeRoute(dayIndex, index);
-  });
+	  // ★ goal 削除時（新仕様：翌日の start を再確認状態に）
+	  if (target.type === "goal") {
+	    removeRoute(dayIndex, index);
+	    markNextDayStartNeedsReconfirm(dayIndex);
+	    return;
+	  }
+
+	  // その他（通常スポット）
+	  removeRoute(dayIndex, index);
+	});
+
 
   container.find(".transportSelect").off("change").on("change", function () {
     const idx = $(this).data("index");
@@ -1282,17 +1461,45 @@ function toggleFavCookie(spotId, elem) {
 }
 
 function updateSpotCards(favOnly) {
-  if (!allSpots || !Array.isArray(allSpots)) return;
-  const favs = loadFavsFromCookie().map(String);
+	  const $spotCards = $("#spotCards");
+	  $spotCards.empty();
 
-  const filtered = allSpots.filter(s => {
-    const idStr = String(s.spotId);
-    const isFav = favs.includes(idStr) || s.fav === true;
-    return !favOnly || isFav;
-  });
+	  // ★ allSpots が無い場合もメッセージ表示
+	  if (!allSpots || !Array.isArray(allSpots)) {
+	    $spotCards.html(`
+	      <div class="col-12">
+	        <div class="alert alert-secondary text-center my-3">
+	          該当するスポットがありません。
+	        </div>
+	      </div>
+	    `);
+	    return;
+	  }
 
-  renderSpotCards(filtered);
-}
+	  const favs = loadFavsFromCookie().map(String);
+
+	  const filtered = allSpots.filter(s => {
+	    const idStr = String(s.spotId);
+	    const isFav = favs.includes(idStr) || s.fav === true;
+	    return !favOnly || isFav;
+	  });
+
+	  // ★ フィルタ後 0件
+	  if (filtered.length === 0) {
+	    $spotCards.html(`
+	      <div class="col-12">
+	        <div class="alert alert-secondary text-center my-3">
+	          該当するスポットがありません。<br>
+	          検索条件を変更してみてください。
+	        </div>
+	      </div>
+	    `);
+	    return;
+	  }
+
+	  renderSpotCards(filtered);
+	}
+
 
 /* ------------------------
    イベントハンドラ（その他）
@@ -1479,33 +1686,59 @@ function showCandidatesOnMap(list) {
 
 // ゴール確定（選ばれた lat/lng/title をここに集約）
 function applyGoalSelection(dayIndex, lat, lng, titleLabel) {
+  const list = routesByDay[dayIndex] || [];
+
+  // 既存ゴールがあれば確認
+  const hasGoal = list.some(r => r.type === "goal");
+  if (hasGoal) {
+    const ok = confirm(`Day${dayIndex + 1} のゴールを上書きしますか？`);
+    if (!ok) return;
+
+ // 既存ゴール削除
+    removeExistingGoal(dayIndex);
+
+    // ★ 翌日の start マーカーを全削除
+    removeAllStartMarkers(dayIndex);
+
+    // ★ 翌日の start 再設定
+    updateNextDayStart(dayIndex, lat, lng, titleLabel);
+
+  }
+
   const formattedAddress = titleLabel || "ゴール地点";
 
+  // ゴール追加
   addRouteHistory(dayIndex, formattedAddress, lat, lng, "goal", null, null);
 
   if (routesByDay[dayIndex].length >= 2) {
     redrawRouteLine(dayIndex);
   }
 
-  if (mapsByDay[dayIndex] && mapsByDay[dayIndex].map) {
+  if (mapsByDay[dayIndex]?.map) {
     mapsByDay[dayIndex].map.setView([lat, lng], 14);
   }
 
-  // 次の日生成
+  // 翌日のスタートを更新
+  updateNextDayStart(dayIndex, lat, lng, formattedAddress);
+
+  // 次の日生成（従来通り）
   if (dayCount < tripDays) {
     createDaySection(dayCount + 1, lat, lng, formattedAddress);
 
-    const nextDaySection = document.getElementById("daySection" + (dayCount));
+    const nextDaySection = document.getElementById(
+      "daySection" + dayCount
+    );
     if (nextDaySection) {
-      nextDaySection.scrollIntoView({ behavior:"smooth", block:"start" });
+      nextDaySection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   } else {
-    // ★最終日のゴール確定後：上へスクロール（全ルート確定ボタンへ行きやすくする）
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   saveRoutesToLocal();
 }
+
+
 
 /* ------------------------
    ゴール住所決定：GSIで候補取得→複数なら地図選択
@@ -1648,48 +1881,101 @@ function buildPdfPayload() {
   for (let d = 0; d < dayCount; d++) {
     const dayRoute = routesByDay[d] || [];
     const simpleDay = dayRoute.map(function(r){
-      return {
-        name: r.name,
-        lat: r.lat,
-        lng: r.lng,
-        type: r.type,
-        stayTime: r.stayTime || 0,
-        memo: r.memo || "",
-        transport: r.transport || "徒歩",
-        photoUrl: r.photoUrl || "",
-        arriveTime: r.arriveTime || "",
-        departTime: r.departTime || ""
-      };
-    });
+    	  const simple = {
+    	    name: r.name,
+    	    lat: r.lat,
+    	    lng: r.lng,
+    	    type: r.type,
+    	    stayTime: r.stayTime || 0,
+    	    memo: r.memo || "",
+    	    transport: r.transport || "徒歩",
+    	    photoUrl: r.photoUrl || "",
+    	    arriveTime: r.arriveTime || "",
+    	    departTime: r.departTime || ""
+    	  };
+
+    	  // ★ 電車区間には注記をメモに追加（既存メモがあれば改行して追記）
+    	  if (simple.transport === "電車") {
+  			simple.memo = (simple.memo ? simple.memo + "\n\n" : "") +
+                 "【重要】この区間は電車ですが、マップと計算は簡易（道路経由）です。\n実際の乗換・所要時間は時刻表で確認してください。";
+}
+
+    	  return simple;
+    	});
     payload.routes.push(simpleDay);
   }
   return payload;
 }
 
+//全ルート確定ボタン（ゴールチェック付き・安全版）
 $("#confirmRouteBtn").on("click", function(){
-  if (!routesByDay[0] || routesByDay[0].length === 0) {
-    alert("ルートが未設定です。スポットやゴールを追加してください。");
-    return;
-  }
+  // ルートが空の場合
+	if (!routesByDay || routesByDay.length === 0 || !routesByDay[0] || routesByDay[0].length === 0) {
+	    alert("ルートが未設定です。スポットやゴールを追加してください。");
+	    return;
+	  }
 
-  syncRoutesFromDOM();
+	  console.log("routesByDay:", routesByDay);  // ← ここで構造を確認
 
-  const payload = buildPdfPayload();
-  const jsonStr = JSON.stringify(payload);
+	  // 全日のゴールチェック
+	  let missingGoalDays = [];
+	  try {
+	    for (let dayIndex = 0; dayIndex < routesByDay.length; dayIndex++) {
+	      let dayRoute = routesByDay[dayIndex] || [];
+	      console.log(`Day ${dayIndex + 1}:`, dayRoute);  // ← 各日の内容を確認
 
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = "pdf_output.jsp";
-  form.style.display = "none";
+	      let hasGoal = false;
+	      for (let j = 0; j < dayRoute.length; j++) {
+	        let r = dayRoute[j];
+	        if (r && r.type === "goal") {
+	          hasGoal = true;
+	          console.log(`Day ${dayIndex + 1} にゴール発見:`, r.name);
+	          break;
+	        }
+	      }
 
-  const input = document.createElement("input");
-  input.type = "hidden";
-  input.name = "routeData";
-  input.value = jsonStr;
-  form.appendChild(input);
+	      if (!hasGoal) {
+	        missingGoalDays.push(dayIndex + 1);
+	        console.log(`Day ${dayIndex + 1} にゴールなし`);
+	      }
+	    }
 
-  document.body.appendChild(form);
-  form.submit();
+	    if (missingGoalDays.length > 0) {
+	      let daysStr = missingGoalDays.join("日目、") + "日目";
+	      alert("以下の日のゴール地点が設定されていません：\n" +
+	            "Day " + daysStr + "\n\n" +
+	            "各日のゴール地点を設定してから「全ルート確定」を押してください。\n" +
+	            "（各日の「ゴール設定」ボタンで住所を入力できます）");
+
+	      // 最初の未設定日にスクロール
+	      let firstMissingDay = missingGoalDays[0];
+	      let section = $("#daySection" + firstMissingDay);
+	      if (section && section.length > 0) {
+	        section[0].scrollIntoView({ behavior: "smooth", block: "center" });
+	      }
+	      return;
+	    } else {
+	      console.log("全日ゴール設定済み");
+	    }
+	  } catch (err) {
+	    console.error("ゴールチェックエラー:", err);
+	  }
+
+	  // 確定処理
+	  syncRoutesFromDOM();
+	  const payload = buildPdfPayload();
+	  const jsonStr = JSON.stringify(payload);
+	  const form = document.createElement("form");
+	  form.method = "POST";
+	  form.action = "pdf_output.jsp";
+	  form.style.display = "none";
+	  const input = document.createElement("input");
+	  input.type = "hidden";
+	  input.name = "routeData";
+	  input.value = jsonStr;
+	  form.appendChild(input);
+	  document.body.appendChild(form);
+	  form.submit();
 });
 
 /* ------------------------
@@ -1704,6 +1990,80 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+
+function removeExistingGoal(dayIndex) {
+	  const list = routesByDay[dayIndex];
+	  if (!list) return;
+
+	  for (let i = list.length - 1; i >= 0; i--) {
+	    const r = list[i];
+	    if (r.type === "goal") {
+
+	      // ★ marker を地図から削除
+	      if (r.marker && mapsByDay[dayIndex]?.markers) {
+	        mapsByDay[dayIndex].markers.removeLayer(r.marker);
+	      }
+
+	      // ★ データから削除
+	      list.splice(i, 1);
+	    }
+	  }
+
+	  // ★ 表示更新
+	  renderRouteHistory(dayIndex);
+
+	  if (list.length >= 2) {
+	    redrawRouteLine(dayIndex);
+	  }
+	}
+
+function markNextDayStartNeedsReconfirm(dayIndex) {
+	  const nextDay = dayIndex + 1;
+	  const list = routesByDay[nextDay];
+	  if (!list || !list[0]) return;
+
+	  list[0].needsReconfirm = true;
+
+	  renderRouteHistory(nextDay);
+	}
+
+function updateNextDayStart(dayIndex, lat, lng, name) {
+	  const nextDay = dayIndex + 1;
+	  const list = routesByDay[nextDay];
+	  if (!list || !list[0]) return;
+
+	  // ★ 地図上を一度リセット
+	  clearNextDayMarkers(dayIndex);
+
+	  const start = list[0];
+	  start.name = name;
+	  start.lat = lat;
+	  start.lng = lng;
+	  start.type = "start";
+	  start.needsReconfirm = false;
+
+	  const marker = addMarker(nextDay, name, lat, lng, "start");
+	  if (marker) start.marker = marker;
+
+	  if (mapsByDay[nextDay]?.map) {
+	    mapsByDay[nextDay].map.setView([lat, lng], 13);
+	  }
+
+	  renderRouteHistory(nextDay);
+	  if (list.length >= 2) redrawRouteLine(nextDay);
+	}
+
+
+
+function clearNextDayMarkers(dayIndex) {
+	  const nextDay = dayIndex + 1;
+	  const mapObj = mapsByDay[nextDay];
+	  if (!mapObj?.markers) return;
+
+	  mapObj.markers.clearLayers(); // ★ 全削除
+	}
+
+
 
 //------------------------
 //LocalStorage 保存・復元
@@ -1840,6 +2200,21 @@ $(document).ready(function(){
     saveRoutesToLocal();
   });
 });
+document.addEventListener("DOMContentLoaded", function () {
+
+	  document.querySelectorAll(".modal").forEach(modal => {
+
+	    modal.addEventListener("show.bs.modal", () => {
+	      setHeaderHide(true);
+	    });
+
+	    modal.addEventListener("hidden.bs.modal", () => {
+	      setHeaderHide(false);
+	    });
+
+	  });
+
+	});
 </script>
 
 <!-- Bootstrap JS（Bundle：Popper 同梱） -->

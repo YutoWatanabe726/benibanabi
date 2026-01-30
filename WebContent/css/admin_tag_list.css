@@ -79,6 +79,7 @@ h2 {
     gap: 14px;
     margin-top: 20px;
     justify-content: center;
+    margin-bottom: 30px; /* ← ここでボタンとの間に余白を追加 */
 }
 
 /* チェックボックスは非表示 */
@@ -111,11 +112,18 @@ h2 {
     color: #ffffff;
     border-color: #000000;
 }
-/* ===== 戻るリンク（右上に固定） ===== */
-.container > a {
+/* ===== 上部操作ボタン（左：新規作成 / 右：戻る） ===== */
+.top-actions {
     position: absolute;
-    right: 30px;
     top: 25px;
+    left: 30px;
+    right: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* 上部ボタン共通 */
+.top-actions a {
     display: inline-block;
     padding: 10px 20px;
     border-radius: 6px;
@@ -127,5 +135,6 @@ h2 {
     transition: all 0.2s;
 }
 
-.container > a:hover {
+.top-actions a:hover {
     background-color: #333333;
+}

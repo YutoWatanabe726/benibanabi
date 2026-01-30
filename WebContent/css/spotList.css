@@ -16,51 +16,88 @@ body {
 /* ===============================
    検索メニュー
 ================================= */
+/* ===============================
+   検索メニュー 改善版
+================================= */
 #searchMenu {
-    background:#fff;
-    padding:15px;
-    display:flex;
-    justify-content:center;
-    flex-wrap:wrap;
-    box-shadow:0 2px 8px rgba(0,0,0,0.12);
-    gap:8px;
-    border-radius:10px;
+    max-width: 900px;
+    margin: 0 auto 20px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
 }
-#searchMenu button,
-#searchMenu input[type="text"] {
-    padding:8px 14px;
-    font-size:14px;
-    border:1px solid #ccc;
-    border-radius:6px;
-    transition:0.2s;
+
+.search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
-#searchMenu input[type="text"] {
-    background:#fff;
-    color:#333;
+
+/* キーワード */
+.keyword-row input {
+    width: 100%;
+    max-width: 520px;
+    padding: 12px 16px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
 }
-#searchMenu button {
-    background: linear-gradient(90deg, #FFB35E, #D92929); /* グラデーション統一 */
-    color:#fff;
-    cursor:pointer;
+
+/* 条件ボタン */
+.condition-row button {
+    min-width: 140px;
+    padding: 10px;
+    border-radius: 20px;
+    background: #f2f2f2;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
 }
-#searchMenu button:hover {
-    background: linear-gradient(90deg, #D92929, #FF7A45);
+
+.condition-row button:hover {
+    background: #ffe1d2;
 }
-#areaBtn, #tagBtn {
-    min-width:130px;
-    text-align:center;
-    background:#f2f2f2;
-    color:#555;
+
+/* お気に入りトグル */
+.favorite-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff4ee;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
 }
-#areaBtn:hover, #tagBtn:hover {
-    background:#ffe1d2;
+
+.favorite-toggle input {
+    transform: scale(1.2);
 }
-.favorite-label {
-    display:flex;
-    align-items:center;
-    gap:4px;
-    font-size:14px;
+
+/* 実行ボタン */
+.action-row {
+    margin-top: 10px;
 }
+
+.search-btn {
+    padding: 14px 36px;
+    font-size: 16px;
+    border-radius: 30px;
+    background: linear-gradient(90deg, #FFAA47, #E6483E);
+    color: #fff;
+    border: none;
+}
+
+.clear-btn {
+    padding: 14px 24px;
+    font-size: 14px;
+    border-radius: 30px;
+    background: #eee;
+    border: none;
+}
+
 
 /* ===============================
    モーダル共通
@@ -82,26 +119,29 @@ body {
     background: #fff;
     width: 90%;
     max-width: 800px;
-    max-height: 75vh; /* 画面高さの75%まで */
+    max-height: 75vh;
     overflow-y: auto;
-    padding: 25px;
+
+    padding: 0 25px 25px; /* ★ 上だけ0にする */
+
     border-radius: 12px;
     position: relative;
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
+
 .modal-close {
     position: absolute;
     top: 12px;
     right: 18px;
-    font-size: 22px;
+    font-size: 28px;
     color: #fff;
     background: linear-gradient(90deg, #FFB35E, #D92929);
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 45px;
+    height: 45px;
     text-align: center;
-    line-height: 28px;
+    line-height: 45px;
     cursor: pointer;
     transition: 0.2s;
 }
@@ -157,6 +197,7 @@ body {
 }
 
 /* スマホ対応: 列幅を調整 */
+/*
 @media (max-width: 500px) {
     .modal-content ul {
         grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
@@ -165,6 +206,7 @@ body {
         font-size: 18px;
     }
 }
+*/
 
 
 /* ===============================
@@ -207,6 +249,34 @@ body {
     font-size:14px;
     color:#555;
 }
+
+/* 英数字でも強制改行させる（スポット名） */
+.card-content h3 {
+    font-size:18px;
+    margin:6px 0;
+    color:#D92929;
+
+    overflow-wrap: break-word;  /* ★ 追加 */
+    word-break: break-all;      /* ★ 追加 */
+}
+
+/* 英数字でも強制改行させる（説明文）＋ 2行省略 */
+.card-content p {
+    font-size:14px;
+    color:#555;
+
+    overflow: hidden;                 /* はみ出し隠す */
+    display: -webkit-box;             /* 行数制限用 */
+    -webkit-line-clamp: 2;            /* ★ 表示する行数 */
+    -webkit-box-orient: vertical;
+
+    overflow-wrap: break-word;
+    word-break: break-all;
+
+    text-overflow: ellipsis;
+}
+
+
 
 /* タイトル行 */
 .title-row {
@@ -299,4 +369,195 @@ body {
     box-shadow: 0 6px 16px rgba(217,41,41,0.45);
 }
 
+
+/* ===============================
+   ページタイトル（横いっぱいの帯）
+================================= */
+.page-title {
+    width: 100%;
+    margin: 0 0 30px;
+    padding: 20px 0;
+
+    text-align: center;
+
+    /* 配色はそのまま */
+    background: linear-gradient(90deg, #FFAA47, #E6483E);
+
+    /* 帯なので角丸は消す */
+    border-radius: 0;
+
+    /* 影は下方向だけにして帯感 */
+    box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+
+    cursor: default;
+    user-select: none;
+}
+
+/* 中身を中央寄せ */
+.page-title h1 {
+    max-width: 720px;
+    margin: 0 auto;
+
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+}
+
+.modal-content label {
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+.modal-content label:hover {
+    background: #fff4ee;
+}
+
+/* ===============================
+   ホバーアニメーション共通
+================================= */
+.hover-anim {
+    transition:
+        background 0.25s,
+        box-shadow 0.25s,
+        transform 0.25s,
+        color 0.25s;
+}
+
+.hover-anim:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.condition-row button {
+    min-width: 140px;
+    padding: 10px;
+    border-radius: 20px;
+    background: #f2f2f2;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+
+    transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+
+.condition-row button:hover {
+    background: #ffe1d2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.favorite-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff4ee;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+
+    transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+
+.favorite-toggle:hover {
+    background: #ffe1d2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.search-btn {
+    padding: 14px 36px;
+    font-size: 16px;
+    border-radius: 30px;
+    background: linear-gradient(90deg, #FFAA47, #E6483E);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+
+    transition: transform 0.25s, box-shadow 0.25s, filter 0.25s;
+}
+
+.search-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(230,72,62,0.45);
+    filter: brightness(1.05);
+}
+
+.clear-btn {
+    padding: 14px 24px;
+    font-size: 14px;
+    border-radius: 30px;
+    background: #eee;
+    border: none;
+    cursor: pointer;
+
+    transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+
+.clear-btn:hover {
+    background: #ddd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* ===============================
+   件数表示 強調版
+================================= */
+.result-count {
+    font-size: 18px;              /* 少し大きく */
+    font-weight: bold;            /* 太字 */
+    color: #D92929;               /* メインカラー */
+
+    background: linear-gradient(90deg, #fff6f0, #ffe1d2);
+    border: 1px solid #ffd1bc;
+
+    padding: 14px 0;
+    margin: 10px auto 0;
+
+    box-shadow: 0 3px 10px rgba(217,41,41,0.18);
+}
+
+
+/* ===============================
+   モーダル固定ヘッダー
+================================= */
+.modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    background: #fff;
+    padding: 16px 40px;
+
+    border-bottom: 1px solid #eee;
+}
+
+
+/* タイトル */
+.modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #D92929;
+    text-align: center;
+}
+
+/* 閉じるボタン（固定ヘッダー内用） */
+.modal-header .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+}
+
+.modal-content ul {
+    margin-top: 8px;
+}
+
+/* モーダル表示中：背景スクロール完全禁止 */
+html.modal-open,
+body.modal-open {
+    overflow: hidden;
+    height: 100%;
+}
 

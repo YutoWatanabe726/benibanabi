@@ -40,7 +40,7 @@
             <!-- ▼ トピックス内容 -->
             <div class="mb-3">
                 <label class="form-label">トピックス内容（必須）</label>
-                <textarea name="topicsContent" class="form-control" rows="4" required></textarea>
+                <textarea name="topicsContent" class="form-control" rows="4" maxlength="20" placeholder="20文字以内で入力してください" required></textarea>
             </div>
 
             <!-- ▼ 地区選択 -->
@@ -65,7 +65,7 @@
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary px-4">登録</button>
-                <a href="AdminTopicsSetting.action" class="ms-3">戻る</a>
+                <a href="AdminTopicsList.action" class="ms-3">戻る</a>
             </div>
         </form>
     </div>

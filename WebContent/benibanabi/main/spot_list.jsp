@@ -4,6 +4,7 @@
 <%@ page import="bean.Tag" %>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
+
 <c:import url="/common/base.jsp">
     <c:param name="title">
         観光スポット一覧
@@ -33,17 +34,21 @@
         if (currentPage == null) currentPage = 1;
         Integer totalPages = (Integer) request.getAttribute("totalPages");
         if (totalPages == null) totalPages = 1;
+
+        Integer totalCount = (Integer) request.getAttribute("totalCount");
+        if (totalCount == null) totalCount = spotList.size();
+
     %>
 
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>観光スポット一覧</title>
 
 <!-- CSS読み込み -->
-<link rel="stylesheet" href="<%= request.getContextPath() %>/css/style.css">
+
 <link rel="stylesheet" href="<%= request.getContextPath() %>/css/spotList.css">
 
 <script>
@@ -80,34 +85,61 @@ function initFavorites() {
             star.classList.toggle("active", nowActive);
         };
         card.onclick = function() {
-            location.href = "SpotDetail.action?spot_id=" + id;
+            location.href =
+                "SpotDetail.action?spot_id=" + id + "&page=<%= currentPage %>";
         };
+
     });
 }
 
 // エリア・タグ選択数を更新
 function updateSelectedCounts() {
     const areaCount = document.querySelectorAll('input[name="area"]:checked').length;
-    const areaBtn = document.getElementById("areaBtn");
-    if (areaBtn) areaBtn.textContent = areaCount === 0 ? "エリア選択 ▼" : `エリア (${areaCount}) ▼`;
-    const tagCount = document.querySelectorAll('input[name="tag"]:checked').length;
-    const tagBtn = document.getElementById("tagBtn");
-    if (tagBtn) tagBtn.textContent = tagCount === 0 ? "タグ選択 ▼" : `タグ (${tagCount}) ▼`;
+    const tagCount  = document.querySelectorAll('input[name="tag"]:checked').length;
+
+    document.getElementById("areaCount").textContent = areaCount;
+    document.getElementById("tagCount").textContent  = tagCount;
 }
+
 
 // 検索条件クリア
 function clearConditions() {
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);
+    // チェックボックス全解除
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+    // キーワードクリア
     const keywordInput = document.querySelector('input[name="keyword"]');
-    if(keywordInput) keywordInput.value="";
-    const fav = document.querySelector('input[name="favoriteOnly"]');
-    if(fav) fav.checked=false;
-    document.querySelector('#searchMenu form').submit();
+    if (keywordInput) keywordInput.value = "";
+
+    // ページ番号を削除（重要）
+    const pageInput = document.querySelector('input[name="page"]');
+    if (pageInput) pageInput.remove();
+
+    // フォーム送信（検索実行）
+    document.getElementById("searchForm").submit();
 }
 
+
 // モーダル表示
-function openModal(id) { document.getElementById(id).style.display="flex"; }
-function closeModal(id) { document.getElementById(id).style.display="none"; }
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  modal.style.display = "flex";
+  document.documentElement.classList.add("modal-open");
+  document.body.classList.add("modal-open");
+  setHeaderHide(true);
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  modal.style.display = "none";
+  document.documentElement.classList.add("modal-open");
+  document.body.classList.remove("modal-open");
+  setHeaderHide(false);
+}
 
 // ページネーションジャンプ
 function goPage(page) {
@@ -134,9 +166,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
 // モーダル外クリックで閉じる
 window.addEventListener("click", function(e) {
-    document.querySelectorAll(".modal").forEach(modal => {
-        if (e.target === modal) modal.style.display = "none";
-    });
+  document.querySelectorAll(".modal").forEach(modal => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+      document.body.classList.remove("modal-open");
+      setHeaderHide(false);
+    }
+  });
 });
 </script>
 </head>
@@ -149,23 +185,41 @@ window.addEventListener("click", function(e) {
 
 <form id="searchForm" action="SpotSearch.action" method="post">
 <div id="searchMenu">
-    <button type="button" id="areaBtn" onclick="openModal('areaModal')">エリア選択 ▼</button>
-    <button type="button" id="tagBtn" onclick="openModal('tagModal')">タグ選択 ▼</button>
 
-    <input type="text" name="keyword" value="<%= keyword %>" placeholder="キーワードを入力">
+    <!-- 上段：キーワード -->
+    <div class="search-row keyword-row">
+        <input type="text" name="keyword" value="<%= keyword %>" placeholder="スポット名・説明で検索">
+    </div>
 
-    <label class="favorite-label">
-        <input type="checkbox" name="favoriteOnly" value="on" <%= favoriteFlag ? "checked" : "" %>>
-        お気に入り
-    </label>
+    <!-- 中段：条件ボタン -->
+    <div class="search-row condition-row">
+        <button type="button" id="areaBtn" onclick="openModal('areaModal')">
+            エリア (<span id="areaCount">0</span>)
+        </button>
 
-    <button type="submit" onclick="setTimeout(initFavorites,50)">検索</button>
-    <button type="button" onclick="clearConditions()">検索条件クリア</button>
+        <button type="button" id="tagBtn" onclick="openModal('tagModal')">
+            タグ (<span id="tagCount">0</span>)
+        </button>
+
+        <label class="favorite-toggle">
+            <input type="checkbox" name="favoriteOnly" value="on" <%= favoriteFlag ? "checked" : "" %>>
+            <span>★ お気に入りのみ</span>
+        </label>
+    </div>
+
+    <!-- 下段：実行 -->
+    <div class="search-row action-row">
+        <button type="submit" class="search-btn">🔍 検索</button>
+        <button type="button" class="clear-btn" onclick="clearConditions()">条件クリア</button>
+    </div>
+
 </div>
+
 
 <div class="result-count">
-    <%= spotList.size() %> 件表示
+    <%= totalCount %> 件表示
 </div>
+
 
 <div class="card-container">
 <% for (Spot s : spotList) { %>
@@ -223,8 +277,13 @@ window.addEventListener("click", function(e) {
 <!-- モーダル: エリア選択 -->
 <div id="areaModal" class="modal">
     <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('areaModal')">×</span>
-        <h2>エリア選択</h2>
+
+    	<!-- ★ 固定ヘッダー -->
+        <div class="modal-header">
+            <h2>エリア選択</h2>
+            <span class="modal-close" onclick="closeModal('areaModal')">×</span>
+        </div>
+
         <ul>
             <!-- 庄内 -->
             <li class="area-group-title">庄内</li>
@@ -275,8 +334,13 @@ window.addEventListener("click", function(e) {
 <!-- モーダル: タグ選択 -->
 <div id="tagModal" class="modal">
     <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('tagModal')">×</span>
-        <h2>タグ選択</h2>
+
+    <!-- ★ 固定ヘッダー -->
+        <div class="modal-header">
+            <h2>タグ選択</h2>
+            <span class="modal-close" onclick="closeModal('tagModal')">×</span>
+        </div>
+
         <ul>
             <% for(Tag t : tagAllList) { %>
                 <li><label>
@@ -287,6 +351,7 @@ window.addEventListener("click", function(e) {
                 </label></li>
             <% } %>
         </ul>
+    </div>
     </div>
 </div>
 
