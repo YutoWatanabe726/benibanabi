@@ -132,14 +132,18 @@ function openModal(id) {
 }
 
 function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (!modal) return;
+	  const modal = document.getElementById(id);
+	  if (!modal) return;
 
-  modal.style.display = "none";
-  document.documentElement.classList.add("modal-open");
-  document.body.classList.remove("modal-open");
-  setHeaderHide(false);
-}
+	  modal.style.display = "none";
+
+	  // ★ 両方 remove にする
+	  document.documentElement.classList.remove("modal-open");
+	  document.body.classList.remove("modal-open");
+
+	  setHeaderHide(false);
+	}
+
 
 // ページネーションジャンプ
 function goPage(page) {
@@ -169,11 +173,13 @@ window.addEventListener("click", function(e) {
   document.querySelectorAll(".modal").forEach(modal => {
     if (e.target === modal) {
       modal.style.display = "none";
+      document.documentElement.classList.remove("modal-open"); // ★ 追加
       document.body.classList.remove("modal-open");
       setHeaderHide(false);
     }
   });
 });
+
 </script>
 </head>
 
