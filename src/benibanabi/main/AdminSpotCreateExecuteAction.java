@@ -114,7 +114,7 @@ public class AdminSpotCreateExecuteAction extends Action {
                     	command.add("-extent");
                     	command.add("1200x900");
                     	command.add("-quality");
-                    	command.add("80");
+                    	command.add("65");
                     	command.add("-strip");
                     	command.add(filePath);
                     } else if (ext.equals("png")) {
