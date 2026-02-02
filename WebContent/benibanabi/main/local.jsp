@@ -27,12 +27,10 @@
   <div class="souvenir-list">
 
     <!-- レンタカー -->
-<<<<<<< HEAD
+
     <a href="https://skyticket.jp/rentacar/tohoku/yamagata//?ad_so=google_rc&ad_cp=1368779519&ad_ag=52138990542&ad_loi=&ad_lop=1009147&ad_dv=c&ad_nw=g&ad_mt=b&ad_kw=&ad=google&gad_source=1&gad_campaignid=1368779519&gbraid=0AAAAADnHEzuL0Waiccub3J3K3gWhFB99K&gclid=Cj0KCQiAp-zLBhDkARIsABcYc6uqDmFGyRvJWVHyI9pSlg69zOus2Oq4C_znbMFbw-uMm7iHykEj3Q0aAsZoEALw_wcB"
        target="_blank" class="link-card">
-=======
 
->>>>>>> branch 'master' of https://github.com/YutoWatanabe726/benibanabi.git
       <div class="souvenir-item">
         <img src="../../images/NSX.jpg" alt="レンタカー">
         <h3>🚗 レンタカー</h3>
