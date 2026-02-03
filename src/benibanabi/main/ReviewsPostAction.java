@@ -41,7 +41,9 @@ public class ReviewsPostAction extends Action {
         // ================================
         Reviews review = new Reviews();
         review.setSpotId(spotId);
-        review.setReviewText(reviewText.trim());
+        reviewText = escapeHtml(reviewText.trim());
+        review.setReviewText(reviewText);
+
         review.setReviewDate(new Date(System.currentTimeMillis()));
 
         // ================================
@@ -54,5 +56,18 @@ public class ReviewsPostAction extends Action {
         // 5. 詳細ページへリダイレクト
         // ================================
         response.sendRedirect("SpotDetail.action?spot_id=" + spotId);
+    }
+
+     // ================================
+        // ★ HTMLエスケープ用メソッド ★
+        // ================================
+        private String escapeHtml(String text) {
+            if (text == null) return null;
+            return text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 }
