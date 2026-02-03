@@ -100,48 +100,42 @@ public class AdminSpotCreateExecuteAction extends Action {
                 File saveFile = new File(uploadDir, photoFileName);
                 item.write(saveFile);
              // ===== 画像リサイズ（JPEG / PNG 分岐）=====
+             // ===== 画像リサイズ・圧縮 =====
                 try {
                     String filePath = saveFile.getAbsolutePath();
-                    List<String> command = new ArrayList<>();
+                    long maxSize = 300 * 1024; // 300KB 目標
 
                     if (ext.equals("jpg") || ext.equals("jpeg")) {
-                        // 写真用（4:3 / 1200x900 / 品質80）
-                    	command.add("mogrify");
-                    	command.add("-resize");
-                    	command.add("1200x900^");
-                    	command.add("-gravity");
-                    	command.add("center");
-                    	command.add("-extent");
-                    	command.add("1200x900");
-                    	command.add("-quality");
-                    	command.add("65");
-                    	command.add("-strip");
-                    	command.add(filePath);
+
+                        // ① 通常圧縮（1200x900 / QoL65）
+                        runMogrify(filePath, "65");
+
+                        // ② まだ重ければ再圧縮（QoL55）
+                        if (saveFile.length() > maxSize) {
+                            runMogrify(filePath, "55");
+                        }
+
                     } else if (ext.equals("png")) {
-                        // PNG（透過保持・拡大しない）
-                    	command.add("mogrify");
-                    	command.add("-resize");
-                    	command.add("1200x900>");
-                    	command.add("-background");
-                    	command.add("none");
-                    	command.add(filePath);
 
-                    }
+                        // PNG（透過維持・拡大しない）
+                        List<String> command = new ArrayList<>();
+                        command.add("mogrify");
+                        command.add("-resize");
+                        command.add("1200x900>");
+                        command.add("-background");
+                        command.add("none");
+                        command.add(filePath);
 
-                    if (!command.isEmpty()) {
                         ProcessBuilder pb = new ProcessBuilder(command);
                         pb.redirectErrorStream(true);
                         Process p = pb.start();
-
-                        BufferedReader br =
-                            new BufferedReader(new InputStreamReader(p.getInputStream()));
-                        while (br.readLine() != null) {}
                         p.waitFor();
                     }
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
 
                 // Eclipse プロジェクト側にも保存
                 try {
@@ -237,4 +231,25 @@ public class AdminSpotCreateExecuteAction extends Action {
 
         return latlng;
     }
+    private void runMogrify(String filePath, String quality) throws Exception {
+
+        List<String> command = new ArrayList<>();
+        command.add("mogrify");
+        command.add("-resize");
+        command.add("1200x900^");
+        command.add("-gravity");
+        command.add("center");
+        command.add("-extent");
+        command.add("1200x900");
+        command.add("-quality");
+        command.add(quality);
+        command.add("-strip");
+        command.add(filePath);
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        p.waitFor();
+    }
+
 }
