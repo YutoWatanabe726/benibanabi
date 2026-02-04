@@ -1204,7 +1204,7 @@ if (item.type === "start") {
           </div>
           <div>メモ:
             <input type="text" class="memoInput form-control form-control-sm"
-                   value="${escapeHtml(memo)}" data-index="${i}" />
+                   value="${escapeHtml(memo)}" data-index="${i}"  maxlength="200"/>
           </div>
         </div>
       </div>
