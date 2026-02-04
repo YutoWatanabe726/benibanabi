@@ -48,7 +48,7 @@ button.primary-btn:hover{opacity:0.85;}
 
   <label for="courseTitle">コースタイトル</label>
   <input type="text" id="courseTitle" name="courseTitle"
-         class="input-like" placeholder="例：山形名所巡りコース" required />
+         class="input-like" placeholder="例：山形名所巡りコース" required maxlength="20" />
 
   <label>旅行期間（日数）</label>
   <div id="daySelectBox" class="input-like clickable">日数を選択してください</div>
