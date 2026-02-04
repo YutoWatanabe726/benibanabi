@@ -2197,7 +2197,7 @@ function buildPdfPayload() {
     	  // ★ 電車区間には注記をメモに追加（既存メモがあれば改行して追記）
     	  if (simple.transport === "電車") {
   			simple.memo = (simple.memo ? simple.memo + "\n\n" : "") +
-                 "【重要】この区間は電車ですが、マップと計算は簡易（道路経由）です。\n実際の乗換・所要時間は時刻表で確認してください。";
+                 "【重要】現在、β版として電車の移動手段を実装していますがPDFを生成することができません。";
 }
 
     	  return simple;

@@ -31,6 +31,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
@@ -98,7 +99,10 @@ public class PDFOutputServlet extends HttpServlet {
     }
 
     private String formatDurationMinutesDouble(double minutes) {
-        int m = (int) Math.round(minutes);
+    	if (Double.isNaN(minutes) || Double.isInfinite(minutes) || minutes < 0) {
+            return "―";
+        }
+    	int m = (int) Math.round(minutes);
         return formatDurationMinutes(m);
     }
 
@@ -108,7 +112,14 @@ public class PDFOutputServlet extends HttpServlet {
     }
 
     private double calcDistanceKm(double lat1, double lng1, double lat2, double lng2) {
-        final double R = 6371.0;
+    	if (Double.isNaN(lat1) || Double.isNaN(lng1) || Double.isNaN(lat2) || Double.isNaN(lng2)) {
+            return 0.0; // 異常値なら距離0とする
+        }
+        // 同じ地点なら0
+        if (lat1 == lat2 && lng1 == lng2) {
+            return 0.0;
+        }
+    	final double R = 6371.0;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);
         double a =
@@ -121,9 +132,11 @@ public class PDFOutputServlet extends HttpServlet {
     }
 
     private double getSpeedKmh(String transport) {
-        if ("車".equals(transport)) return 40.0;
-        if ("電車".equals(transport)) return 60.0;
-        return 5.0;
+        if (transport == null || transport.trim().isEmpty()) return 5.0;
+        String t = transport.trim();
+        if ("車".equals(t) || "自動車".equals(t)) return 40.0;
+        if ("電車".equals(t) || "train".equalsIgnoreCase(t)) return 60.0;
+        return 5.0; // 徒歩、他
     }
 
     private LocalTime parseStartTime(String s) {
@@ -289,6 +302,43 @@ public class PDFOutputServlet extends HttpServlet {
         cs.endText();
     }
 
+    /**
+     * PDPageContentStream に塗りつぶし円を描画するヘルパー
+     * @param cs PDPageContentStream
+     * @param cx 中心X
+     * @param cy 中心Y
+     * @param radius 半径
+     * @throws IOException
+     */
+    private static void fillCircle(PDPageContentStream cs, float cx, float cy, float radius) throws IOException {
+        final float kappa = 0.552284749831f;  // ベジェで円を近似する定数（ほぼ標準値）
+
+        cs.moveTo(cx - radius, cy);
+
+        // 右上 → 上
+        cs.curveTo(cx - radius, cy + kappa * radius,
+                   cx - kappa * radius, cy + radius,
+                   cx, cy + radius);
+
+        // 上 → 右
+        cs.curveTo(cx + kappa * radius, cy + radius,
+                   cx + radius, cy + kappa * radius,
+                   cx + radius, cy);
+
+        // 右 → 下
+        cs.curveTo(cx + radius, cy - kappa * radius,
+                   cx + kappa * radius, cy - radius,
+                   cx, cy - radius);
+
+        // 下 → 左
+        cs.curveTo(cx - kappa * radius, cy - radius,
+                   cx - radius, cy - kappa * radius,
+                   cx - radius, cy);
+
+        cs.closePath();
+        cs.fill();  // 塗りつぶし
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
@@ -318,24 +368,39 @@ public class PDFOutputServlet extends HttpServlet {
 
         try (PDDocument doc = new PDDocument()) {
 
-            PDType0Font font;
-            try (InputStream fontStream =
-                     getServletContext().getResourceAsStream("/WEB-INF/fonts/NotoSansJP-Regular.ttf")) {
-                if (fontStream == null) {
-                    res.setContentType("text/plain; charset=UTF-8");
-                    try (PrintWriter out = res.getWriter()) {
-                        out.println("日本語フォントが読み込めませんでした。WEB-INF/fonts に配置してください。");
-                    }
-                    return;
-                }
-                font = PDType0Font.load(doc, fontStream, true);
-            } catch (Exception ex) {
-                res.setContentType("text/plain; charset=UTF-8");
-                try (PrintWriter out = res.getWriter()) {
-                    out.println("日本語フォントが読み込めませんでした。: " + ex.getMessage());
-                }
-                return;
-            }
+        	PDType0Font font = null;
+        	String regularPath = "/WEB-INF/fonts/NotoSansJP-Regular.ttf";
+        	InputStream regularStream = getServletContext().getResourceAsStream(regularPath);
+        	if (regularStream != null) {
+        	    try {
+        	        font = PDType0Font.load(doc, regularStream, true);
+        	    } catch (Exception e) {
+        	        e.printStackTrace();
+        	    } finally {
+        	        try { regularStream.close(); } catch (Exception ignore) {}
+        	    }
+        	} else {
+        	    System.err.println("NotoSansJP-Regular not found - using Helvetica fallback");
+        	}
+
+        	PDType0Font elegantFont = font;
+        	String elegantPath = "/WEB-INF/fonts/ZenOldMincho-Regular.ttf";
+        	InputStream elegantStream = getServletContext().getResourceAsStream(elegantPath);
+        	if (elegantStream != null) {
+        	    try {
+        	        elegantFont = PDType0Font.load(doc, elegantStream, true);
+        	    } catch (Exception e) {
+        	        e.printStackTrace();
+        	    } finally {
+        	        try { elegantStream.close(); } catch (Exception ignore) {}
+        	    }
+        	} else {
+        	    System.err.println("ZenOldMincho-Regular not found - using Helvetica fallback");
+        	}
+
+        	if (font == null && elegantFont == null) {
+        	    System.err.println("All fonts failed - proceeding with Helvetica");
+        	}
 
             Random rnd = new Random(System.nanoTime());
 
@@ -350,72 +415,90 @@ public class PDFOutputServlet extends HttpServlet {
                 float w = mb.getWidth();
                 float h = mb.getHeight();
 
-             // ===== 高級感ある背景（2トーンレイヤー）=====
-                drawFilledRoundRect(cs, 0, 0, w, h, 245, 240, 232);      // ベース
-                drawFilledRoundRect(cs, 0, h * 0.55f, w, h * 0.45f, 235, 228, 218); // 上レイヤー
-
-                // ===== 中央カード =====
-                float cardM = 60;
-                float cardW = w - cardM * 2;
-                float cardH = h - cardM * 2;
-                drawFilledRoundRect(cs, cardM, cardM, cardW, cardH, 255, 255, 255);
-                drawBorderRect(cs, cardM, cardM, cardW, cardH, 200, 190, 170, 1.4f);
-
-                // ===== 内側ゴールド枠 =====
-                drawBorderRect(cs, cardM + 12, cardM + 12, cardW - 24, cardH - 24, 190, 160, 110, 1.2f);
-
-                // ===== タイトル =====
-                String title = (payload.courseTitle != null && !payload.courseTitle.isEmpty())
-                        ? payload.courseTitle
-                        : "Yamagata Travel Plan";
-
-                drawText(cs, font, 34, cardM + 70, h - 170, title, 40, 40, 40);
-
-                // ===== サブタイトル =====
-                drawText(cs, font, 16, cardM + 72, h - 210,
-                        payload.tripDays + " Days Travel in Yamagata", 120, 120, 120);
-
-                // ===== 区切りライン =====
-                cs.setStrokingColor(190, 160, 110);
-                cs.setLineWidth(1.4f);
-                cs.moveTo(cardM + 70, h - 230);
-                cs.lineTo(w - cardM - 70, h - 230);
-                cs.stroke();
-
-                // ===== 山形地図（メイン）=====
-                PDImageXObject map = loadImageAny(doc, req, "/images/defaults/yamagata.jpg");
-                if (map != null) {
-                    float imgMaxW = 380;
-                    float imgMaxH = 380;
-
-                    float iw = map.getWidth();
-                    float ih = map.getHeight();
-                    float scale = Math.min(imgMaxW / iw, imgMaxH / ih);
-
-                    float dw = iw * scale;
-                    float dh = ih * scale;
-
-                    float cx = w / 2 - dw / 2;
-                    float cy = h / 2 - dh / 2 - 20;
-
-                    cs.drawImage(map, cx, cy, dw, dh);
+                // 背景
+                PDImageXObject bgImage = loadImageAny(doc, req, "/images/defaults/ginzan.jpg");
+                if (bgImage != null) {
+                    cs.drawImage(bgImage, 0, 0, w, h);
+                } else {
+                    cs.setNonStrokingColor(240, 240, 245);
+                    cs.addRect(0, 0, w, h);
+                    cs.fill();
                 }
 
-                // ===== フッター =====
-                drawText(cs, font, 11, w / 2 - 70, cardM + 32, "TRAVEL GUIDE BOOK", 150, 150, 150);
+                // 変数宣言
+                String mainTitle = (payload.courseTitle != null && !payload.courseTitle.isEmpty())
+                        ? payload.courseTitle
+                        : "Yamagata Journey";
 
+                String subText = payload.tripDays + "-Day Yamagata Itinerary / " + payload.tripDays + "日の旅行";
 
-                // ===== アイコン配置 =====
-                PDImageXObject cherry = loadImageAny(doc, req, "/images/sakuranbo.jpg");
-                if (cherry != null) cs.drawImage(cherry, 120, h / 2 + 60, 60, 60);
+                float titleSize = 54f;
+                float subSize = 22f;
+                float titleX = w / 2;
+                float titleY = h - 180;
+                float subY = titleY - 60;
+                float titleWidth = 0;
+                float subX = w / 2;
+                float subWidth = 0;
 
-                PDImageXObject zao = loadImageAny(doc, req, "/images/zao_ski.jpg");
-                if (zao != null) cs.drawImage(zao, 140, h / 2 - 80, 60, 60);
+                int[] shadowOffsets = {0, 1, 2, 3, 4};
 
-                // ===== フッター =====
-                drawText(cs, font, 12, w / 2 - 40, 80, "TRAVEL NOTE", 160, 160, 160);
+                // タイトル描画
+                PDType0Font safeTitleFont = (elegantFont != null) ? elegantFont : font;
+                if (safeTitleFont != null) {
+                    titleWidth = safeTitleFont.getStringWidth(mainTitle) / 1000f * titleSize;
+                    titleX = (w / 2) - (titleWidth / 2);
+
+                    for (int offset : shadowOffsets) {
+                        drawText(cs, safeTitleFont, titleSize, titleX + offset, titleY - offset, mainTitle, 0, 0, 0);
+                        drawText(cs, safeTitleFont, titleSize, titleX - offset, titleY + offset, mainTitle, 0, 0, 0);
+                    }
+                    drawText(cs, safeTitleFont, titleSize, titleX, titleY, mainTitle, 255, 255, 255);
+                } else {
+                    cs.beginText();
+                    cs.setFont(PDType1Font.HELVETICA_BOLD, titleSize);
+                    cs.newLineAtOffset(titleX - 150, titleY);
+                    cs.showText(mainTitle);
+                    cs.endText();  // endText() を追加
+                }
+
+                // サブタイトル描画
+                if (safeTitleFont != null) {
+                    subWidth = safeTitleFont.getStringWidth(subText) / 1000f * subSize;
+                    subX = (w / 2) - (subWidth / 2);
+
+                    for (int offset : shadowOffsets) {
+                        drawText(cs, safeTitleFont, subSize, subX + offset, subY - offset, subText, 0, 0, 0);
+                        drawText(cs, safeTitleFont, subSize, subX - offset, subY + offset, subText, 0, 0, 0);
+                    }
+                    drawText(cs, safeTitleFont, subSize, subX, subY, subText, 255, 255, 255);
+                } else {
+                    cs.beginText();
+                    cs.setFont(PDType1Font.HELVETICA, subSize);
+                    cs.newLineAtOffset(subX - 150, subY);
+                    cs.showText(subText);
+                    cs.endText();  // endText() を追加
+                }
+
+                // フッター描画
+                String footerText = "© べにばナビ All Rights Reserved.";  // 日本語を英語に置き換え
+                float footerSize = 10f;
+                float footerX = w - 300;
+                float footerY = 40;
+
+                PDType0Font safeFont = font;
+                if (safeFont != null) {
+                    float footerWidth = safeFont.getStringWidth(footerText) / 1000f * footerSize;
+                    footerX = w - footerWidth - 40;
+                    drawText(cs, safeFont, footerSize, footerX, footerY, footerText, 255, 255, 255);
+                } else {
+                    cs.beginText();
+                    cs.setFont(PDType1Font.HELVETICA, footerSize);
+                    cs.newLineAtOffset(footerX, footerY);
+                    cs.showText(footerText);
+                    cs.endText();  // endText() を追加
+                }
             }
-
 
 
             List<PDPage> overviewPages = new ArrayList<>();
@@ -462,8 +545,20 @@ public class PDFOutputServlet extends HttpServlet {
                     } else {
                         RoutePoint prev = dayRoute.get(i - 1);
                         double dist = calcDistanceKm(prev.lat, prev.lng, rp.lat, rp.lng);
-                        double speed = getSpeedKmh(rp.transport != null ? rp.transport : "徒歩");
-                        long moveMin = Math.round(dist / speed * 60.0);
+
+                        if (Double.isNaN(dist) || Double.isInfinite(dist) || dist <= 0.0001) {
+                            dist = 0.0;
+                        }
+                        double speed = getSpeedKmh(rp.transport);
+                        double minutes = 0.0;
+                        if (speed > 0 && dist > 0) {
+                            minutes = (dist / speed) * 60.0;
+                            if (Double.isNaN(minutes) || Double.isInfinite(minutes) || minutes < 0) {
+                                minutes = 0.0;
+                            }
+                        }
+
+                        long moveMin = (long) Math.max(0, Math.round(minutes));
                         current = current.plusMinutes(moveMin);
                         arriveTimes[i] = current;
                     }
@@ -544,14 +639,28 @@ public class PDFOutputServlet extends HttpServlet {
 
                     RoutePoint prev = (i > 0) ? dayRoute.get(i - 1) : null;
                     double dist = 0.0;
-                    double moveMin = 0.0;
-                    String transport = (rp.transport != null) ? rp.transport : "徒歩";
+                    double minutes = 0.0;
+                    String transport = (rp.transport != null) ? rp.transport.trim() : "徒歩";
 
                     if (prev != null) {
                         dist = calcDistanceKm(prev.lat, prev.lng, rp.lat, rp.lng);
+
+                        // dist が異常値・極小なら強制0
+                        if (Double.isNaN(dist) || Double.isInfinite(dist) || dist <= 0.0001) {
+                            dist = 0.0;
+                        }
+
                         double speed = getSpeedKmh(transport);
-                        moveMin = (dist / speed) * 60.0;
+                        if (speed > 0 && dist > 0) {
+                            minutes = (dist / speed) * 60.0;
+                            // minutes が異常値なら0に
+                            if (Double.isNaN(minutes) || Double.isInfinite(minutes) || minutes < 0) {
+                                minutes = 0.0;
+                            }
+                        }
                     }
+
+                    int moveMin = (int) Math.max(0, Math.round(minutes));
 
                     PDImageXObject photoImage = loadPhotoImage(doc, req, rp);
                     if (photoImage == null) {
@@ -651,9 +760,14 @@ public class PDFOutputServlet extends HttpServlet {
                         ty -= 22;
 
                         if (prev != null) {
-                            drawText(cs, font, 13, tx, ty, "概算移動時間： " + formatDurationMinutesDouble(moveMin), 30, 30, 30);
+                            String moveTimeStr = formatDurationMinutes(moveMin);
+                            drawText(cs, font, 13, tx, ty, "概算移動時間： " + moveTimeStr, 30, 30, 30);
                             ty -= 22;
-                            drawText(cs, font, 13, tx, ty, String.format("移動距離： %.1f km", dist), 30, 30, 30);
+
+                            String distStr = (dist <= 0.0001 || Double.isNaN(dist) || Double.isInfinite(dist))
+                                    ? "―"
+                                    : String.format("%.1f km", dist);
+                            drawText(cs, font, 13, tx, ty, "移動距離： " + distStr, 30, 30, 30);
                             ty -= 22;
                         } else {
                             drawText(cs, font, 13, tx, ty, "移動時間・距離： （スタート地点）", 100, 100, 100);
@@ -702,34 +816,83 @@ public class PDFOutputServlet extends HttpServlet {
              drawFilledRoundRect(cs, m, m, w - m * 2, h - m * 2, 255, 255, 255);
              drawBorderRect(cs, m, m, w - m * 2, h - m * 2, 200, 190, 170, 1.2f);
 
-             // タイトル
-             drawText(cs, font, 24, m + 40, h - 140, "旅行中の緊急連絡先", 40, 40, 40);
+          // タイトル（日本語）
+             drawText(cs, font, 24, m + 40, h - 130,
+                     "旅行中の緊急連絡先", 40, 40, 40);
 
-             // テキスト
+             // サブタイトル（英語）
+             drawText(cs, font, 16, m + 40, h - 165,
+                     "Emergency contact information while traveling", 90, 90, 90);
+
+
              float tx = m + 40;
-             float ty = h - 200;
+             float ty = h - 220;
+             float lh = 26;
 
-             drawText(cs, font, 14, tx, ty, "警察 : 110", 30, 30, 30); ty -= 28;
-             drawText(cs, font, 14, tx, ty, "火事・救急車 : 119", 30, 30, 30); ty -= 28;
-             drawText(cs, font, 14, tx, ty, "海上の事故 : 118", 30, 30, 30); ty -= 28;
-             drawText(cs, font, 14, tx, ty, "JNTO ( 観光案内・災害相談 ):", 30, 30, 30); ty -= 24;
-             drawText(cs, font, 14, tx + 20, ty, "050-3816-2787", 30, 30, 30);
 
-             // 山形画像（右側）
+             drawText(cs, font, 14, tx, ty, "警察 (Police) : 110", 30, 30, 30); ty -= lh;
+             drawText(cs, font, 14, tx, ty, "火事・救急車 (Fire ・ Ambulance) : 119", 30, 30, 30); ty -= lh;
+             drawText(cs, font, 14, tx, ty, "海上の事故 (Accident at sea) : 118", 30, 30, 30); ty -= lh * 1.2f;
+
+             drawText(cs, font, 14, tx, ty, "JNTO（観光案内・災害相談）", 30, 30, 30); ty -= lh;
+             drawText(cs, font, 14, tx + 20, ty,
+            		    "Tourist information・ ",
+            		    30, 30, 30);
+            		ty -= 22;
+
+            		drawText(cs, font, 14, tx + 20, ty,
+            		    "Disaster consultation",
+            		    30, 30, 30);
+            		ty -= 26;
+
+             drawText(cs, font, 14, tx + 20, ty, "TEL : 050-3816-2787", 30, 30, 30);
+
+             float textAreaWidth = 360;
+
+
              PDImageXObject map = loadImageAny(doc, req, "/images/defaults/yamagata.jpg");
              if (map != null) {
+
+                 float maxW = 180;   // ← 裏表紙ではこれ以上大きくしない
+                 float maxH = 260;
+
                  float iw = map.getWidth();
                  float ih = map.getHeight();
-                 float scale = Math.min(250 / iw, 250 / ih);
+
+                 float scale = Math.min(maxW / iw, maxH / ih);
 
                  float dw = iw * scale;
                  float dh = ih * scale;
 
-                 float x = w - m - dw - 40;
-                 float y = h / 2 - dh / 2;
+                 // ★ 右上固定（安全）
+                 float x = w - m - dw - 20;
+                 float y = h - m - dh - 120;
 
                  cs.drawImage(map, x, y, dw, dh);
              }
+
+          // 下部イラスト（中央）
+             PDImageXObject illust = loadImageAny(doc, req, "/images/defaults/benichan.png");
+             if (illust != null) {
+                 float iw = illust.getWidth();
+                 float ih = illust.getHeight();
+
+                 // 表示サイズ（ここ調整OK）
+                 float targetW = 180f;
+                 float scale = targetW / iw;
+
+                 float dw = iw * scale;
+                 float dh = ih * scale;
+
+                 // 中央寄せ + 下部
+                 float x = (w - dw) / 2;
+                 float y = m + 70; // フッターより少し上
+
+                 cs.drawImage(illust, x, y, dw, dh);
+             }
+
+
+
 
              // フッター
              drawText(cs, font, 11, w / 2 - 90, m + 30, "Have a nice trip in Yamagata", 150, 150, 150);
@@ -776,6 +939,7 @@ public class PDFOutputServlet extends HttpServlet {
                 out.print("}");
             }
         } catch (Exception e) {
+        	e.printStackTrace();
             log("PDF生成エラー user=" + req.getRemoteAddr() + " size=" +
                 (req.getContentLengthLong() / 1024) + "KB", e);
 
@@ -785,7 +949,7 @@ public class PDFOutputServlet extends HttpServlet {
             // フォント関連エラーなどの追加分岐（必要に応じて）
             if (message.contains("font") || message.contains("NotoSansJP")) {
                 type = "font_error";
-                message = "日本語フォントの読み込みに失敗しました。サーバー管理者に連絡してください。";
+                message = "日本語フォントの読み込みに失敗しました。";
             } else if (req.getContentLengthLong() > 10_000_000) { // 10MB超え
                 type = "payload_too_large";
                 message = "データ量が多すぎます（" + (req.getContentLengthLong()/1024/1024) + "MB）。スポットを減らしてください。";
