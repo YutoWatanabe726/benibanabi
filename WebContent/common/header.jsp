@@ -22,7 +22,7 @@
   top: 0;
   left: 0;
 
-  z-index: 1500;
+  z-index: 1000;
   transition: 0.35s ease;
   border-bottom: 1px solid rgba(255,255,255,0.4);
   box-shadow: 0 4px 14px rgba(0,0,0,0.05);
