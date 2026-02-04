@@ -1,21 +1,24 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <%@ page import="dao.TopicsDAO, java.util.List, bean.Topics" %>
 
 <%
-    // ▼ DB からトピックスを取得して JSP に渡す（index.jsp 単独で動く）
+    // ▼ DB からトピックスを取得
     TopicsDAO dao = new TopicsDAO();
-    List<Topics> topTopics = dao.findAll();   // 必要ならフィルタリング可
+    List<Topics> topTopics = dao.findAll();
     request.setAttribute("topTopics", topTopics);
 %>
+
+<!-- 現在日時 -->
+<jsp:useBean id="now" class="java.util.Date" />
 
 <c:import url="../common/base.jsp">
   <c:param name="title" value="べにばナビ TOP" />
   <c:param name="content">
 
 <style>
-
 /* ===== HERO（スライドショー）===== */
 .hero {
   position: relative;
@@ -24,7 +27,6 @@
   overflow: hidden;
   border-radius: 0 0 40px 40px;
 }
-
 .hero-slide {
   width: 100%;
   height: 100%;
@@ -36,7 +38,6 @@
 }
 .hero-slide.active { opacity: 1; }
 
-/* 薄い紅花グラデ */
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -44,7 +45,6 @@
   z-index: 3;
 }
 
-/* HERO テキスト */
 .hero-content {
   position: absolute;
   bottom: 18%;
@@ -95,96 +95,82 @@
   50% { transform: translateY(400px) rotate(200deg); opacity: 0.9; }
   100% { transform: translateY(850px) rotate(360deg); opacity: 0; }
 }
-
-/* ===== スクロールアニメ ===== */
-.fade-up {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: all .9s cubic-bezier(.17,.67,.2,1);
-}
-.fade-left {
-  opacity: 0;
-  transform: translateX(-40px);
-  transition: all .9s cubic-bezier(.17,.67,.2,1);
-}
-.fade-right {
-  opacity: 0;
-  transform: translateX(40px);
-  transition: all .9s cubic-bezier(.17,.67,.2,1);
-}
-.show {
-  opacity: 1;
-  transform: translate(0,0);
-}
-
 </style>
-
 
 <!-- ================= HERO ================= -->
 <section class="hero">
-  <img src="../images/9_倉津川の桜2.jpg"  class="hero-slide active">
+  <img src="../images/9_倉津川の桜2.jpg" class="hero-slide active">
   <img src="../images/1674_飛島の海岸.jpg" class="hero-slide">
-  <img src="../images/199_月山遠景.jpg"   class="hero-slide">
+  <img src="../images/199_月山遠景.jpg" class="hero-slide">
   <img src="../images/110_銀山温泉4.jpg" class="hero-slide">
 
   <div class="hero-overlay"></div>
 
-  <div class="hero-content fade-left">
+  <div class="hero-content">
     <h1>紅花が彩る、山形の旅。</h1>
     <p>伝統 × 自然 × 食 × 温泉 —— もう一歩ふかく。</p>
-    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="hero-btn courseLink">コースを作成する</a>
+    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="hero-btn">
+      コースを作成する
+    </a>
   </div>
 
-  <!-- 花びら -->
   <img class="petal" style="left:10%; animation:petalFall 9s linear infinite;">
-  <img class="petal" style="left:25%; animation:petalFall 10s linear infinite 1s;">
-  <img class="petal" style="left:40%; animation:petalFall 11s linear infinite 0.5s;">
-  <img class="petal" style="left:55%; animation:petalFall 9.5s linear infinite 2s;">
-  <img class="petal" style="left:70%; animation:petalFall 12s linear infinite 1s;">
-  <img class="petal" style="left:85%; animation:petalFall 8s linear infinite 0.3s;">
+  <img class="petal" style="left:30%; animation:petalFall 11s linear infinite;">
+  <img class="petal" style="left:50%; animation:petalFall 10s linear infinite;">
+  <img class="petal" style="left:70%; animation:petalFall 12s linear infinite;">
 </section>
-
 
 <script>
 const slides = document.querySelectorAll(".hero-slide");
 let current = 0;
-const seasons = ["spring","summer","autumn","winter"];
-const petalImg = {
-  spring: "../souvenirdropimages/petal_sakura.png",
-  summer: "../souvenirdropimages/benibana.png",
-  autumn: "../souvenirdropimages/petal_maple.png",
-  winter: "../souvenirdropimages/petal_snow.png"
-};
-
 function showSlide(){
   slides[current].classList.remove("active");
   current = (current + 1) % slides.length;
   slides[current].classList.add("active");
-  changeSeason(seasons[current]);
 }
-
-function changeSeason(season){
-  document.querySelectorAll(".petal").forEach(p=>p.src = petalImg[season]);
-}
-
-changeSeason(seasons[0]);
 setInterval(showSlide, 4500);
-
 </script>
 
-
-
-<!-- ================= 最新トピックス（DBから取得） ================= -->
-<h2 class="section-title fade-left">最新トピックス</h2>
+<!-- ================= 最新トピックス ================= -->
+<h2 class="section-title">最新トピックス</h2>
 
 <c:if test="${not empty topTopics}">
   <c:forEach var="t" items="${topTopics}">
-    <div class="topic-item fade-right">
-      <div class="topic-meta">
-        ${t.topicsPublicationDate} — ${t.topicsArea}
+
+    <!-- 掲載期間内のみ表示 -->
+    <c:if test="${now >= t.topicsPublicationDate and now <= t.topicsEndDate}">
+
+      <!-- 年比較用 -->
+      <fmt:formatDate value="${t.topicsStartDate}" pattern="yyyy" var="startYear"/>
+      <fmt:formatDate value="${t.topicsEndDate}" pattern="yyyy" var="endYear"/>
+
+      <div class="topic-item">
+        <div class="topic-meta">
+
+          <!-- 掲載開始日〜掲載終了日 -->
+          <c:choose>
+            <c:when test="${startYear == endYear}">
+              <fmt:formatDate value="${t.topicsStartDate}" pattern="M/d" />
+              〜
+              <fmt:formatDate value="${t.topicsEndDate}" pattern="M/d" />
+            </c:when>
+            <c:otherwise>
+              <fmt:formatDate value="${t.topicsStartDate}" pattern="yyyy/M/d" />
+              〜
+              <fmt:formatDate value="${t.topicsEndDate}" pattern="yyyy/M/d" />
+            </c:otherwise>
+          </c:choose>
+
+          — ${t.topicsArea}
+        </div>
+
+        <div class="topic-title">
+          ${t.topicsContent}
+        </div>
       </div>
-      <div class="topic-title">${t.topicsContent}</div>
-    </div>
+
+    </c:if>
+
   </c:forEach>
 </c:if>
 
