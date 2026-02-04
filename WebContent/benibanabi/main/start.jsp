@@ -104,6 +104,66 @@ button.primary-btn:hover{opacity:0.85;}
 
   <button type="submit" class="primary-btn">スタート地点を設定</button>
 
+  <script>
+  // 修正版バリデーションコード（これを丸ごと置き換え）
+  const badWords = [
+    "死ね", "殺す", "自殺", "クソ野郎", "バカ野郎", "詐欺", "違法", "闇", "売春", "援交", "パパ活"
+  ];
+
+  const safePhrases = [
+    "死ぬほど", "クソ", "バカ", "アホ", "草津", "クソ美味い", "クソ楽しい", "バカうまい"
+  ];
+
+  function checkTitle(title) {
+    const trimmed = title.trim();
+    const lower = trimmed.toLowerCase();
+
+    // タグ記号（< > / " ' = など）をブロック
+    if (/[<>/"'=]/.test(trimmed)) {
+      return "タグ記号（< > / \" ' = など）は使用できません";
+    }
+
+    // URL/リンク検知
+    if (/https?:\/\/|www\.|\.(com|net|jp|co\.jp)/i.test(lower)) {
+      return "URLやリンクは使用できません";
+    }
+
+    // ホワイトリストに含まれるならOK
+    if (safePhrases.some(p => lower.includes(p.toLowerCase()))) {
+      return "";
+    }
+
+    // 不適切ワード検知
+    if (badWords.some(w => lower.includes(w.toLowerCase()))) {
+      return "不適切な言葉が含まれています";
+    }
+
+    // 文字数チェック
+    if (trimmed.length > 20) {
+      return "20文字以内で入力してください";
+    }
+
+    return "";
+  }
+
+  // リアルタイム警告
+  document.getElementById("courseTitle").addEventListener("input", function() {
+    const msg = checkTitle(this.value);
+    this.style.borderColor = msg ? "red" : "";
+    this.title = msg || "";
+  });
+
+  // 送信時チェック
+  document.getElementById("startForm").addEventListener("submit", function(e) {
+    const msg = checkTitle(document.getElementById("courseTitle").value);
+    if (msg) {
+      alert(msg);
+      document.getElementById("courseTitle").focus();
+      e.preventDefault();
+    }
+  });
+</script>
+
 </form>
 </main>
 

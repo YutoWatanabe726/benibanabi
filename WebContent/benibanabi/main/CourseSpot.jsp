@@ -2096,23 +2096,61 @@ function buildPdfPayload() {
   return payload;
 }
 
-//全ルート確定ボタン（ゴールチェック付き・安全版）
 $("#confirmRouteBtn").on("click", function(){
-  // ルートが空の場合
-	if (!routesByDay || routesByDay.length === 0 || !routesByDay[0] || routesByDay[0].length === 0) {
+	  // ★追加：メモチェック（ここでNGなら即終了）
+	  let hasError = false;
+	  let errorMsg = "";
+
+	  $(".memoInput").each(function() {
+	    const value = $(this).val().trim();
+
+	    if (/[<>/"'=]/.test(value)) {
+	      errorMsg = "メモにタグ記号（< > / \" ' = など）が含まれています。\n修正してください。";
+	      hasError = true;
+	    } else if (/https?:\/\/|www\.|\.(com|net|jp|co\.jp|org|biz|info)/i.test(value)) {
+	      errorMsg = "メモにURLやリンクが含まれています。\n修正してください。";
+	      hasError = true;
+	    }
+
+	    if (hasError) return false;  // ループ中断
+	  });
+
+	  if (hasError) {
+	    alert(errorMsg);
+
+	    // 最初のNGメモにフォーカス＋視覚強調
+	    $(".memoInput").each(function() {
+	      const value = $(this).val().trim();
+	      if (/[<>/"'=]/.test(value) || /https?:\/\/|www\.|\.(com|net|jp|co\.jp)/i.test(value)) {
+	        $(this).focus();
+	        $(this).css({
+	          borderColor: "red",
+	          backgroundColor: "#ffebee",
+	          boxShadow: "0 0 0 3px rgba(255,0,0,0.2)"
+	        });
+	        setTimeout(() => {
+	          $(this).css({ borderColor: "", backgroundColor: "", boxShadow: "" });
+	        }, 2000);
+	        return false;
+	      }
+	    });
+
+	    return;  // ★ここで処理終了 → PDF生成に進まない
+	  }
+
+	  // 元の処理（ここから下は変更なし）
+	  // ルートが空の場合
+	  if (!routesByDay || routesByDay.length === 0 || !routesByDay[0] || routesByDay[0].length === 0) {
 	    alert("ルートが未設定です。スポットやゴールを追加してください。");
 	    return;
 	  }
-
-	  console.log("routesByDay:", routesByDay);  // ← ここで構造を確認
-
+	  console.log("routesByDay:", routesByDay); // ← ここで構造を確認
 	  // 全日のゴールチェック
 	  let missingGoalDays = [];
 	  try {
 	    for (let dayIndex = 0; dayIndex < routesByDay.length; dayIndex++) {
 	      let dayRoute = routesByDay[dayIndex] || [];
-	      console.log(`Day ${dayIndex + 1}:`, dayRoute);  // ← 各日の内容を確認
-
+	      console.log(`Day ${dayIndex + 1}:`, dayRoute); // ← 各日の内容を確認
 	      let hasGoal = false;
 	      for (let j = 0; j < dayRoute.length; j++) {
 	        let r = dayRoute[j];
@@ -2122,20 +2160,17 @@ $("#confirmRouteBtn").on("click", function(){
 	          break;
 	        }
 	      }
-
 	      if (!hasGoal) {
 	        missingGoalDays.push(dayIndex + 1);
 	        console.log(`Day ${dayIndex + 1} にゴールなし`);
 	      }
 	    }
-
 	    if (missingGoalDays.length > 0) {
 	      let daysStr = missingGoalDays.join("日目、") + "日目";
 	      alert("以下の日のゴール地点が設定されていません：\n" +
 	            "Day " + daysStr + "\n\n" +
 	            "各日のゴール地点を設定してから「全ルート確定」を押してください。\n" +
 	            "（各日の「ゴール設定」ボタンで住所を入力できます）");
-
 	      // 最初の未設定日にスクロール
 	      let firstMissingDay = missingGoalDays[0];
 	      let section = $("#daySection" + firstMissingDay);
@@ -2149,7 +2184,6 @@ $("#confirmRouteBtn").on("click", function(){
 	  } catch (err) {
 	    console.error("ゴールチェックエラー:", err);
 	  }
-
 	  // 確定処理
 	  syncRoutesFromDOM();
 	  const payload = buildPdfPayload();
@@ -2165,7 +2199,7 @@ $("#confirmRouteBtn").on("click", function(){
 	  form.appendChild(input);
 	  document.body.appendChild(form);
 	  form.submit();
-});
+	});
 
 /* ------------------------
    ユーティリティ
@@ -2414,6 +2448,8 @@ document.addEventListener("DOMContentLoaded", function () {
 	  });
 
 	});
+
+
 </script>
 
 <!-- Bootstrap JS（Bundle：Popper 同梱） -->
