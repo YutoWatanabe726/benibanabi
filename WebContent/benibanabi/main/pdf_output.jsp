@@ -1070,7 +1070,7 @@ function setupPdfButton() {
         }
         // その他のエラー
         else {
-          desc = "予期しないエラーが発生しました。\n\nエラー内容： " + (e.message || "不明") + "\n\n管理者に連絡する場合はこのメッセージを伝えてください。";
+          desc = "予期しないエラーが発生しました。 ";
         }
 
         setPdfStatus("danger", title, desc, 100);
