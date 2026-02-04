@@ -20,7 +20,8 @@ public class AdminTopicsListAction extends Action {
     private String formatDateWithWeek(java.sql.Date date) {
         if (date == null) return "";
         LocalDate localDate = date.toLocalDate();
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd(E)", Locale.JAPANESE);
+        DateTimeFormatter format =
+                DateTimeFormatter.ofPattern("MM/dd(E)", Locale.JAPANESE);
         return localDate.format(format);
     }
 
@@ -38,41 +39,52 @@ public class AdminTopicsListAction extends Action {
                 .collect(Collectors.toList());
         req.setAttribute("years", years);
 
-        // ▼ ここ！ デフォルトは現在の年度
+        // ▼ デフォルトは現在の年度
         String yearParam = req.getParameter("year");
         int selectedYear = (yearParam != null && !yearParam.isEmpty())
                 ? Integer.parseInt(yearParam)
-                : LocalDate.now().getYear();   // ← ★ 最新ではなく「今年」
-
+                : LocalDate.now().getYear();
         req.setAttribute("selectedYear", selectedYear);
 
         // ▼ 指定年度だけ抽出
         List<Topics> filteredTopics = allTopics.stream()
-                .filter(t -> t.getTopicsPublicationDate().toLocalDate().getYear() == selectedYear)
+                .filter(t -> t.getTopicsPublicationDate()
+                        .toLocalDate().getYear() == selectedYear)
                 .collect(Collectors.toList());
 
         // ▼ JSP表示用の曜日つき文字列に変換
         for (Topics t : filteredTopics) {
-            t.setFormattedPublicationDate(formatDateWithWeek(t.getTopicsPublicationDate()));
-            t.setFormattedStartDate(formatDateWithWeek(t.getTopicsStartDate()));
-            t.setFormattedEndDate(formatDateWithWeek(t.getTopicsEndDate()));
+            t.setFormattedPublicationDate(
+                    formatDateWithWeek(t.getTopicsPublicationDate()));
+            t.setFormattedStartDate(
+                    formatDateWithWeek(t.getTopicsStartDate()));
+            t.setFormattedEndDate(
+                    formatDateWithWeek(t.getTopicsEndDate()));
         }
 
-        // ▼ 掲載中／終了に分類
+        // ▼ 掲載中／掲載期間外に分類（確定ロジック）
         LocalDate today = LocalDate.now();
         List<Topics> ongoing = new ArrayList<>();
         List<Topics> expired = new ArrayList<>();
 
         for (Topics t : filteredTopics) {
-            LocalDate start = t.getTopicsStartDate().toLocalDate();
-            LocalDate end = t.getTopicsEndDate().toLocalDate();
-            if (!today.isBefore(start) && !today.isAfter(end)) ongoing.add(t);
-            else expired.add(t);
+            LocalDate publication =
+                    t.getTopicsPublicationDate().toLocalDate();
+            LocalDate end =
+                    t.getTopicsEndDate().toLocalDate();
+
+            // 今日が範囲外なら掲載期間外
+            if (today.isBefore(publication) || today.isAfter(end)) {
+                expired.add(t);
+            } else {
+                ongoing.add(t);
+            }
         }
 
         req.setAttribute("ongoingTopics", ongoing);
         req.setAttribute("expiredTopics", expired);
 
-        req.getRequestDispatcher("admin_topics_list.jsp").forward(req, res);
+        req.getRequestDispatcher("admin_topics_list.jsp")
+                .forward(req, res);
     }
 }
