@@ -532,79 +532,6 @@ h3 {
   border-radius: 12px;
 }
 
-/* ===============================
-   モーダルフッター固定レイアウト
-================================= */
-.modal-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-/* ページネーションの横ズレ防止 */
-.modal-pagination {
-    margin-bottom: 0;
-}
-
-/* 右側ボタンを固定幅扱いにする */
-.modal-footer > .d-flex {
-    flex-shrink: 0;
-}
-
-/* ===============================
-   モーダル内 ページネーション
-================================= */
-.modal-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin: 0;              /* modal-footer内なので余白リセット */
-}
-
-/* 矢印ボタン */
-.modal-pagination .nav-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 18px;
-    border-radius: 50%;
-    border: 1px solid #ddd;
-    background: #fff;
-    color: #555;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-/* hover */
-.modal-pagination .nav-btn:hover:not(:disabled) {
-    background: #ffe1d2;
-    color: #D92929;
-    transform: translateY(-2px);
-}
-
-/* 非活性 */
-.modal-pagination .nav-btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-/* 現在ページ */
-.modal-pagination .current-page {
-    min-width: 60px;
-    height: 60px;
-    line-height: 60px;
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-    color: #fff;
-    border-radius: 50%;
-    background: linear-gradient(90deg, #D92929, #FF7A45);
-    box-shadow: 0 6px 16px rgba(217,41,41,0.45);
-}
-
-
 </style>
 </head>
 
@@ -702,29 +629,12 @@ h3 {
         <!-- カード一覧 -->
         <div class="row" id="spotCards"></div>
       </div>
-      <div class="modal-footer d-flex align-items-center">
-
-  <!-- 左：ページネーション -->
-  <nav class="me-auto">
-    <ul id="spotPagination" class="pagination modal-pagination me-auto">
-      <!-- JSで生成 -->
-    </ul>
-  </nav>
-
-  <!-- 右：検索 & 閉じる -->
-  <div class="d-flex gap-2">
-    <button id="searchSpotBtn" class="btn btn-primary">
-      検索
-    </button>
-    <button type="button"
-            class="btn btn-secondary"
-            data-bs-dismiss="modal">
-      閉じる
-    </button>
-  </div>
-
-</div>
-
+		<div id="spotPagination" class="text-center my-3"></div>
+      <div class="modal-footer">
+        <button id="searchSpotBtn" class="btn btn-primary">検索</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1626,81 +1536,60 @@ pageSpots.forEach(function (s) {
 /* ===== ページネーション ===== */
 if (totalPages <= 1) return;
 
-const ul = $('<ul class="pagination modal-pagination"></ul>');
+const ul = $('<ul class="pagination justify-content-center"></ul>');
 
 // Prev
 ul.append(`
-  <li>
-    <button class="nav-btn"
-            data-page="${currentSpotPage - 1}"
-            ${currentSpotPage === 1 ? "disabled" : ""}>
-      «
-    </button>
-  </li>
+ <li class="page-item ${currentSpotPage === 1 ? 'disabled' : ''}">
+   <a class="page-link" href="#" data-page="${currentSpotPage - 1}">«</a>
+ </li>
 `);
 
 const maxVisible = 5;
 let startPage = Math.max(1, currentSpotPage - 2);
-let endPage   = Math.min(totalPages, startPage + maxVisible - 1);
+let endPage = Math.min(totalPages, startPage + maxVisible - 1);
 startPage = Math.max(1, endPage - maxVisible + 1);
 
 for (let i = startPage; i <= endPage; i++) {
-  if (i === currentSpotPage) {
-    ul.append(`
-      <li>
-        <div class="current-page">${i}</div>
-      </li>
-    `);
-  } else {
-    ul.append(`
-      <li>
-        <button class="nav-btn" data-page="${i}">
-          ${i}
-        </button>
-      </li>
-    `);
-  }
+  ul.append(`
+    <li class="page-item ${i === currentSpotPage ? 'active' : ''}">
+      <a class="page-link" href="#" data-page="${i}">${i}</a>
+    </li>
+  `);
 }
+
 
 // Next
 ul.append(`
-  <li>
-    <button class="nav-btn"
-            data-page="${currentSpotPage + 1}"
-            ${currentSpotPage === totalPages ? "disabled" : ""}>
-      »
-    </button>
-  </li>
+ <li class="page-item ${currentSpotPage === totalPages ? 'disabled' : ''}">
+   <a class="page-link" href="#" data-page="${currentSpotPage + 1}">»</a>
+ </li>
 `);
 
 $pagination.append(ul);
-
 }
 
 /* =========================
 ページ番号クリック
 ========================= */
-$(document).on("click", "#spotPagination .nav-btn", function (e) {
-  e.preventDefault();
+$(document).on("click", "#spotPagination .page-link", function (e) {
+	  e.preventDefault();
 
-  if (this.disabled) return;
+	  const page = Number($(this).data("page"));
+	  const totalPages = Math.ceil(filteredSpots.length / SPOTS_PER_PAGE);
 
-  const page = Number($(this).data("page"));
-  const totalPages = Math.ceil(filteredSpots.length / SPOTS_PER_PAGE);
+	  if (
+	    !Number.isInteger(page) ||
+	    page < 1 ||
+	    page > totalPages ||
+	    page === currentSpotPage
+	  ) {
+	    return;
+	  }
 
-  if (
-    !Number.isInteger(page) ||
-    page < 1 ||
-    page > totalPages ||
-    page === currentSpotPage
-  ) {
-    return;
-  }
-
-  currentSpotPage = page;
-  renderSpotCards(filteredSpots);
-});
-
+	  currentSpotPage = page;
+	  renderSpotCards(filteredSpots);
+	});
 
 /* スポット選択 */
 function selectSpot(id, name, lat, lng, photoUrl) {
