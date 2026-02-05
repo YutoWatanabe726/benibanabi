@@ -39,6 +39,7 @@ h3 {
   border-radius: 10px;
   padding: 10px;
   margin-bottom: 10px;
+  overflow: hidden;
 }
 .day-starttime-box .label {
   font-weight: 700;
@@ -268,8 +269,6 @@ h3 {
   /* ★ ここを追加 */
   position: relative;
   z-index: 1;
-}
-verflow: hidden;
 }
 
 /* ================================
@@ -523,3 +522,11 @@ verflow: hidden;
   object-fit: cover;   /* トリミング */
   border-radius: 12px;
 }
+@supports (-webkit-touch-callout: none) {
+  .day-starttime-box input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: 1.2;
+  }
+}
+
