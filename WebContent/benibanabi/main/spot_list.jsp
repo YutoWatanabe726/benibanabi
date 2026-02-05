@@ -194,7 +194,8 @@ window.addEventListener("click", function(e) {
 
     <!-- 上段：キーワード -->
     <div class="search-row keyword-row">
-        <input type="text" name="keyword" value="<%= keyword %>" placeholder="スポット名・説明で検索">
+        <input type="text" name="keyword" value="<c:out value='${keyword}'/>"
+         placeholder="スポット名・説明で検索">
     </div>
 
     <!-- 中段：条件ボタン -->

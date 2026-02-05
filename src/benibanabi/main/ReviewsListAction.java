@@ -25,7 +25,15 @@ public class ReviewsListAction extends Action {
         if (sid == null) {
             return;
         }
-        int spotId = Integer.parseInt(sid);
+        int spotId;
+        try {
+            spotId = Integer.parseInt(sid);
+        } catch (NumberFormatException e) {
+            req.setAttribute("errorMessage", "不正なアクセスです。");
+            req.getRequestDispatcher("/error.jsp").forward(req, res);
+            return;
+        }
+
 
         String pageParam = req.getParameter("page");
         int page = 1;
@@ -33,14 +41,22 @@ public class ReviewsListAction extends Action {
             page = Integer.parseInt(pageParam);
         }
 
-        // ===============================
-        // DAO
-        // ===============================
-        SpotDAO spotDao = new SpotDAO();
-        Spot spot = spotDao.findById(spotId);
+     // ===============================
+     // DAO
+     // ===============================
+     SpotDAO spotDao = new SpotDAO();
+     Spot spot = spotDao.findById(spotId);
 
-        ReviewsDAO reviewsDao = new ReviewsDAO();
-        List<Reviews> reviewList = reviewsDao.findBySpotId(spotId);
+     // ★★★ 追加：スポット存在チェック ★★★
+     if (spot == null) {
+         req.setAttribute("errorMessage", "この観光スポットは削除されたか存在しません。");
+         req.getRequestDispatcher("/error.jsp").forward(req, res);
+         return;
+     }
+
+     ReviewsDAO reviewsDao = new ReviewsDAO();
+     List<Reviews> reviewList = reviewsDao.findBySpotId(spotId);
+
 
         // ===============================
         // request セット

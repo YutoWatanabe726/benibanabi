@@ -4,6 +4,8 @@
 <%@ page import="bean.Tag" %>
 <%@ page import="bean.Reviews" %>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
 
 <c:import url="/common/base.jsp">
 <c:param name="title">観光スポット詳細</c:param>
@@ -23,7 +25,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title><%= spot.getSpotName() %> の詳細</title>
+<title><c:out value="${spot.spotName}" /> の詳細</title>
+
 
 
 <link rel="stylesheet" href="<%= request.getContextPath() %>/css/spot_detail.css">
@@ -61,7 +64,7 @@ function updateFavoriteButton(btn, isFav) {
         isFav ? "お気に入り解除" : "お気に入り追加";
 }
 
-window.addEventListener("DOMContentLoaded", initFavorite);
+
 
 /* ===== ここから口コミカウンタ ===== */
 function initReviewCounter() {
@@ -85,7 +88,7 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-</script>
+
 
 </head>
 <body>
@@ -95,7 +98,8 @@ window.addEventListener("DOMContentLoaded", function () {
     <a href="SpotSearch.action?page=${page}" class="back-btn">一覧へ戻る</a>
 
     <div class="spot-header">
-    	<h1><%= spot.getSpotName() %></h1>
+    	<h1><c:out value="${spot.spotName}" /></h1>
+
 
     	<button
       	id="favoriteBtn"
@@ -109,22 +113,29 @@ window.addEventListener("DOMContentLoaded", function () {
 
     <div class="card detail-box">
         <img src="<%= request.getContextPath() + spot.getSpotPhoto() %>" class="card-img" alt="spot image">
-        <p class="card-description"><%= spot.getDescription() %></p>
+        <p class="card-description">
+    <c:out value="${spot.description}" />
+</p>
+
 
         <div class="tag-container">
-            <% for(Tag t : tagList) { %>
-                <span class="tag"><%= t.getTagName() %></span>
-            <% } %>
-        </div>
+    <c:forEach var="t" items="${tagList}">
+        <span class="tag">
+            <c:out value="${t.tagName}" />
+        </span>
+    </c:forEach>
+</div>
+
     </div>
 
     <h2 class="section-title">所在地</h2>
     <div class="card detail-box">
         <p>
-  			<strong>住所：山形県</strong>
-  			<%= (spot.getArea() != null ? spot.getArea() : "") %>
-  			<%= (spot.getAddress() != null ? " " + spot.getAddress() : "") %>
-		</p>
+    <strong>住所：山形県</strong>
+    <c:out value="${spot.area}" />
+    <c:out value="${spot.address}" />
+</p>
+
 
         <iframe width="100%" height="350" class="map-frame"
             loading="lazy" allowfullscreen
@@ -141,23 +152,32 @@ window.addEventListener("DOMContentLoaded", function () {
     <% if(totalReviews == 0) { %>
         <p>口コミはまだありません。</p>
     <% } else { %>
-        <% for(int i=0;i<Math.min(limit,totalReviews);i++){
-            Reviews r = reviewList.get(i);
-        %>
-        <div class="card review-box">
-            <div class="review-user">投稿者：匿名さん</div>
-            <div class="review-content"><%= r.getReviewText() %></div>
-            <div>投稿日：<%= r.getReviewDate() %></div>
+        <c:forEach var="r" items="${reviewList}" begin="0" end="2">
+    <div class="card review-box">
+        <div class="review-user">投稿者：匿名さん</div>
+        <div class="review-content">
+            <c:out value="${r.reviewText}" />
+
         </div>
-        <% } %>
+        <div>
+            投稿日：<c:out value="${r.reviewDate}" />
+        </div>
+    </div>
+</c:forEach>
+
+
+
         <% if(totalReviews > limit){ %>
-        <a href="ReviewsList.action?spot_id=<%= spot.getSpotId() %>" class="more-btn">もっと見る（全 <%= totalReviews %> 件）</a>
-        <% } %>
+<a href="ReviewsList.action?spot_id=<%= spot.getSpotId() %>" class="more-btn">
+    もっと見る（全 <%= totalReviews %> 件）
+</a>
+<% } %>
+
     <% } %>
 
     <h2 class="section-title">口コミ投稿</h2>
 <div class="card detail-box">
-    <form action="ReviewsPost.action" method="post" onsubmit="return checkReviewLength();">
+    <form action="ReviewsPost.action" method="post">
         <input type="hidden" name="spot_id" value="<%= spot.getSpotId() %>">
 
         <textarea id="reviewText"

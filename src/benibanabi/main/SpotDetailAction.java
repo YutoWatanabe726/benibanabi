@@ -47,8 +47,11 @@ public class SpotDetailAction extends Action {
 	    Spot spot = spotDao.findById(spotId);
 
 	    if (spot == null) {
+	        req.setAttribute("errorMessage", "この観光スポットは削除されたか存在しません。");
+	        req.getRequestDispatcher("/error.jsp").forward(req, res);
 	        return;
 	    }
+
 
 	    TagDAO tagDao = new TagDAO();
 	    ArrayList<Tag> tagList = tagDao.findTagsBySpotId(spotId);
