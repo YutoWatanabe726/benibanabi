@@ -5,20 +5,18 @@
 <%@ page import="dao.TopicsDAO, java.util.List, bean.Topics" %>
 
 <%
-    // ▼ DB からトピックスを取得
+    // ▼ DB からトピックスを取得して JSP に渡す（index.jsp 単独で動く）
     TopicsDAO dao = new TopicsDAO();
-    List<Topics> topTopics = dao.findAll();
+    List<Topics> topTopics = dao.findAll();   // 必要ならフィルタリング可
     request.setAttribute("topTopics", topTopics);
 %>
-
-<!-- 現在日時 -->
-<jsp:useBean id="now" class="java.util.Date" />
 
 <c:import url="../common/base.jsp">
   <c:param name="title" value="べにばナビ TOP" />
   <c:param name="content">
 
 <style>
+
 /* ===== HERO（スライドショー）===== */
 .hero {
   position: relative;
@@ -27,6 +25,7 @@
   overflow: hidden;
   border-radius: 0 0 40px 40px;
 }
+
 .hero-slide {
   width: 100%;
   height: 100%;
@@ -38,6 +37,7 @@
 }
 .hero-slide.active { opacity: 1; }
 
+/* 薄い紅花グラデ */
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -45,6 +45,7 @@
   z-index: 3;
 }
 
+/* HERO テキスト */
 .hero-content {
   position: absolute;
   bottom: 18%;
@@ -95,39 +96,76 @@
   50% { transform: translateY(400px) rotate(200deg); opacity: 0.9; }
   100% { transform: translateY(850px) rotate(360deg); opacity: 0; }
 }
+
+/* ===== スクロールアニメ ===== */
+.fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: all .9s cubic-bezier(.17,.67,.2,1);
+}
+.fade-left {
+  opacity: 0;
+  transform: translateX(-40px);
+  transition: all .9s cubic-bezier(.17,.67,.2,1);
+}
+.fade-right {
+  opacity: 0;
+  transform: translateX(40px);
+  transition: all .9s cubic-bezier(.17,.67,.2,1);
+}
+.show {
+  opacity: 1;
+  transform: translate(0,0);
+}
+
 </style>
+
 
 <!-- ================= HERO ================= -->
 <section class="hero">
-  <img src="../images/9_倉津川の桜2.jpg" class="hero-slide active">
+  <img src="../images/9_倉津川の桜2.jpg"  class="hero-slide active">
   <img src="../images/1674_飛島の海岸.jpg" class="hero-slide">
-  <img src="../images/199_月山遠景.jpg" class="hero-slide">
+  <img src="../images/199_月山遠景.jpg"   class="hero-slide">
   <img src="../images/110_銀山温泉4.jpg" class="hero-slide">
 
   <div class="hero-overlay"></div>
 
-  <div class="hero-content">
+  <div class="hero-content fade-left">
     <h1>紅花が彩る、山形の旅。</h1>
     <p>伝統 × 自然 × 食 × 温泉 —— もう一歩ふかく。</p>
-    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="hero-btn">
-      コースを作成する
-    </a>
+    <a href="<c:url value='/benibanabi/main/start.jsp'/>" class="hero-btn courseLink">コースを作成する</a>
   </div>
 
+  <!-- 花びら -->
   <img class="petal" style="left:10%; animation:petalFall 9s linear infinite;">
-  <img class="petal" style="left:30%; animation:petalFall 11s linear infinite;">
-  <img class="petal" style="left:50%; animation:petalFall 10s linear infinite;">
-  <img class="petal" style="left:70%; animation:petalFall 12s linear infinite;">
+  <img class="petal" style="left:25%; animation:petalFall 10s linear infinite 1s;">
+  <img class="petal" style="left:40%; animation:petalFall 11s linear infinite 0.5s;">
+  <img class="petal" style="left:55%; animation:petalFall 9.5s linear infinite 2s;">
+  <img class="petal" style="left:70%; animation:petalFall 12s linear infinite 1s;">
+  <img class="petal" style="left:85%; animation:petalFall 8s linear infinite 0.3s;">
 </section>
+
 
 <script>
 const slides = document.querySelectorAll(".hero-slide");
 let current = 0;
+const seasons = ["spring","summer","autumn","winter"];
+const petalImg = {
+  spring: "../souvenirdropimages/petal_sakura.png",
+  summer: "../souvenirdropimages/benibana.png",
+  autumn: "../souvenirdropimages/petal_maple.png",
+  winter: "../souvenirdropimages/petal_snow.png"
+};
 function showSlide(){
   slides[current].classList.remove("active");
   current = (current + 1) % slides.length;
   slides[current].classList.add("active");
+  changeSeason(seasons[current]);
 }
+function changeSeason(season){
+  document.querySelectorAll(".petal").forEach(p=>p.src = petalImg[season]);
+}
+changeSeason(seasons[0]);
 setInterval(showSlide, 4500);
 </script>
 
