@@ -44,11 +44,12 @@ h3 {
   font-weight: 700;
   margin-bottom: 6px;
 }
-.day-starttime-box input[type="time"]{
+.day-starttime-box input[type="time"] {
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 16px;
+  height: auto;
+  box-sizing: border-box;
 }
 
 /* ================================
@@ -263,6 +264,12 @@ h3 {
   min-height: 300px;
   border-radius: 10px;
   overflow: hidden;
+
+  /* ★ ここを追加 */
+  position: relative;
+  z-index: 1;
+}
+verflow: hidden;
 }
 
 /* ================================
@@ -352,6 +359,8 @@ h3 {
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid #ddd;
+  position: relative;
+  z-index: 1;
 }
 #candidateList {
   max-height: 220px;
@@ -369,6 +378,12 @@ h3 {
   border-color: #ff7043;
   box-shadow: 0 0 0 2px rgba(255,112,67,0.18);
 }
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 500 !important;
+}
+
 
 /* ================================
    📱 スマホ対応（600px以下）

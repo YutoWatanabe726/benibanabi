@@ -642,7 +642,7 @@ function renderRouteHistory(dayIndex) {
     	      <select class="form-select form-select-sm transportSelect" data-index="${i}" style="width:100px; display:inline-block;">
     	        <option ${transport === "徒歩" ? "selected" : ""}>徒歩</option>
     	        <option ${transport === "車" ? "selected" : ""}>車</option>
-    	        <option ${transport === "電車" ? "selected" : ""}>電車</option>
+    	        <option ${transport === "電車" ? "selected" : ""}>電車(※開発中)</option>
     	      </select>
     	      予測時間: <span class="estimatedTime">${timeMin}</span>分 / 概算距離: ${dist}km
     	      ${note}
