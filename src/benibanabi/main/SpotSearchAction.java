@@ -38,8 +38,8 @@ public class SpotSearchAction extends Action {
         /* ===============================
          * 2. パラメータ取得
          * =============================== */
-        String keyword = req.getParameter("keyword");
-        if (keyword == null) keyword = "";
+        String keyword = sanitizeKeyword(req.getParameter("keyword"));
+
 
         String[] areaValues = req.getParameterValues("area");
         List<String> areaList = areaValues != null
@@ -127,4 +127,20 @@ public class SpotSearchAction extends Action {
         req.getRequestDispatcher("/benibanabi/main/spot_list.jsp")
            .forward(req, res);
     }
+    /* ===============================
+     * キーワードのHTMLタグ除去
+     * =============================== */
+    private String sanitizeKeyword(String keyword) {
+        if (keyword == null) return "";
+
+        // HTMLタグ除去（より安全）
+        keyword = keyword.replaceAll("<.*?>", "");
+
+        // 制御文字を除去
+        keyword = keyword.replaceAll("[\\r\\n\\t]", "");
+
+        return keyword.trim();
+    }
+
+
 }

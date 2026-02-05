@@ -250,3 +250,8 @@ textarea {
         color: #fff;
     }
 }
+
+
+.review-content {
+    white-space: pre-line;
+}
