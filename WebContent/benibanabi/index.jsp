@@ -11,6 +11,9 @@
     request.setAttribute("topTopics", topTopics);
 %>
 
+<!-- 現在日時 -->
+<jsp:useBean id="now" class="java.util.Date" />
+
 <c:import url="../common/base.jsp">
   <c:param name="title" value="べにばナビ TOP" />
   <c:param name="content">
