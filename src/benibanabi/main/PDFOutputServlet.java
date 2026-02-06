@@ -430,7 +430,7 @@ public class PDFOutputServlet extends HttpServlet {
                         ? payload.courseTitle
                         : "Yamagata Journey";
 
-                String subText = payload.tripDays + "-Day Yamagata Itinerary / " + payload.tripDays + "日の旅行";
+                String subText = payload.tripDays + "-Day Yamagata Itinerary / " + payload.tripDays + "日の山形旅行";
 
                 float titleSize = 54f;
                 float subSize = 22f;
