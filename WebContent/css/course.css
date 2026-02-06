@@ -47,11 +47,17 @@ h3 {
 }
 .day-starttime-box input[type="time"] {
   width: 100%;
+  max-width: 100%;
   padding: 4px 8px;
   font-size: 16px;
   height: auto;
   box-sizing: border-box;
 }
+
+.sidebar {
+  min-width: 0;   /* ★ これが決定打 */
+}
+
 
 /* ================================
    履歴表示エリア
